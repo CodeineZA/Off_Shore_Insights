@@ -578,7 +578,7 @@
       "cells": [
         "wealth_market.business_owners"
       ],
-      "automation": "n8n workflow E1 (monthly) · n8n/src/e1-fetch-eurostat.js",
+      "automation": "node research/fetch-eurostat.mjs (run by /update-offshore-insights); n8n E1 exists but is paused",
       "extract": "JSON-stat: value × 1000 per geo per year."
     },
     {

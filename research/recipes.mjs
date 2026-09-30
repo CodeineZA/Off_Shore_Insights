@@ -55,7 +55,7 @@ const recipes = [
     extract: 'Which target countries have a DTA with Seychelles. Listed = agreement exists (confirm in-force date from the treaty text); not listed = none.' },
   { id: 'eurostat-employers', method: 'api',
     url: 'https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfsa_egaps?format=JSON&lang=EN&wstatus=SELF_S&sex=T&age=Y15-74&unit=THS_PER',
-    cells: ['wealth_market.business_owners'], automation: 'n8n workflow E1 (monthly) · n8n/src/e1-fetch-eurostat.js',
+    cells: ['wealth_market.business_owners'], automation: 'node research/fetch-eurostat.mjs (run by /update-offshore-insights); n8n E1 exists but is paused',
     extract: 'JSON-stat: value × 1000 per geo per year.' },
   { id: 'ubs-gwr-millionaires', method: 'manual', url: 'https://www.ubs.com/global/en/wealthmanagement/insights/global-wealth-report.html', cells: ['wealth_market.millionaires'],
     extract: 'UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source "UBS Global Wealth Report <edition>".' },

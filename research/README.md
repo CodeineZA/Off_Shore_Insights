@@ -8,8 +8,8 @@ Each recipe has a `method`:
 
 | method | Automation | How |
 |---|---|---|
-| `api` | **n8n**, no AI | Structured source (JSON/CSV) → parse → upsert. Example: E1 Eurostat |
-| `page-extract` | **`/update-offshore-insights` skill** (AI) | Fetch the page and answer the recipe's `extract` question: the figures are in prose or tables that change layout |
+| `api` | Script, no AI (`research/fetch-*.mjs`) | Structured source (JSON/CSV) → parse → SQL. Example: Eurostat. Can move to n8n when automation is wanted |
+| `page-extract` | **`/update-offshore-insights` skill** (AI, on demand) | Fetch the page and answer the recipe's `extract` question: the figures are in prose or tables that change layout |
 | `manual` | Human | Paywalled or PDF-only (e.g. some wealth reports). Hentus/Justus enter it in Studio |
 
 Rules for every write (the skill and n8n workflows follow these):
@@ -24,3 +24,7 @@ Rules for every write (the skill and n8n workflows follow these):
 
 Applied data lives in `db/research/*.sql`: idempotent and public. Private notes stay in
 `db/seed-private.sql`.
+
+**On demand only (2026-09-30).** No scheduled updates: Hentus calls `/update-offshore-insights`,
+which runs every `api` and `page-extract` recipe. The n8n update workflows (W1–W4, E1) exist but
+are paused.

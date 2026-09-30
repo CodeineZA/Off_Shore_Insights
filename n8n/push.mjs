@@ -18,11 +18,11 @@ const H = { 'X-N8N-API-KEY': env.N8N_API_KEY, 'Content-Type': 'application/json'
 const FILES = [
   ['ERR-error-alert', 'N8N_WF_ERROR_ALERT', true], // n8n 2.x only runs an error workflow if it is ACTIVE
   ['W0-gitsync', 'N8N_WF_GITSYNC', true],
-  ['W1-recheck', 'N8N_WF_RECHECK', true],
-  ['W2-telegram-callback', 'N8N_WF_TELEGRAM_CB', true],
-  ['W3-monthly', 'N8N_WF_MONTHLY', true],
-  ['W4-budget', 'N8N_WF_BUDGET', true],
-  ['E1-eurostat', 'N8N_WF_EUROSTAT', true],
+  ['W1-recheck', 'N8N_WF_RECHECK', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
+  ['W2-telegram-callback', 'N8N_WF_TELEGRAM_CB', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
+  ['W3-monthly', 'N8N_WF_MONTHLY', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
+  ['W4-budget', 'N8N_WF_BUDGET', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
+  ['E1-eurostat', 'N8N_WF_EUROSTAT', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
 ];
 
 async function api(method, path, body) {
@@ -55,6 +55,7 @@ for (const [file, envKey, activate] of FILES) {
   else { saved = await api('POST', '/workflows', payload); id = saved.id; }
   // Activating re-registers trigger webhooks (Telegram rate-limits setWebhook), so only
   // activate when needed, and retry briefly on "Too Many Requests".
+  if (!activate && saved.active) await api("POST", `/workflows/${id}/deactivate`);
   for (let attempt = 1; activate && !saved.active; attempt++) {
     try { saved = await api('POST', `/workflows/${id}/activate`); }
     catch (e) {
