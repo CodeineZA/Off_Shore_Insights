@@ -295,4 +295,26 @@ treaty rows but no tax rates for either hub, so C1–C4 show "unknown" until Pha
 
 G4 → then the tiles whose data exists, while the decisions for the others are agreed.
 
-Tiles built so far: G4.
+Tiles built so far: **all 14** (2026-09-30), each named for its purpose:
+
+| # | Name | # | Name |
+|---|---|---|---|
+| G1 | Where to go first | C1 | Head to head |
+| G2 | Open doors | C2 | Bracket spread |
+| G3 | Sweet spot | C3 | The saving gap |
+| G4 | Tax pressure map | C4 | Same client, three homes |
+| G5 | Sample client bill | C5 | Treaty bridge |
+| G6 | Where the wealth is | C6 | Prospect pool |
+| G7 | Rate momentum | C7 | Country brief |
+
+Model choices, shown on screen and adjustable (`apps/web/src/data/model.ts`):
+- **Sample client (G5, C4, G1 pain, G3 y):** €2m portfolio, 6% a year, 20 years, gains realised
+  yearly, then inherited by 2 children.
+  - Net wealth vs solidarity tax: the client pays whichever is higher, because the solidarity
+    tax credits the wealth tax.
+  - UK and South Africa tax the estate as a whole.
+  - A top-band / entry-band toggle bounds the progressive taxes.
+- **Opportunity (G1):** equal thirds of market size, tax pain and ease of reach, each scaled to
+  the best country shown. Unknown counts as 0 and is drawn hatched.
+- **Gates (G2, C7):** the treaty comes from `treaty`; blacklist and trust recognition from
+  `jurisdiction_gate`. Marketing stays unknown until Justus decides it.

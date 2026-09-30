@@ -14,8 +14,9 @@ rows with open review flags), or `all` (the default).
 ## 1. Scope
 
 1. Load `research/recipes.json`. This skill runs everything that needs no person:
-   - `api` recipes run as scripts: `node research/fetch-eurostat.mjs` →
-     `db/research/eurostat-<date>.sql` (applied in step 4 together with the run).
+   - `api` recipes run as scripts: `node research/fetch-eurostat.mjs` (employers) and
+     `node research/fetch-fx.mjs` (EUR exchange rates). Each writes `db/research/<name>-<date>.sql`,
+     applied in step 4 together with the run.
    - `page-extract` recipes run as described below.
    - `manual` recipes (UBS, Capgemini, Knight Frank) can't be fetched; list them at the end as
      reminders for Hentus.
@@ -55,6 +56,9 @@ Create `research/runs/<YYYY-MM-DD>.json` (the format is in `research/runs/2026-0
 - Every cell of every recipe you fetched, **including unchanged ones**. That is how verification
   dates get refreshed.
 - `treaties` for `mra-MU-dta` / `src-SC-dta` / `pwc-MU-wht`.
+- `gates` for the blacklist and trust-recognition recipes (`eu-annex-i`, `fr-etnc`, `es-no-cooperativas`,
+  `pt-portaria-150-2004`, `it-dm-1999`, `hcch-trusts`). The format is in `research/runs/2026-09-30-gates.json`.
+  PDFs (Portugal, Italy): when the page summary cannot read the PDF, read the saved file itself.
 - `left_unknown` for anything you couldn't settle.
 
 ## 4. Generate, review, apply
@@ -66,7 +70,7 @@ node research/apply-run.mjs research/runs/<date>.json      # → db/research/<da
 1. **Before applying**, show Hentus a short diff: each value that changed (old → new, with its
    source), each new value, and each flag set or cleared. Applying writes to the live database, so
    wait for his go-ahead.
-2. Apply with `bash db/apply.sh db/research/<date>.sql db/research/eurostat-<date>.sql`. It's
+2. Apply with `bash db/apply.sh db/research/<date>.sql db/research/eurostat-<date>.sql db/research/fx-<date>.sql`. It's
    idempotent, so running it twice is harmless.
 3. Resolve the W1 flags you answered: `status = 'resolved'`, `reviewed_by = 'claude: /update-offshore-insights <date>'`.
 4. Check the access suite still passes: `node scripts/verify-access.mjs`.

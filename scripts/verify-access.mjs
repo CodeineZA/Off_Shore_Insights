@@ -40,7 +40,8 @@ async function directSignIn(email, password) {
   return r.json.access_token;
 }
 const TABLES = ['jurisdiction', 'tax_type', 'tax_rate', 'treaty', 'wealth_market', 'jurisdiction_note',
-  'review_flag', 'sync_run', 'site_page', 'search_daily', 'search_query_monthly', 'analytics_daily', 'app_user'];
+  'review_flag', 'sync_run', 'site_page', 'search_daily', 'search_query_monthly', 'analytics_daily', 'app_user',
+  'jurisdiction_gate', 'fx_rate'];
 const RATES ='/rest/v1/v_current_rates?select=jurisdiction_code,headline_rate&jurisdiction_code=in.(FR,ES)&headline_rate=not.is.null';
 
 // 1. anon

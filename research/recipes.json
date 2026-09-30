@@ -572,6 +572,94 @@
       "extract": "Which target countries have a DTA with Seychelles. Listed = agreement exists (confirm in-force date from the treaty text); not listed = none."
     },
     {
+      "id": "eu-annex-i",
+      "method": "page-extract",
+      "url": "https://taxation-customs.ec.europa.eu/taxation/common-eu-list-third-country-jurisdictions-tax-purposes_en",
+      "alt_urls": [
+        "https://taxation-customs.ec.europa.eu/news/eu-updates-list-non-cooperative-tax-jurisdictions-highlighting-commitment-global-tax-good-governance-2026-02-17_en"
+      ],
+      "cells": [
+        "gate:DE:blacklist:*"
+      ],
+      "extract": "Current Annex I (non-cooperative) and Annex II (state of play) lists and their date. Are Mauritius / Seychelles on either? Germany applies Annex I (StAbwG)."
+    },
+    {
+      "id": "fr-etnc",
+      "method": "page-extract",
+      "url": "https://kpmg.com/av/fr/avocats/eclairages/2026/06/publication-de-l-arrete-annuel-2026-fixant-la-liste-noire-francaise-des-etnc.html",
+      "cells": [
+        "gate:FR:blacklist:*"
+      ],
+      "extract": "The French ETNC list from the latest annual arrêté (JO date). Are Maurice / Seychelles listed or removed (and when)? Prefer the Légifrance arrêté text when available."
+    },
+    {
+      "id": "es-no-cooperativas",
+      "method": "page-extract",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-tributacion-no-residentes/anexos/jurisdicciones-no-cooperativas.html",
+      "cells": [
+        "gate:ES:blacklist:*"
+      ],
+      "extract": "Spain's current non-cooperative jurisdictions (Orden HFP/115/2023 as amended). Mauricio / Seychelles listed? Latest modification and date."
+    },
+    {
+      "id": "pt-portaria-150-2004",
+      "method": "page-extract",
+      "url": "https://files.dre.pt/1s/2004/02/037b00/08600860.pdf",
+      "alt_urls": [
+        "https://diariodarepublica.pt/dr/legislacao-consolidada/portaria/2004-105808897"
+      ],
+      "cells": [
+        "gate:PT:blacklist:*"
+      ],
+      "extract": "Portaria 150/2004 list (PDF: read it as a document). Entries for Maurícias and Seychelles, then check the consolidated version / later portarias (2011, 2016, 292/2025) for removals."
+    },
+    {
+      "id": "it-dm-1999",
+      "method": "page-extract",
+      "url": "https://www.agenziaentrate.gov.it/portale/documents/20143/369991/DM+4_5_1999.pdf/fcbaea6a-1cf2-23ec-4a40-9f8f92acdc6e",
+      "cells": [
+        "gate:IT:blacklist:*"
+      ],
+      "extract": "DM 4 May 1999 (privileged-tax states for individuals), as in force: is \"Maurizio\" / \"Seicelle\" listed? (PDF: read it as a document.)"
+    },
+    {
+      "id": "be-tax-havens",
+      "method": "manual",
+      "url": "https://fin.belgium.be/",
+      "cells": [
+        "gate:BE:blacklist:*"
+      ],
+      "extract": "Belgium's yearly Excel of tax-haven lists (art. 179 KB/WIB 92, art. 73/4quater, Global Forum non/partially compliant). Is Mauritius / Seychelles on any? Seychelles was on the reporting list from 2021; its 2026 Global Forum upgrade may have removed it."
+    },
+    {
+      "id": "hcch-trusts",
+      "method": "page-extract",
+      "url": "https://www.hcch.net/en/instruments/conventions/status-table/?cid=59",
+      "cells": [
+        "gate:*:trust_recognition"
+      ],
+      "extract": "Hague Trusts Convention (1985) status: parties with entry-into-force date, signatories only. Party = green; signed only = amber; not a party = amber (\"recognition depends on domestic law\")."
+    },
+    {
+      "id": "marketing-rules",
+      "method": "manual",
+      "url": "",
+      "cells": [
+        "gate:*:marketing"
+      ],
+      "extract": "Whether cross-border marketing of offshore structures to residents is allowed. No objective public source: Justus decides per country."
+    },
+    {
+      "id": "fx-eur",
+      "method": "api",
+      "url": "https://open.er-api.com/v6/latest/EUR",
+      "cells": [
+        "fx_rate"
+      ],
+      "automation": "node research/fetch-fx.mjs (run by /update-offshore-insights)",
+      "extract": "EUR per unit for EUR, GBP, ZAR, CHF, MUR, SCR."
+    },
+    {
       "id": "eurostat-employers",
       "method": "api",
       "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfsa_egaps?format=JSON&lang=EN&wstatus=SELF_S&sex=T&age=Y15-74&unit=THS_PER",

@@ -191,6 +191,34 @@ create index if not exists review_flag_pending_idx
 -- Hash of the source page as observed by W1; stored into source_hash on ✅ confirm.
 alter table offshore_insights.review_flag add column if not exists observed_hash text;
 
+-- Gates: can a client from this country use the hub? (G2 "Open doors", C7, G1 ease of reach)
+-- hub = 'MU'/'SC' for hub-specific gates (blacklist); null for hub-independent ones
+-- (trust_recognition, marketing). The treaty gate is derived from `treaty`, not stored.
+-- No row = unknown (grey).
+create table if not exists offshore_insights.jurisdiction_gate (
+  id                 bigint generated always as identity primary key,
+  jurisdiction_code  text not null references offshore_insights.jurisdiction(code),
+  hub                text references offshore_insights.jurisdiction(code),
+  gate               text not null check (gate in ('blacklist', 'trust_recognition', 'marketing')),
+  status             text not null check (status in ('green', 'amber', 'red')),
+  label              text not null,          -- short text on the badge, e.g. 'Listed', 'Hague party'
+  note               text,
+  source_url         text,
+  verified_on        date not null,
+  next_check_on      date not null,
+  needs_verification boolean not null default false
+);
+create unique index if not exists jurisdiction_gate_uq
+  on offshore_insights.jurisdiction_gate (jurisdiction_code, coalesce(hub, ''), gate);
+
+-- Exchange rates to convert local-currency thresholds into EUR (sample-client model).
+create table if not exists offshore_insights.fx_rate (
+  currency     char(3) primary key,
+  eur_per_unit numeric(18,8) not null,
+  as_of        date not null,
+  source_url   text not null
+);
+
 -- ════════════════════════════ Operations ═════════════════════════════════════
 -- Every n8n workflow writes one row per run.
 create table if not exists offshore_insights.sync_run (
@@ -370,6 +398,8 @@ returns jsonb language sql stable security invoker set search_path = '' as $$
     'treaties',      coalesce((select jsonb_agg(to_jsonb(t) order by t.country_a, t.country_b) from offshore_insights.treaty t), '[]'),
     'wealth',        coalesce((select jsonb_agg(to_jsonb(w) order by w.jurisdiction_code, w.year) from offshore_insights.wealth_market w), '[]'),
     'notes',         coalesce((select jsonb_agg(to_jsonb(n) order by n.jurisdiction_code, n.sort_order) from offshore_insights.jurisdiction_note n), '[]'),
+    'gates',         coalesce((select jsonb_agg(to_jsonb(g) order by g.jurisdiction_code, g.gate, g.hub) from offshore_insights.jurisdiction_gate g), '[]'),
+    'fx',            coalesce((select jsonb_agg(to_jsonb(x) order by x.currency) from offshore_insights.fx_rate x), '[]'),
     'signals',       coalesce((select jsonb_agg(to_jsonb(s) order by s.jurisdiction_code) from offshore_insights.v_market_signal s), '[]'),
     'flags',         coalesce((select jsonb_agg(jsonb_build_object('id', f.id, 'target_table', f.target_table,
                        'target_id', f.target_id, 'reason', f.reason, 'status', f.status, 'detail', f.detail,
@@ -544,7 +574,7 @@ do $$
 declare t text;
 begin
   foreach t in array array['jurisdiction','tax_type','tax_rate','treaty','wealth_market',
-                           'jurisdiction_note','review_flag','sync_run','site_page',
+                           'jurisdiction_note','review_flag','sync_run','site_page','jurisdiction_gate','fx_rate',
                            'search_daily','search_query_monthly','analytics_daily'] loop
     execute format('alter table offshore_insights.%I enable row level security', t);
     execute format('drop policy if exists members_read on offshore_insights.%I', t);

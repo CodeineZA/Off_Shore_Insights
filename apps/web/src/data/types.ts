@@ -28,6 +28,7 @@ export interface RateHistory {
 export interface Treaty {
   id: number; country_a: string; country_b: string; status: TreatyStatus;
   signed_on: string | null; in_force_on: string | null; mli_note: string | null;
+  wht_dividend: number | null; wht_interest: number | null;
   source_url: string | null; verified_on: string; next_check_on: string;
 }
 export interface Wealth {
@@ -51,6 +52,12 @@ export interface Flag {
   reason: 'due' | 'page_changed' | 'fetch_failed'; status: 'pending' | 'confirmed' | 'needs_update' | 'resolved';
   detail: string | null; raised_on: string; reviewed_on: string | null;
 }
+export interface Gate {
+  id: number; jurisdiction_code: string; hub: string | null; gate: 'blacklist' | 'trust_recognition' | 'marketing';
+  status: 'green' | 'amber' | 'red'; label: string; note: string | null; source_url: string | null;
+  verified_on: string; next_check_on: string; needs_verification: boolean;
+}
+export interface Fx { currency: string; eur_per_unit: number; as_of: string; source_url: string }
 export interface Run { workflow: string; status: 'running' | 'ok' | 'error'; started_at: string; finished_at: string | null; rows: number | null }
 
 export interface Dashboard {
@@ -58,4 +65,5 @@ export interface Dashboard {
   me: { username: string; display_name: string | null } | null;
   jurisdictions: Jurisdiction[]; tax_types: TaxType[]; rates: Rate[]; rate_history: RateHistory[];
   treaties: Treaty[]; wealth: Wealth[]; notes: Note[]; signals: Signal[]; flags: Flag[]; runs: Run[];
+  gates: Gate[]; fx: Fx[];
 }

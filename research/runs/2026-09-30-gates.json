@@ -1,0 +1,41 @@
+{
+  "run": "2026-09-30",
+  "by": "claude (gates research for G2 / C7 / G1)",
+  "mode": "history",
+  "defaults": { "valid_from": { "*": "2026-01-01" }, "next_check_on": { "*": "2027-01-15" } },
+  "rates": [],
+  "treaties": [],
+  "gates": [
+    { "j": "FR", "hub": "MU", "gate": "blacklist", "status": "green", "label": "Not listed", "note": "Not on the French ETNC list (arrêté, JO 26 Apr 2026)", "recipe": "fr-etnc" },
+    { "j": "FR", "hub": "SC", "gate": "blacklist", "status": "green", "label": "Not listed", "note": "Removed from the French ETNC list in 2025 (arrêté 18 Apr 2025); absent from the 2026 list", "recipe": "fr-etnc" },
+    { "j": "DE", "hub": "MU", "gate": "blacklist", "status": "green", "label": "Not listed", "note": "Germany applies EU Annex I (StAbwG); Mauritius not on it (Feb 2026)", "recipe": "eu-annex-i" },
+    { "j": "DE", "hub": "SC", "gate": "blacklist", "status": "green", "label": "Not listed", "note": "Germany applies EU Annex I; Seychelles not on it and removed from Annex II (Feb 2026)", "recipe": "eu-annex-i" },
+    { "j": "BE", "hub": "SC", "gate": "blacklist", "status": "amber", "label": "Reporting list", "nv": true, "note": "On Belgium's tax-haven payment-reporting list since 2021 (Global Forum 'partially compliant'); may have changed after Seychelles' 2026 upgrade", "recipe": "be-tax-havens" },
+    { "j": "IT", "hub": "MU", "gate": "blacklist", "status": "red", "label": "Listed", "note": "\"Maurizio\" on DM 4 May 1999 (privileged tax regime, in force from 24 Feb 2014); IVAFE 0.4% rate applies", "recipe": "it-dm-1999" },
+    { "j": "IT", "hub": "SC", "gate": "blacklist", "status": "red", "label": "Listed", "note": "\"Seicelle\" on DM 4 May 1999 (privileged tax regime, in force from 24 Feb 2014); IVAFE 0.4% rate applies", "recipe": "it-dm-1999" },
+    { "j": "ES", "hub": "MU", "gate": "blacklist", "status": "green", "label": "Not listed", "note": "Not a non-cooperative jurisdiction under Orden HFP/115/2023 as amended", "recipe": "es-no-cooperativas" },
+    { "j": "ES", "hub": "SC", "gate": "blacklist", "status": "green", "label": "Removed 2026", "note": "Removed by Orden HAC/649/2026 (in force 28 Jun 2026)", "recipe": "es-no-cooperativas" },
+    { "j": "PT", "hub": "MU", "gate": "blacklist", "status": "red", "label": "Listed", "note": "No. 46 \"Maurícias\" on Portaria 150/2004; not among removals in 2011/2016/2025. 35% WHT rate and anti-abuse rules apply", "recipe": "pt-portaria-150-2004" },
+    { "j": "PT", "hub": "SC", "gate": "blacklist", "status": "red", "label": "Listed", "note": "No. 70 \"Seychelles\" on Portaria 150/2004; not among removals in 2011/2016/2025. 35% WHT rate and anti-abuse rules apply", "recipe": "pt-portaria-150-2004" },
+    { "j": "GB", "hub": "MU", "gate": "blacklist", "status": "green", "label": "Not listed", "nv": true, "note": "No UK national blacklist of this kind; not on EU Annex I", "recipe": "eu-annex-i" },
+    { "j": "GB", "hub": "SC", "gate": "blacklist", "status": "green", "label": "Not listed", "nv": true, "note": "No UK national blacklist of this kind; not on EU Annex I", "recipe": "eu-annex-i" },
+    { "j": "ZA", "hub": "MU", "gate": "blacklist", "status": "green", "label": "Not listed", "nv": true, "note": "No South African national blacklist of this kind", "recipe": "eu-annex-i" },
+    { "j": "ZA", "hub": "SC", "gate": "blacklist", "status": "green", "label": "Not listed", "nv": true, "note": "No South African national blacklist of this kind", "recipe": "eu-annex-i" },
+    { "j": "CH", "hub": "MU", "gate": "blacklist", "status": "green", "label": "Not listed", "nv": true, "note": "No Swiss national blacklist of this kind; not on EU Annex I", "recipe": "eu-annex-i" },
+    { "j": "CH", "hub": "SC", "gate": "blacklist", "status": "green", "label": "Not listed", "nv": true, "note": "No Swiss national blacklist of this kind; not on EU Annex I", "recipe": "eu-annex-i" },
+
+    { "j": "GB", "gate": "trust_recognition", "status": "green", "label": "Hague party", "note": "Hague Trusts Convention in force since 1 Jan 1992", "recipe": "hcch-trusts" },
+    { "j": "IT", "gate": "trust_recognition", "status": "green", "label": "Hague party", "note": "Hague Trusts Convention in force since 1 Jan 1992", "recipe": "hcch-trusts" },
+    { "j": "CH", "gate": "trust_recognition", "status": "green", "label": "Hague party", "note": "Hague Trusts Convention in force since 1 Jul 2007", "recipe": "hcch-trusts" },
+    { "j": "FR", "gate": "trust_recognition", "status": "amber", "label": "Signed only", "note": "Signed the Hague Trusts Convention (1 Jul 1985) but never ratified; trusts are taxed under a specific regime (art. 792-0 bis CGI)", "recipe": "hcch-trusts" },
+    { "j": "DE", "gate": "trust_recognition", "status": "amber", "label": "Not a party", "note": "Not a Hague Trusts Convention party: recognition depends on domestic law", "recipe": "hcch-trusts" },
+    { "j": "BE", "gate": "trust_recognition", "status": "amber", "label": "Not a party", "note": "Not a Hague Trusts Convention party: recognition depends on domestic law", "recipe": "hcch-trusts" },
+    { "j": "ES", "gate": "trust_recognition", "status": "amber", "label": "Not a party", "note": "Not a Hague Trusts Convention party: recognition depends on domestic law", "recipe": "hcch-trusts" },
+    { "j": "PT", "gate": "trust_recognition", "status": "amber", "label": "Not a party", "note": "Not a Hague Trusts Convention party: recognition depends on domestic law", "recipe": "hcch-trusts" },
+    { "j": "ZA", "gate": "trust_recognition", "status": "amber", "label": "Not a party", "note": "Not a Hague Trusts Convention party; trusts exist in South African domestic law", "recipe": "hcch-trusts" }
+  ],
+  "left_unknown": [
+    "BE:blacklist:MU: Belgian lists not checked (manual recipe be-tax-havens)",
+    "*:marketing: no objective source; Justus decides per country (manual recipe marketing-rules)"
+  ]
+}

@@ -1,9 +1,10 @@
-// G4 · Tax heatmap. Countries × tax types, colour intensity = headline_rate.
+// G4 · Tax pressure map (heatmap). Countries × tax types, colour intensity = headline_rate.
 // Grey hatching = unknown (no row); a real 0% is the darkest colour with "0".
 import { useRef, useState } from 'react';
 import type { Dashboard, TaxType } from '../data/types';
 import { CATEGORIES, fmtDate, heatmap, hostOf, pct, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
+import { Card } from './common';
 
 const LO = [42, 38, 34], HI = [243, 220, 178];               // #2a2622 → #f3dcb2
 const mix = (t: number) => `rgb(${LO.map((l, i) => Math.round(l + (HI[i] - l) * t)).join(',')})`;
@@ -22,11 +23,12 @@ export default function G4Heatmap({ d, cc, types }: { d: Dashboard; cc: string[]
   const col = tip ? h.cols[tip.c] : null;
 
   return (
-    <article className="card">
-      <header className="card-head">
-        <div className="card-title">Tax heatmap</div>
-        <div className="card-sub">{h.known} of {h.total} rates known</div>
-      </header>
+    <Card id="g4" full title="Tax pressure map" purpose={`Where the pain is, tax by tax · ${h.known} of ${h.total} rates known`}
+      foot={<div className="heat-legend">
+        <span>0%</span><span className="ramp" /><span>{scale}%</span>
+        <span className="sw unknown" /><span>Unknown</span>
+        <span className="sw check" /><span>Conflicting sources</span>
+      </div>}>
       {!h.rows.length || !h.cols.length ? <div className="empty">Select at least one country and one tax category.</div> : (
         <div className="heat-wrap" ref={box} onMouseLeave={() => setTip(null)}>
           <table className="heat" style={{ minWidth: 150 + h.cols.length * 60 }}>
@@ -77,11 +79,6 @@ export default function G4Heatmap({ d, cc, types }: { d: Dashboard; cc: string[]
           )}
         </div>
       )}
-      <footer className="heat-legend">
-        <span>0%</span><span className="ramp" /><span>{scale}%</span>
-        <span className="sw unknown" /><span>Unknown</span>
-        <span className="sw check" /><span>Conflicting sources</span>
-      </footer>
-    </article>
+    </Card>
   );
 }
