@@ -31,7 +31,8 @@ const LIMITS = {
 };
 
 // ── Directory cache ───────────────────────────────────────────────────────────
-let directory = new Map();   // username → auth email
+// login name (username, login email or contact email, lowercased) → { username, email }
+let directory = new Map();
 let directoryAt = 0;
 async function refreshDirectory() {
   try {
@@ -43,7 +44,12 @@ async function refreshDirectory() {
     });
     if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
     const rows = await res.json();
-    directory = new Map(rows.map((r) => [r.username, r.auth_email]));
+    const next = new Map();
+    for (const r of rows) {
+      const entry = { username: r.username, email: r.auth_email };
+      for (const k of [r.username, r.auth_email, r.contact_email]) if (k) next.set(String(k).trim().toLowerCase(), entry);
+    }
+    directory = next;
     directoryAt = Date.now();
   } catch (e) {
     console.error('directory refresh failed (keeping last good copy):', e.message);
@@ -107,16 +113,17 @@ async function login(req, res) {
 
   let body;
   try { body = await readJson(req); } catch { return send(res, 400, { error: 'bad_request' }); }
-  const username = String(body?.username ?? '').trim().toLowerCase();
+  const login = String(body?.username ?? '').trim().toLowerCase(); // username or email
   const password = String(body?.password ?? '');
-  if (!username || !password || username.length > 32 || password.length > 256) return send(res, 400, { error: 'bad_request' });
-
-  if (userFails.blocked(username)) return tooMany(res, userFails.retryAfterS(username));
+  if (!login || !password || login.length > 254 || password.length > 256) return send(res, 400, { error: 'bad_request' });
 
   // Unknown or disabled → reject from memory. No DB, no GoTrue.
-  const email = directory.get(username);
-  // (Not counted per username: that map would only grow with junk names.)
-  if (!email) { ipFails.add(ip); return invalid(res); }
+  // (Not counted per name: that map would only grow with junk names.)
+  const entry = directory.get(login);
+  if (!entry) { ipFails.add(ip); return invalid(res); }
+  // Lockout is per account, whichever name (username or email) was typed.
+  const username = entry.username, email = entry.email;
+  if (userFails.blocked(username)) return tooMany(res, userFails.retryAfterS(username));
 
   // Global budget: protects GoTrue/bcrypt/Postgres from a distributed attack.
   if (global.blocked('all') || inFlight >= LIMITS.maxConcurrentGotrue) return tooMany(res, 30);
@@ -189,7 +196,7 @@ http.createServer((req, res) => {
   if (req.method === 'POST' && url === '/api/refresh') return void refresh(req, res);
   if (req.method === 'POST' && url === '/api/logout') return void logout(req, res);
   if (req.method === 'GET' && url === '/api/health') {
-    return send(res, 200, { ok: directoryAt > 0, users: directory.size,
+    return send(res, 200, { ok: directoryAt > 0, users: new Set([...directory.values()].map((e) => e.username)).size,
       directoryAgeS: directoryAt ? Math.round((Date.now() - directoryAt) / 1000) : null });
   }
   send(res, 404, { error: 'not_found' });

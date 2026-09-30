@@ -54,6 +54,8 @@ const ar = await resolve(env.TEST_USER_USERNAME);
 check('anon cannot call resolve_login (no pre-auth DB path)', ar.status >= 400, `${ar.status} ${JSON.stringify(ar.json)}`);
 const bad = await gatewayLogin(env.TEST_USER_USERNAME, 'wrong-password-' + randomBytes(4).toString('hex'));
 check('gateway rejects a wrong password (401)', bad.status === 401, `${bad.status} ${JSON.stringify(bad.json)}`);
+const byEmail = await gatewayLogin(`${env.TEST_USER_USERNAME}@${env.AUTH_USERNAME_DOMAIN}`.toUpperCase(), env.TEST_USER_PASSWORD);
+check('gateway accepts the login email too (any case)', byEmail.status === 200 && !!byEmail.json?.access_token, byEmail.status);
 const unk = await gatewayLogin('no-such-user-' + randomBytes(3).toString('hex'), 'x');
 check('gateway rejects an unknown username (401)', unk.status === 401, unk.status);
 const ok = await gatewayLogin(env.TEST_USER_USERNAME, env.TEST_USER_PASSWORD);

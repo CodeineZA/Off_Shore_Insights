@@ -66,9 +66,11 @@ $$;
 
 -- Every active member's username → Auth email, for the gateway's in-memory
 -- cache (refreshed on a timer, never per login attempt). SERVICE ROLE ONLY.
-create or replace function offshore_insights.login_directory()
-returns table (username text, auth_email text) language sql stable security definer set search_path = '' as $$
-  select u.username, au.email::text
+-- Users may sign in with their username, their login email or their contact email.
+drop function if exists offshore_insights.login_directory();
+create function offshore_insights.login_directory()
+returns table (username text, auth_email text, contact_email text) language sql stable security definer set search_path = '' as $$
+  select u.username, au.email::text, u.email
   from offshore_insights.app_user u
   join auth.users au on au.id = u.user_id
   where not u.disabled;

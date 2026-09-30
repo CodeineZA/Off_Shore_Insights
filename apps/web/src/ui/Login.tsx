@@ -25,7 +25,7 @@ export default function Login({ onLogin, notice }: { onLogin: (s: Session) => vo
       onLogin(await login(username.trim().toLowerCase(), password));
     } catch (err) {
       const k = err instanceof LoginError ? err : new LoginError('unavailable');
-      if (k.kind === 'invalid') setError('Username or password is not right.');
+      if (k.kind === 'invalid') setError('That username/email and password do not match.');
       else if (k.kind === 'rate') { setWait(k.retryAfterS); setError('Too many attempts.'); }
       else setError('The sign-in service is not reachable. Try again in a moment.');
       setPassword('');
@@ -49,11 +49,11 @@ export default function Login({ onLogin, notice }: { onLogin: (s: Session) => vo
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div className="kicker">Off_Shore_Insights</div>
           <h1 className="h1" style={{ fontSize: 26 }}>Sign in</h1>
-          <p className="lead">Mauritius &amp; Seychelles market insights. Accounts are created by Hentus.</p>
+          <p className="lead">Sign in with your username or email address. Accounts are created by Hentus; ask him if you forget your password.</p>
         </div>
         <div className="field">
-          <label htmlFor="u">Username</label>
-          <input id="u" autoComplete="username" autoCapitalize="none" spellCheck={false} value={username} onChange={(e) => setUsername(e.target.value)} autoFocus />
+          <label htmlFor="u">Username or email</label>
+          <input id="u" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" value={username} onChange={(e) => setUsername(e.target.value)} autoFocus />
         </div>
         <div className="field">
           <label htmlFor="p">Password</label>
