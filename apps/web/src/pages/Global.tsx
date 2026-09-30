@@ -10,6 +10,7 @@ import G4Heatmap from '../tiles/G4Heatmap';
 import G5ClientBill from '../tiles/G5ClientBill';
 import G6WealthShare from '../tiles/G6WealthShare';
 import G7Momentum from '../tiles/G7Momentum';
+import TileGrid from '../ui/TileGrid';
 
 const APPLIES: [AppliesTo, string][] = [['all', 'All'], ['individual', 'Individual'], ['trust', 'Trust'], ['company', 'Company']];
 
@@ -56,15 +57,16 @@ export default function Global({ d }: { d: Dashboard }) {
           </div>
         </div>
       </section>
-      <div className="cards">
-        <G1WhereFirst d={d} cc={cc} hub={hub} />
-        <G2OpenDoors d={d} cc={cc} hub={hub} />
-        <G3SweetSpot d={d} cc={cc} hub={hub} />
-        <G4Heatmap d={d} cc={cc} types={types} />
-        <G5ClientBill d={d} cc={cc} cats={cats} />
-        <G6WealthShare d={d} cc={cc} />
-        <G7Momentum d={d} cc={cc} />
-      </div>
+      {/* Open doors and the tax pressure map can't shrink into tiles: they stay open, the tiles sit around them. */}
+      <TileGrid items={[
+        { id: 'g1', label: 'Where to go first', node: <G1WhereFirst d={d} cc={cc} hub={hub} /> },
+        { id: 'g2', label: 'Open doors', node: <G2OpenDoors d={d} cc={cc} hub={hub} />, fixed: true },
+        { id: 'g5', label: 'Sample client bill', node: <G5ClientBill d={d} cc={cc} cats={cats} /> },
+        { id: 'g3', label: 'Sweet spot', node: <G3SweetSpot d={d} cc={cc} hub={hub} /> },
+        { id: 'g6', label: 'Where the wealth is', node: <G6WealthShare d={d} cc={cc} /> },
+        { id: 'g7', label: 'Rate momentum', node: <G7Momentum d={d} cc={cc} /> },
+        { id: 'g4', label: 'Tax pressure map', node: <G4Heatmap d={d} cc={cc} types={types} />, fixed: true, wide: true },
+      ]} />
     </>
   );
 }

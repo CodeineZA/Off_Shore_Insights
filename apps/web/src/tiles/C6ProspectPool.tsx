@@ -2,7 +2,7 @@
 // Tiers overlap (every HNWI is also a millionaire), so they are shown side by side, not summed.
 import type { Dashboard } from '../data/types';
 import { WEALTH_LABEL, latestWealth, type WealthMetric } from '../data/model';
-import { nameOf } from '../data/insights';
+import { fmtCount, nameOf } from '../data/insights';
 import { Card, useGrown } from './common';
 
 const TIERS: { m: WealthMetric; what: string }[] = [
@@ -15,9 +15,11 @@ const TIERS: { m: WealthMetric; what: string }[] = [
 export default function C6ProspectPool({ d, code }: { d: Dashboard; code: string }) {
   const rows = TIERS.map((t) => ({ ...t, w: latestWealth(d, code, t.m) }));
   const max = Math.max(1, ...rows.map((r) => r.w?.value ?? 0));
+  const known = rows.filter((r) => r.w);
   const grown = useGrown([code]);
   return (
-    <Card id="c6" title="Prospect pool" purpose={`How many potential clients ${nameOf(d, code)} has, by wealth tier`}
+    <Card id="c6" title="Prospect pool"
+      metric={known[0] ? { value: fmtCount(known[0].w!.value), label: WEALTH_LABEL[known[0].m].toLowerCase(), sub: `${known.length} of ${TIERS.length} tiers known` } : { value: '?', label: 'no wealth figures yet' }} purpose={`How many potential clients ${nameOf(d, code)} has, by wealth tier`}
       foot={<div>Tiers overlap and come from different reports, so they are not added up. Missing tiers are entered from the wealth reports (manual recipes).</div>}>
       <div className="pool">
         {rows.map((r) => (

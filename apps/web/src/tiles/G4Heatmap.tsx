@@ -4,13 +4,15 @@ import { useRef, useState } from 'react';
 import type { Dashboard, TaxType } from '../data/types';
 import { CATEGORIES, fmtDate, heatmap, hostOf, pct, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
-import { Card } from './common';
+import { Card, useCompact } from './common';
 
 const LO = [42, 38, 34], HI = [243, 220, 178];               // #2a2622 → #f3dcb2
 const mix = (t: number) => `rgb(${LO.map((l, i) => Math.round(l + (HI[i] - l) * t)).join(',')})`;
 
 export default function G4Heatmap({ d, cc, types }: { d: Dashboard; cc: string[]; types: TaxType[] }) {
+  const compact = useCompact();
   const h = heatmap(d, cc, types);
+  const top = h.rows.flatMap((r) => r.cells.map((c, i) => ({ r, c, t: h.cols[i] }))).filter((x) => x.c.rate).sort((a, b) => b.c.rate!.headline_rate - a.c.rate!.headline_rate)[0];
   const scale = niceMax(Math.max(h.max, 10));
   const [tip, setTip] = useState<{ r: number; c: number; x: number; y: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
@@ -23,13 +25,19 @@ export default function G4Heatmap({ d, cc, types }: { d: Dashboard; cc: string[]
   const col = tip ? h.cols[tip.c] : null;
 
   return (
-    <Card id="g4" full title="Tax pressure map" purpose={`Where the pain is, tax by tax · ${h.known} of ${h.total} rates known`}
+    <Card id="g4" full title="Tax pressure map"
+      metric={{ value: `${h.known}/${h.total}`, label: 'rates known', sub: top ? `peak ${top.r.code} ${shortLabel(top.t)} ${pct(top.c.rate!.headline_rate)}` : undefined }} purpose={`Where the pain is, tax by tax · ${h.known} of ${h.total} rates known`}
       foot={<div className="heat-legend">
         <span>0%</span><span className="ramp" /><span>{scale}%</span>
         <span className="sw unknown" /><span>Unknown</span>
         <span className="sw check" /><span>Conflicting sources</span>
       </div>}>
-      {!h.rows.length || !h.cols.length ? <div className="empty">Select at least one country and one tax category.</div> : (
+      {compact ? (
+        <div className="mini-heat" style={{ gridTemplateColumns: `28px repeat(${h.cols.length}, 1fr)` }}>
+          {h.rows.map((row) => [<span key={row.code} className="mini-code">{row.code}</span>, ...row.cells.map((c, ci) => (
+            <span key={row.code + ci} className={'mini-cell' + (c.rate ? '' : ' unknown')} style={c.rate ? { background: mix(Math.min(1, c.rate.headline_rate / scale)) } : undefined} />))])}
+        </div>
+      ) : !h.rows.length || !h.cols.length ? <div className="empty">Select at least one country and one tax category.</div> : (
         <div className="heat-wrap" ref={box} onMouseLeave={() => setTip(null)}>
           <table className="heat" style={{ minWidth: 150 + h.cols.length * 60 }}>
             <colgroup><col style={{ width: 150 }} />{h.cols.map((c) => <col key={c.code} />)}</colgroup>

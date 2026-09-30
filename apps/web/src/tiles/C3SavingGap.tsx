@@ -4,17 +4,21 @@ import type { Dashboard } from '../data/types';
 import { savingGap } from '../data/model';
 import { nameOf, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
-import { Card, HUB_COLOR, useGrown } from './common';
+import { Card, HUB_COLOR, useCompact, useGrown } from './common';
 
 export default function C3SavingGap({ d, code }: { d: Dashboard; code: string }) {
   const hubs = ['MU', 'SC'];
-  const rows = savingGap(d, code, 'MU').map((m) => ({ t: m.t, gaps: hubs.map((h) => savingGap(d, code, h).find((x) => x.t.code === m.t.code)!) }));
+  const compact = useCompact();
+  const allRows = savingGap(d, code, 'MU').map((m) => ({ t: m.t, gaps: hubs.map((h) => savingGap(d, code, h).find((x) => x.t.code === m.t.code)!) }));
+  const top = (r: (typeof allRows)[number]) => Math.max(...r.gaps.map((g) => g.gap ?? -Infinity));
+  const rows = compact ? [...allRows].sort((a, b) => top(b) - top(a)).slice(0, 4) : allRows;
   const known = rows.flatMap((r) => r.gaps.map((g) => g.gap)).filter((g): g is number => g != null);
-  const max = niceMax(Math.max(5, ...known.map(Math.abs)));
+  const max = niceMax(Math.max(5, ...known.map(Math.abs)) * 1.3); // headroom for the value labels
   const grown = useGrown([code]);
-  const biggest = [...rows].map((r) => ({ r, g: Math.max(...r.gaps.map((g) => g.gap ?? -Infinity)) })).filter((x) => x.g > 0).sort((a, b) => b.g - a.g)[0];
+  const biggest = [...allRows].map((r) => ({ r, g: Math.max(...r.gaps.map((g) => g.gap ?? -Infinity)) })).filter((x) => x.g > 0).sort((a, b) => b.g - a.g)[0];
   return (
-    <Card id="c3" title="The saving gap" purpose={`Where ${nameOf(d, code)} taxes more than the hubs: the bigger the bar, the stronger the case`}
+    <Card id="c3" title="The saving gap"
+      metric={biggest ? { value: `+${biggest.g.toFixed(1)}`, label: `points on ${shortLabel(biggest.r.t)}`, sub: 'biggest gap' } : undefined} purpose={`Where ${nameOf(d, code)} taxes more than the hubs: the bigger the bar, the stronger the case`}
       foot={<>
         <div className="legend">{hubs.map((h) => <span key={h}><i style={{ background: HUB_COLOR[h] }} />vs {nameOf(d, h)}</span>)}<span className="muted">Percentage points · right = {nameOf(d, code)} higher</span></div>
         {biggest && <div>Biggest gap: <b>{shortLabel(biggest.r.t)}</b>, {biggest.g.toFixed(1)} points.</div>}

@@ -1,13 +1,34 @@
 // Shared tile building blocks: every tile is a Card named for its purpose, with a one-line
 // "what it answers", optional controls, and a footnote that states its assumptions.
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GateStatus } from '../data/model';
 
-export function Card({ title, purpose, controls, children, foot, full, id }: {
-  title: string; purpose: string; controls?: ReactNode; children: ReactNode; foot?: ReactNode; full?: boolean; id: string;
+/** 'compact' = the preview inside a grid tile; 'full' = the expanded view. Set by TileGrid. */
+export const TileMode = createContext<'compact' | 'full'>('full');
+export const useCompact = () => useContext(TileMode) === 'compact';
+
+/** The tile's immediate metric: a headline value, what it is, and optional context. */
+export interface Metric { value: ReactNode; label: ReactNode; sub?: ReactNode }
+
+export function Card({ title, purpose, controls, children, foot, id, metric }: {
+  title: string; purpose: string; controls?: ReactNode; children: ReactNode; foot?: ReactNode; full?: boolean; id: string; metric?: Metric;
 }) {
+  if (useCompact()) {
+    return (
+      <div className="tile-card">
+        <h2 className="card-title">{title}</h2>
+        {metric && (
+          <div className="tile-metric">
+            <div className="tile-value">{metric.value}</div>
+            <div className="tile-label">{metric.label}{metric.sub && <span> · {metric.sub}</span>}</div>
+          </div>
+        )}
+        <div className="tile-preview">{children}</div>
+      </div>
+    );
+  }
   return (
-    <article className={'card' + (full ? ' full' : '')} id={id} aria-labelledby={id + '-t'}>
+    <article className="card-full" id={id} aria-labelledby={id + '-t'}>
       <header className="card-head">
         <div className="card-name">
           <h2 className="card-title" id={id + '-t'}>{title}</h2>

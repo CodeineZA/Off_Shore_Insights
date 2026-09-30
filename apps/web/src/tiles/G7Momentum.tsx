@@ -2,22 +2,27 @@
 import type { Dashboard } from '../data/types';
 import { MOMENTUM_TYPES, momentum } from '../data/model';
 import { fmtDate, nameOf, pct, shortLabel } from '../data/insights';
-import { Card } from './common';
+import { Card, useCompact } from './common';
 
 const ARROW = { up: '▲', down: '▼', flat: '→', unknown: '·' };
 
 export default function G7Momentum({ d, cc }: { d: Dashboard; cc: string[] }) {
+  const compact = useCompact();
+  const rows = compact ? cc.slice(0, 5) : cc;
   const types = MOMENTUM_TYPES.map((c) => d.tax_types.find((t) => t.code === c)).filter((t): t is NonNullable<typeof t> => !!t);
   const firstRecorded = d.rate_history.map((h) => h.valid_from).sort()[0];
-  const anyChange = cc.some((c) => types.some((t) => { const m = momentum(d, c, t.code); return m.dir === 'up' || m.dir === 'down'; }));
+  const dirs = cc.flatMap((c) => types.map((t) => momentum(d, c, t.code).dir));
+  const up = dirs.filter((x) => x === 'up').length, down = dirs.filter((x) => x === 'down').length;
+  const anyChange = up + down > 0;
   return (
-    <Card id="g7" title="Rate momentum" purpose="Is the tax pain rising? A rising rate means a warming market"
+    <Card id="g7" title="Rate momentum"
+      metric={{ value: <>{up}<small>▲</small> {down}<small>▼</small></>, label: 'key rates moved', sub: anyChange ? undefined : 'none since the first check' }} purpose="Is the tax pain rising? A rising rate means a warming market"
       foot={<div>{anyChange ? '▲ rate went up at its last change · ▼ went down · → no change recorded.'
         : `No rate changes recorded yet: the history starts ${firstRecorded ? fmtDate(firstRecorded) : 'with the first check'}. Arrows appear as refreshes find changes.`}</div>}>
       <table className="momentum">
         <thead><tr><th />{types.map((t) => <th key={t.code}>{shortLabel(t)}</th>)}</tr></thead>
         <tbody>
-          {cc.map((c) => (
+          {rows.map((c) => (
             <tr key={c}>
               <th>{nameOf(d, c)}</th>
               {types.map((t) => {

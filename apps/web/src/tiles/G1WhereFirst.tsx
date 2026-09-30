@@ -2,7 +2,7 @@
 // reach (equal thirds, each scaled to the best country shown). Unknown parts count as 0, hatched.
 import type { Dashboard } from '../data/types';
 import { GATES, WEALTH_LABEL, marketMetric, opportunities, type Opportunity } from '../data/model';
-import { Card, GATE_COLOR, useGrown, useTip } from './common';
+import { Card, GATE_COLOR, useCompact, useGrown, useTip } from './common';
 
 const SEGS = [
   { key: 'market', label: 'Market size', color: '#f3dcb2' },
@@ -11,12 +11,15 @@ const SEGS = [
 ] as const;
 
 export default function G1WhereFirst({ d, cc, hub }: { d: Dashboard; cc: string[]; hub: string }) {
-  const rows = opportunities(d, cc, hub);
+  const compact = useCompact();
+  const all = opportunities(d, cc, hub);
+  const rows = compact ? all.slice(0, 5) : all;
   const grown = useGrown([cc.join(), hub]);
   const t = useTip<Opportunity>();
   const hubName = hub === 'MU' ? 'Mauritius' : 'Seychelles';
   return (
-    <Card id="g1" full title="Where to go first" purpose={`Countries ranked by how worth it they are for a ${hubName} structure: market size, tax pain and ease of reach`}
+    <Card id="g1" full title="Where to go first"
+      metric={all[0] ? { value: all[0].score, label: `${all[0].name} leads`, sub: `${all.length} countries ranked` } : undefined} purpose={`Countries ranked by how worth it they are for a ${hubName} structure: market size, tax pain and ease of reach`}
       foot={<>
         <div className="legend">{SEGS.map((s) => <span key={s.key}><i style={{ background: s.color }} />{s.label}</span>)}<span><i className="hatch-dot" />Unknown (counts as 0)</span></div>
         <div>Each part is scaled 0–100 to the best country shown and weighted equally. Market = {WEALTH_LABEL[marketMetric(d)].toLowerCase()}; tax pain = the sample-client bill (G5); ease = the known gates (G2).</div>

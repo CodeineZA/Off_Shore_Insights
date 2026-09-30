@@ -21,11 +21,13 @@ export default function G3SweetSpot({ d, cc, hub }: { d: Dashboard; cc: string[]
   const maxS = Math.max(1, ...shown.map((p) => p.size ?? 0));
   const X = (v: number) => L + (v / mx) * (W - L - R), Y = (v: number) => H - B - (v / my) * (H - T - B);
   const midX = X(mx / 2), midY = Y(my / 2);
+  const inTarget = shown.filter((p) => p.x! >= mx / 2 && p.y >= my / 2);
   const grown = useGrown([cc.join(), hub]);
   const t = useTip<(typeof pts)[number]>();
   const hubName = hub === 'MU' ? 'Mauritius' : 'Seychelles';
   return (
-    <Card id="g3" title="Sweet spot" purpose="Where a big market meets high tax pain: top right is the target"
+    <Card id="g3" title="Sweet spot"
+      metric={{ value: inTarget.length, label: 'in the target corner', sub: inTarget.map((p) => p.code).join(', ') || 'none yet' }} purpose="Where a big market meets high tax pain: top right is the target"
       foot={<>
         <div className="legend">
           <span><i style={{ background: GATE_COLOR.green }} />Treaty with {hubName}</span><span><i style={{ background: GATE_COLOR.amber }} />Negotiating</span>

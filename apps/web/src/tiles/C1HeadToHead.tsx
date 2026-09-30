@@ -3,7 +3,7 @@ import type { Dashboard, Rate, TaxType } from '../data/types';
 import { compareTypes } from '../data/model';
 import { fmtDate, nameOf, pct, rateOf, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
-import { COUNTRY_COLOR, Card, HUB_COLOR, SourceLink, useGrown, useTip } from './common';
+import { COUNTRY_COLOR, Card, HUB_COLOR, SourceLink, useCompact, useGrown, useTip } from './common';
 
 export const trio = (code: string) => [code, 'MU', 'SC'];
 export const trioColor = (c: string) => HUB_COLOR[c] ?? COUNTRY_COLOR;
@@ -23,12 +23,17 @@ export function RateTip({ d, t, code, r }: { d: Dashboard; t: TaxType; code: str
 
 export default function C1HeadToHead({ d, code }: { d: Dashboard; code: string }) {
   const codes = trio(code);
-  const types = compareTypes(d, codes);
+  const compact = useCompact();
+  const allTypes = compareTypes(d, codes);
+  const both = allTypes.filter((t) => rateOf(d, code, t.code) && rateOf(d, 'MU', t.code));
+  const higher = both.filter((t) => rateOf(d, code, t.code)!.headline_rate > rateOf(d, 'MU', t.code)!.headline_rate).length;
+  const types = compact ? [...allTypes].sort((a, b) => (rateOf(d, code, b.code)?.headline_rate ?? -1) - (rateOf(d, code, a.code)?.headline_rate ?? -1)).slice(0, 4) : allTypes;
   const max = niceMax(Math.max(10, ...types.flatMap((t) => codes.map((c) => rateOf(d, c, t.code)?.headline_rate ?? 0))));
   const grown = useGrown([code]);
   const tip = useTip<{ t: TaxType; c: string }>();
   return (
-    <Card id="c1" full title="Head to head" purpose={`${nameOf(d, code)} against Mauritius and Seychelles, tax by tax`}
+    <Card id="c1" full title="Head to head"
+      metric={{ value: higher, label: `taxes higher in ${nameOf(d, code)} than Mauritius`, sub: `of ${both.length} comparable` }} purpose={`${nameOf(d, code)} against Mauritius and Seychelles, tax by tax`}
       foot={<div className="legend">{codes.map((c) => <span key={c}><i style={{ background: trioColor(c) }} />{nameOf(d, c)}</span>)}<span><i className="hatch-dot" />Unknown</span><span className="muted">Scale 0–{max}%</span></div>}>
       <div className="h2h" ref={tip.box} onMouseLeave={tip.hide}>
         {types.map((t) => (

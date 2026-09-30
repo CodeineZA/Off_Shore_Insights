@@ -14,7 +14,8 @@ export default function C4ThreeHomes({ d, code }: { d: Dashboard; code: string }
   const bills = trio(code).map((c) => sampleBill(d, c, client));
   const saving = bills[0].total - Math.min(bills[1].total, bills[2].total);
   return (
-    <Card id="c4" title="Same client, three homes" purpose={`One number each: what the €2m client pays living in ${nameOf(d, code)}, Mauritius or Seychelles`}
+    <Card id="c4" title="Same client, three homes"
+      metric={{ value: fmtEur(Math.max(0, saving)), label: 'saved against the cheaper hub', sub: `${nameOf(d, code)} ${fmtEur(bills[0].total)}` }} purpose={`One number each: what the €2m client pays living in ${nameOf(d, code)}, Mauritius or Seychelles`}
       controls={<Seg label="Rate basis" opts={[['top', 'Top band'], ['entry', 'Entry band']]} cur={basis} on={setBasis} />}
       foot={<>
         <div className="legend"><span><i style={{ background: PART_COLOR.cgt }} />Capital gains</span><span><i style={{ background: PART_COLOR.wealth }} />Wealth taxes</span><span><i style={{ background: PART_COLOR.inheritance }} />Inheritance</span></div>

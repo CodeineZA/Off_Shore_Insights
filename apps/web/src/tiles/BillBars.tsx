@@ -5,12 +5,13 @@ import { fmtEur, useGrown, useTip } from './common';
 
 export const PART_COLOR: Record<BillPart['key'], string> = { cgt: '#f3dcb2', wealth: '#d8b07a', inheritance: '#8a6844' };
 
-export default function BillBars({ bills, show, sortDesc = true, depKey }: { bills: Bill[]; show: BillPart['key'][]; sortDesc?: boolean; depKey: string }) {
+export default function BillBars({ bills, show, sortDesc = true, depKey, limit }: { bills: Bill[]; show: BillPart['key'][]; sortDesc?: boolean; depKey: string; limit?: number }) {
   const rows = bills.map((b) => {
     const parts = b.parts.filter((p) => show.includes(p.key));
     return { b, parts, total: parts.reduce((s, p) => s + p.eur, 0), complete: parts.every((p) => p.known) };
   });
   if (sortDesc) rows.sort((a, b) => b.total - a.total);
+  if (limit) rows.splice(limit);
   const max = Math.max(1, ...rows.map((r) => r.total));
   const grown = useGrown([depKey]);
   const t = useTip<(typeof rows)[number]>();

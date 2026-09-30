@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type { Dashboard } from '../data/types';
 import { WEALTH_LABEL, latestWealth, type WealthMetric } from '../data/model';
-import { nameOf } from '../data/insights';
+import { fmtCount, nameOf } from '../data/insights';
 import { Donut } from '../ui/charts';
 import { Card, Seg } from './common';
 
@@ -16,8 +16,10 @@ export default function G6WealthShare({ d, cc }: { d: Dashboard; cc: string[] })
     .filter((x) => x.w).map((x) => ({ code: x.code, name: x.name, value: x.w!.value, year: x.w!.year, source: x.w!.source }));
   const missing = cc.filter((c) => !latestWealth(d, c, metric)).map((c) => nameOf(d, c));
   const years = [...new Set(items.map((i) => i.year))].sort();
+  const total = items.reduce((s, i) => s + i.value, 0), lead = [...items].sort((a, b) => b.value - a.value)[0];
   return (
-    <Card id="g6" title="Where the wealth is" purpose="Which of the selected countries holds most of the prospects"
+    <Card id="g6" title="Where the wealth is"
+      metric={lead ? { value: `${Math.round((lead.value / total) * 100)}%`, label: `in ${lead.name}`, sub: `of ${fmtCount(total)} ${WEALTH_LABEL[metric].toLowerCase()}` } : undefined} purpose="Which of the selected countries holds most of the prospects"
       controls={<Seg label="Measure" opts={METRICS.map((m) => [m, WEALTH_LABEL[m]] as [WealthMetric, string])} cur={metric} on={(m) => { setMetric(m); setHover(null); }} />}
       foot={<>
         {items.length > 0 && <div>{WEALTH_LABEL[metric]}, latest year {years.join('/')}, source {items[0].source}.</div>}
