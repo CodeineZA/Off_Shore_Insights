@@ -81,7 +81,11 @@ const recipes = [
   { id: 'ubs-gwr-millionaires', method: 'manual', url: 'https://www.ubs.com/global/en/wealthmanagement/insights/global-wealth-report.html', cells: ['wealth_market.millionaires'],
     extract: 'UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source "UBS Global Wealth Report <edition>".' },
   { id: 'capgemini-hnwi', method: 'manual', url: 'https://www.capgemini.com/insights/research-library/world-wealth-report/', cells: ['wealth_market.hnwi_count'],
-    extract: 'Capgemini World Wealth Report: HNWI population per country (largest markets only).' },
+    extract: 'Capgemini World Wealth Report: HNWI population per country (largest markets only). '
+      + 'CHECKED 2026-09-30: the 2026 edition (interactive copy at https://wwr2026.s3.us-east-1.amazonaws.com/index.html; the PDF download link was broken) '
+      + 'publishes NO per-country counts: only global (25.3m HNWIs, +7.9%), regional charts and 2025 growth for a few markets '
+      + '(population: Europe +6.5%, France +2.7%, Germany +11.1%, UK +2.6%, Africa +4.1%). Its text is rendered as images and its charts as videos. '
+      + 'Needs a per-country source; growth alone cannot give a count.' },
   { id: 'knightfrank-uhnwi', method: 'manual', url: 'https://www.knightfrank.com/wealthreport', cells: ['wealth_market.uhnwi_count'],
     extract: 'Knight Frank Wealth Report: UHNWI (> US$30m) population per country.' },
 ];

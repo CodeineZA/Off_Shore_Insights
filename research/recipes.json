@@ -685,7 +685,7 @@
       "cells": [
         "wealth_market.hnwi_count"
       ],
-      "extract": "Capgemini World Wealth Report: HNWI population per country (largest markets only)."
+      "extract": "Capgemini World Wealth Report: HNWI population per country (largest markets only). CHECKED 2026-09-30: the 2026 edition (interactive copy at https://wwr2026.s3.us-east-1.amazonaws.com/index.html; the PDF download link was broken) publishes NO per-country counts: only global (25.3m HNWIs, +7.9%), regional charts and 2025 growth for a few markets (population: Europe +6.5%, France +2.7%, Germany +11.1%, UK +2.6%, Africa +4.1%). Its text is rendered as images and its charts as videos. Needs a per-country source; growth alone cannot give a count."
     },
     {
       "id": "knightfrank-uhnwi",
