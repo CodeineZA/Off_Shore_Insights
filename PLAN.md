@@ -124,6 +124,14 @@ Treat them as draft.
 - Not yet researched: MU, SC, CH and PT rates; ZA `INCOME_TOP`; all WHT rows; Belgian regional
   inheritance; Seychelles treaties.
 
+**Data fix, 2026-09-30** (`research/runs/2026-09-30.json`): known current rates went from 29 to
+145. MU, SC, PT, CH, income-top and WHT are filled for every country, and all 6 conflicting rows
+are resolved. 20 honest flags remain: Seychelles "no such tax" facts from secondary sources only,
+cantonal Swiss values, Belgian regional inheritance, ES unrelated-heir multipliers, and PT
+direct-line exemption. The treaty table covers MU and SC against every target country. How each
+figure is retrieved: `research/recipes.json`. Refreshes: n8n (API sources) or the
+`/update-offshore-insights` skill.
+
 `wealth_market` has no rows yet. Fill it in Phase 2 from the UBS Global Wealth Report, the
 Capgemini World Wealth Report, the Knight Frank Wealth Report and Eurostat. Use the latest
 edition of each, and record the year and source on every row. Eurostat's business-owner figure

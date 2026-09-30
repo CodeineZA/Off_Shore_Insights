@@ -51,6 +51,20 @@ in `src/data/insights.ts`.
 - Deploy: `deploy.sh` builds into `dist-next` and swaps it in only after tests, `tsc` and the
   secret scan pass. nginx mounts `apps/web` (not `dist`), so the swap is seen.
 
+## Data: how figures are retrieved
+
+Every figure has a **recipe** in `research/recipes.json` (edit `research/recipes.mjs`, then run
+`node research/recipes.mjs`). A refresh is a **run**: `research/runs/<date>.json` →
+`node research/apply-run.mjs <run>` → `db/research/<date>.sql` → `bash db/apply.sh …`. History mode
+closes a changed row and opens a new one; unchanged values only refresh `verified_on`.
+
+- `api` recipes run in **n8n** (E1 Eurostat).
+- `page-extract` recipes run through the project skill **`/update-offshore-insights`**
+  (`.claude/skills/`), which shows Hentus the diff before applying.
+- `manual` recipes (wealth-report databooks) are entered by a human.
+
+Never add a figure without a recipe. Rules are in `research/README.md`.
+
 ## n8n workflows
 
 Edit `n8n/build.mjs` (structure) and `n8n/src/*.js` (Code-node logic). Then run
