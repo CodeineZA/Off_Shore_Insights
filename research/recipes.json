@@ -1,0 +1,612 @@
+{
+  "version": 1,
+  "updated": "2026-09-30",
+  "recipes": [
+    {
+      "id": "pwc-FR-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/france/individual/taxes-on-personal-income",
+      "cells": [
+        "FR:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-FR-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/france/individual/income-determination",
+      "cells": [
+        "FR:CGT_FINANCIAL",
+        "FR:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-FR-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/france/individual/other-taxes",
+      "cells": [
+        "FR:INHERITANCE_DIRECT",
+        "FR:INHERITANCE_OTHER",
+        "FR:WEALTH_NET",
+        "FR:WEALTH_SOLIDARITY",
+        "FR:WEALTH_PROPERTY",
+        "FR:SECURITIES_ACCOUNT",
+        "FR:FOREIGN_ASSET_TAX",
+        "FR:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-FR-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/france/corporate/withholding-taxes",
+      "cells": [
+        "FR:WHT_DIVIDEND",
+        "FR:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-DE-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/germany/individual/taxes-on-personal-income",
+      "cells": [
+        "DE:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-DE-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/germany/individual/income-determination",
+      "cells": [
+        "DE:CGT_FINANCIAL",
+        "DE:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-DE-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/germany/individual/other-taxes",
+      "cells": [
+        "DE:INHERITANCE_DIRECT",
+        "DE:INHERITANCE_OTHER",
+        "DE:WEALTH_NET",
+        "DE:WEALTH_SOLIDARITY",
+        "DE:WEALTH_PROPERTY",
+        "DE:SECURITIES_ACCOUNT",
+        "DE:FOREIGN_ASSET_TAX",
+        "DE:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-DE-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/germany/corporate/withholding-taxes",
+      "cells": [
+        "DE:WHT_DIVIDEND",
+        "DE:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-BE-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/belgium/individual/taxes-on-personal-income",
+      "cells": [
+        "BE:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-BE-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/belgium/individual/income-determination",
+      "cells": [
+        "BE:CGT_FINANCIAL",
+        "BE:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-BE-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/belgium/individual/other-taxes",
+      "cells": [
+        "BE:INHERITANCE_DIRECT",
+        "BE:INHERITANCE_OTHER",
+        "BE:WEALTH_NET",
+        "BE:WEALTH_SOLIDARITY",
+        "BE:WEALTH_PROPERTY",
+        "BE:SECURITIES_ACCOUNT",
+        "BE:FOREIGN_ASSET_TAX",
+        "BE:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-BE-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/belgium/corporate/withholding-taxes",
+      "cells": [
+        "BE:WHT_DIVIDEND",
+        "BE:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-GB-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/united-kingdom/individual/taxes-on-personal-income",
+      "cells": [
+        "GB:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-GB-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/united-kingdom/individual/income-determination",
+      "cells": [
+        "GB:CGT_FINANCIAL",
+        "GB:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-GB-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/united-kingdom/individual/other-taxes",
+      "cells": [
+        "GB:INHERITANCE_DIRECT",
+        "GB:INHERITANCE_OTHER",
+        "GB:WEALTH_NET",
+        "GB:WEALTH_SOLIDARITY",
+        "GB:WEALTH_PROPERTY",
+        "GB:SECURITIES_ACCOUNT",
+        "GB:FOREIGN_ASSET_TAX",
+        "GB:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-GB-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/united-kingdom/corporate/withholding-taxes",
+      "cells": [
+        "GB:WHT_DIVIDEND",
+        "GB:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-IT-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/italy/individual/taxes-on-personal-income",
+      "cells": [
+        "IT:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-IT-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/italy/individual/income-determination",
+      "cells": [
+        "IT:CGT_FINANCIAL",
+        "IT:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-IT-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/italy/individual/other-taxes",
+      "cells": [
+        "IT:INHERITANCE_DIRECT",
+        "IT:INHERITANCE_OTHER",
+        "IT:WEALTH_NET",
+        "IT:WEALTH_SOLIDARITY",
+        "IT:WEALTH_PROPERTY",
+        "IT:SECURITIES_ACCOUNT",
+        "IT:FOREIGN_ASSET_TAX",
+        "IT:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-IT-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/italy/corporate/withholding-taxes",
+      "cells": [
+        "IT:WHT_DIVIDEND",
+        "IT:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-ES-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/spain/individual/taxes-on-personal-income",
+      "cells": [
+        "ES:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-ES-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/spain/individual/income-determination",
+      "cells": [
+        "ES:CGT_FINANCIAL",
+        "ES:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-ES-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/spain/individual/other-taxes",
+      "cells": [
+        "ES:INHERITANCE_DIRECT",
+        "ES:INHERITANCE_OTHER",
+        "ES:WEALTH_NET",
+        "ES:WEALTH_SOLIDARITY",
+        "ES:WEALTH_PROPERTY",
+        "ES:SECURITIES_ACCOUNT",
+        "ES:FOREIGN_ASSET_TAX",
+        "ES:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-ES-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/spain/corporate/withholding-taxes",
+      "cells": [
+        "ES:WHT_DIVIDEND",
+        "ES:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-ZA-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/south-africa/individual/taxes-on-personal-income",
+      "cells": [
+        "ZA:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-ZA-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/south-africa/individual/income-determination",
+      "cells": [
+        "ZA:CGT_FINANCIAL",
+        "ZA:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-ZA-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/south-africa/individual/other-taxes",
+      "cells": [
+        "ZA:INHERITANCE_DIRECT",
+        "ZA:INHERITANCE_OTHER",
+        "ZA:WEALTH_NET",
+        "ZA:WEALTH_SOLIDARITY",
+        "ZA:WEALTH_PROPERTY",
+        "ZA:SECURITIES_ACCOUNT",
+        "ZA:FOREIGN_ASSET_TAX",
+        "ZA:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-ZA-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/south-africa/corporate/withholding-taxes",
+      "cells": [
+        "ZA:WHT_DIVIDEND",
+        "ZA:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-PT-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/portugal/individual/taxes-on-personal-income",
+      "cells": [
+        "PT:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-PT-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/portugal/individual/income-determination",
+      "cells": [
+        "PT:CGT_FINANCIAL",
+        "PT:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-PT-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/portugal/individual/other-taxes",
+      "cells": [
+        "PT:INHERITANCE_DIRECT",
+        "PT:INHERITANCE_OTHER",
+        "PT:WEALTH_NET",
+        "PT:WEALTH_SOLIDARITY",
+        "PT:WEALTH_PROPERTY",
+        "PT:SECURITIES_ACCOUNT",
+        "PT:FOREIGN_ASSET_TAX",
+        "PT:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-PT-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/portugal/corporate/withholding-taxes",
+      "cells": [
+        "PT:WHT_DIVIDEND",
+        "PT:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-CH-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/switzerland/individual/taxes-on-personal-income",
+      "cells": [
+        "CH:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-CH-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/switzerland/individual/income-determination",
+      "cells": [
+        "CH:CGT_FINANCIAL",
+        "CH:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-CH-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/switzerland/individual/other-taxes",
+      "cells": [
+        "CH:INHERITANCE_DIRECT",
+        "CH:INHERITANCE_OTHER",
+        "CH:WEALTH_NET",
+        "CH:WEALTH_SOLIDARITY",
+        "CH:WEALTH_PROPERTY",
+        "CH:SECURITIES_ACCOUNT",
+        "CH:FOREIGN_ASSET_TAX",
+        "CH:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-CH-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/switzerland/corporate/withholding-taxes",
+      "cells": [
+        "CH:WHT_DIVIDEND",
+        "CH:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
+      "id": "pwc-MU-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/mauritius/individual/taxes-on-personal-income",
+      "cells": [
+        "MU:INCOME_TOP"
+      ],
+      "extract": "Resident income tax bands and top rate; Fair Share Contribution rate, threshold and the income years it applies to."
+    },
+    {
+      "id": "pwc-MU-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/mauritius/individual/other-taxes",
+      "cells": [
+        "MU:INHERITANCE_DIRECT",
+        "MU:INHERITANCE_OTHER",
+        "MU:WEALTH_NET",
+        "MU:WEALTH_SOLIDARITY",
+        "MU:WEALTH_PROPERTY",
+        "MU:SECURITIES_ACCOUNT",
+        "MU:FOREIGN_ASSET_TAX",
+        "MU:FOREIGN_PROPERTY"
+      ],
+      "extract": "Whether Mauritius levies inheritance, estate, gift or net wealth taxes (quote the \"there are no ...\" sentences)."
+    },
+    {
+      "id": "pwc-MU-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/mauritius/corporate/income-determination",
+      "cells": [
+        "MU:CGT_FINANCIAL"
+      ],
+      "extract": "The sentence on capital gains tax in Mauritius and its exception."
+    },
+    {
+      "id": "pwc-MU-property",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/mauritius/corporate/other-taxes",
+      "cells": [
+        "MU:CGT_PROPERTY"
+      ],
+      "extract": "Land transfer tax (rate, who pays, changes for non-citizens) and registration duty on immovable property."
+    },
+    {
+      "id": "pwc-MU-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/mauritius/corporate/withholding-taxes",
+      "cells": [
+        "MU:WHT_DIVIDEND",
+        "MU:WHT_INTEREST",
+        "treaty:MU-*:wht"
+      ],
+      "extract": "Domestic WHT on dividends and interest (residents / non-residents) and the treaty table (dividends / interest) for BE, FR, DE, IT, ZA, GB, SC."
+    },
+    {
+      "id": "src-SC-income",
+      "method": "page-extract",
+      "url": "https://src.gov.sc/income-and-non-monetary-benefits-tax/",
+      "cells": [
+        "SC:INCOME_TOP"
+      ],
+      "extract": "Monthly income tax bands on emoluments for citizens and non-citizens; top rate and threshold."
+    },
+    {
+      "id": "src-SC-system",
+      "method": "page-extract",
+      "url": "https://src.gov.sc/seychelles-tax-system/",
+      "cells": [
+        "SC:WHT_DIVIDEND",
+        "SC:WHT_INTEREST",
+        "SC:WEALTH_PROPERTY",
+        "SC:CGT_FINANCIAL",
+        "SC:WEALTH_NET",
+        "SC:WEALTH_SOLIDARITY",
+        "SC:SECURITIES_ACCOUNT",
+        "SC:FOREIGN_ASSET_TAX",
+        "SC:FOREIGN_PROPERTY"
+      ],
+      "extract": "Every rate listed: WHT to non-residents (dividends, interest, bank-interest exceptions), Immovable Property Tax. Taxes NOT listed (CGT, inheritance, gift, wealth) stay needs_verification until an official statement confirms they do not exist."
+    },
+    {
+      "id": "chambers-SC-realestate",
+      "method": "page-extract",
+      "url": "https://practiceguides.chambers.com/practice-guides/real-estate-2026/seychelles",
+      "cells": [
+        "SC:CGT_PROPERTY"
+      ],
+      "extract": "Stamp duty and fees when a non-Seychellois buys immovable property; any capital gains tax on sale."
+    },
+    {
+      "id": "secondary-SC-death-taxes",
+      "method": "page-extract",
+      "url": "https://www.expanship.com/sc/blog/seychelles-inheritance-and-estate-tax",
+      "cells": [
+        "SC:INHERITANCE_DIRECT",
+        "SC:INHERITANCE_OTHER"
+      ],
+      "extract": "Whether Seychelles levies inheritance/estate tax. Secondary source: keep needs_verification = true."
+    },
+    {
+      "id": "law-DE-erbstg",
+      "method": "page-extract",
+      "url": "https://www.gesetze-im-internet.de/erbstg_1974/__19.html",
+      "cells": [
+        "DE:INHERITANCE_DIRECT",
+        "DE:INHERITANCE_OTHER"
+      ],
+      "extract": "The full §19(1) ErbStG rate table, every row for classes I–III (do not summarise). Allowances from §16: https://www.gesetze-im-internet.de/erbstg_1974/__16.html."
+    },
+    {
+      "id": "gov-GB-cgt",
+      "method": "page-extract",
+      "url": "https://www.gov.uk/capital-gains-tax/rates",
+      "cells": [
+        "GB:CGT_FINANCIAL",
+        "GB:CGT_PROPERTY"
+      ],
+      "extract": "CGT rates for basic and higher/additional-rate taxpayers for the current tax year; annual exempt amount from https://www.gov.uk/capital-gains-tax/allowances."
+    },
+    {
+      "id": "pwcnews-BE-cgt",
+      "method": "page-extract",
+      "url": "https://news.pwc.be/belgiums-comprehensive-capital-gains-tax-changes-key-updates-and-implications-starting-january-2026/",
+      "cells": [
+        "BE:CGT_FINANCIAL"
+      ],
+      "extract": "The 2026 Belgian capital gains tax on financial assets: rate, exemption, internal-gains rate, law date and publication. (The PwC WWTS individual page was still outdated on 2026-09-30.)"
+    },
+    {
+      "id": "region-BE-inheritance",
+      "method": "page-extract",
+      "url": "https://www.vlaanderen.be/belastingen-en-begroting/vlaamse-belastingen/erfbelasting",
+      "alt_urls": [
+        "https://fiscalite.brussels/",
+        "https://finances.wallonie.be/"
+      ],
+      "cells": [
+        "BE-VLG:INHERITANCE_DIRECT",
+        "BE-VLG:INHERITANCE_OTHER",
+        "BE-BRU:INHERITANCE_DIRECT",
+        "BE-BRU:INHERITANCE_OTHER",
+        "BE-WAL:INHERITANCE_DIRECT",
+        "BE-WAL:INHERITANCE_OTHER"
+      ],
+      "extract": "Official regional inheritance tariffs: direct line lowest/highest, unrelated lowest/highest, upcoming reforms (Wallonia 2028). The 2026-09-30 run used secondary sources (pia.be, Expatica): replace them and clear needs_verification."
+    },
+    {
+      "id": "mra-MU-dta",
+      "method": "page-extract",
+      "url": "https://www.mra.mu/taxes-duties/international-taxation/double-taxation-agreements",
+      "cells": [
+        "treaty:MU-*:status"
+      ],
+      "extract": "Per target country: in force / awaiting signature / awaiting ratification / under negotiation / not listed (= none). Dates are in the treaty PDFs linked from the page."
+    },
+    {
+      "id": "src-SC-dta",
+      "method": "page-extract",
+      "url": "https://src.gov.sc/agreements/",
+      "cells": [
+        "treaty:SC-*:status"
+      ],
+      "extract": "Which target countries have a DTA with Seychelles. Listed = agreement exists (confirm in-force date from the treaty text); not listed = none."
+    },
+    {
+      "id": "eurostat-employers",
+      "method": "api",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfsa_egaps?format=JSON&lang=EN&wstatus=SELF_S&sex=T&age=Y15-74&unit=THS_PER",
+      "cells": [
+        "wealth_market.business_owners"
+      ],
+      "automation": "n8n workflow E1 (monthly) · n8n/src/e1-fetch-eurostat.js",
+      "extract": "JSON-stat: value × 1000 per geo per year."
+    },
+    {
+      "id": "ubs-gwr-millionaires",
+      "method": "manual",
+      "url": "https://www.ubs.com/global/en/wealthmanagement/insights/global-wealth-report.html",
+      "cells": [
+        "wealth_market.millionaires"
+      ],
+      "extract": "UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source \"UBS Global Wealth Report <edition>\"."
+    },
+    {
+      "id": "capgemini-hnwi",
+      "method": "manual",
+      "url": "https://www.capgemini.com/insights/research-library/world-wealth-report/",
+      "cells": [
+        "wealth_market.hnwi_count"
+      ],
+      "extract": "Capgemini World Wealth Report: HNWI population per country (largest markets only)."
+    },
+    {
+      "id": "knightfrank-uhnwi",
+      "method": "manual",
+      "url": "https://www.knightfrank.com/wealthreport",
+      "cells": [
+        "wealth_market.uhnwi_count"
+      ],
+      "extract": "Knight Frank Wealth Report: UHNWI (> US$30m) population per country."
+    }
+  ]
+}
