@@ -27,11 +27,11 @@ export default function G4Heatmap({ d, cc, types }: { d: Dashboard; cc: string[]
   return (
     <Card id="g4" full title="Tax pressure map"
       metric={{ value: `${h.known}/${h.total}`, label: 'rates known', sub: top ? `peak ${top.r.code} ${shortLabel(top.t)} ${pct(top.c.rate!.headline_rate)}` : undefined }} purpose={`Where the pain is, tax by tax · ${h.known} of ${h.total} rates known`}
-      foot={<div className="heat-legend">
-        <span>0%</span><span className="ramp" /><span>{scale}%</span>
+      legend={<span className="heat-legend">
+        <span>Headline rate: 0%</span><span className="ramp" /><span>{scale}%</span>
         <span className="sw unknown" /><span>Unknown</span>
         <span className="sw check" /><span>Conflicting sources</span>
-      </div>}>
+      </span>}>
       {compact ? (
         <div className="mini-heat" style={{ gridTemplateColumns: `28px repeat(${h.cols.length}, 1fr)` }}>
           {h.rows.map((row) => [<span key={row.code} className="mini-code">{row.code}</span>, ...row.cells.map((c, ci) => (

@@ -4,7 +4,7 @@ import type { Dashboard } from '../data/types';
 import { savingGap } from '../data/model';
 import { nameOf, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
-import { Card, HUB_COLOR, useCompact, useGrown } from './common';
+import { AxisRow, Card, HUB_COLOR, Key, useCompact, useGrown } from './common';
 
 export default function C3SavingGap({ d, code }: { d: Dashboard; code: string }) {
   const hubs = ['MU', 'SC'];
@@ -13,17 +13,18 @@ export default function C3SavingGap({ d, code }: { d: Dashboard; code: string })
   const top = (r: (typeof allRows)[number]) => Math.max(...r.gaps.map((g) => g.gap ?? -Infinity));
   const rows = compact ? [...allRows].sort((a, b) => top(b) - top(a)).slice(0, 4) : allRows;
   const known = rows.flatMap((r) => r.gaps.map((g) => g.gap)).filter((g): g is number => g != null);
-  const max = niceMax(Math.max(5, ...known.map(Math.abs)) * 1.3); // headroom for the value labels
+  const max = niceMax(Math.max(5, ...known.map(Math.abs))); // values sit in their own column, so no headroom needed
   const grown = useGrown([code]);
   const biggest = [...allRows].map((r) => ({ r, g: Math.max(...r.gaps.map((g) => g.gap ?? -Infinity)) })).filter((x) => x.g > 0).sort((a, b) => b.g - a.g)[0];
   return (
     <Card id="c3" title="The saving gap"
       metric={biggest ? { value: `+${biggest.g.toFixed(1)}`, label: `points on ${shortLabel(biggest.r.t)}`, sub: 'biggest gap' } : undefined} purpose={`Where ${nameOf(d, code)} taxes more than the hubs: the bigger the bar, the stronger the case`}
-      foot={<>
-        <div className="legend">{hubs.map((h) => <span key={h}><i style={{ background: HUB_COLOR[h] }} />vs {nameOf(d, h)}</span>)}<span className="muted">Percentage points · right = {nameOf(d, code)} higher</span></div>
-        {biggest && <div>Biggest gap: <b>{shortLabel(biggest.r.t)}</b>, {biggest.g.toFixed(1)} points.</div>}
-      </>}>
+      legend={<>{hubs.map((h) => <Key key={h} color={HUB_COLOR[h]}>vs {nameOf(d, h)}</Key>)}{!compact && <em>Bar to the right = {nameOf(d, code)} taxes more, in percentage points</em>}</>}
+      foot={biggest && <div>Biggest gap: <b>{shortLabel(biggest.r.t)}</b>, {biggest.g.toFixed(1)} points.</div>}>
       <div className="gap">
+        {compact
+          ? <AxisRow row="gap-row" lead="Tax" centred min="← hub higher" label="0" max={`${code} higher →`} value="pts" />
+          : <AxisRow row="gap-row" lead="Tax" centred min={`← −${max}`} label="0" max={`+${max} →`} value="Points" />}
         {rows.map((r) => (
           <div className="gap-row" key={r.t.code}>
             <div className="h2h-label">{shortLabel(r.t)}</div>
@@ -36,10 +37,10 @@ export default function C3SavingGap({ d, code }: { d: Dashboard; code: string })
                       left: g.gap >= 0 ? '50%' : `${50 - (grown ? (Math.abs(g.gap) / max) * 50 : 0)}%`,
                       width: grown ? `${(Math.abs(g.gap) / max) * 50}%` : 0 }} />
                   )}
-                  {g.gap != null && <span className="gap-val" style={g.gap >= 0 ? { left: `calc(${50 + (Math.abs(g.gap) / max) * 50}% + 6px)` } : { right: `calc(${50 + (Math.abs(g.gap) / max) * 50}% + 6px)` }}>{g.gap > 0 ? '+' : ''}{g.gap.toFixed(1)}</span>}
                 </div>
               ))}
             </div>
+            <div className="gap-vals">{r.gaps.map((g, i) => <span key={hubs[i]} style={{ color: HUB_COLOR[hubs[i]] }}>{g.gap == null ? '?' : (g.gap > 0 ? '+' : '') + g.gap.toFixed(1)}</span>)}</div>
           </div>
         ))}
       </div>

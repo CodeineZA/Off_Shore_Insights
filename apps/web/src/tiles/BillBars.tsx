@@ -1,11 +1,17 @@
 // Horizontal stacked bars of the sample-client bill (G5 across countries, C4 across the three
 // homes). Segments = capital gains / wealth taxes / inheritance; unknown parts are hatched.
 import type { Bill, BillPart } from '../data/model';
-import { fmtEur, useGrown, useTip } from './common';
+import { AxisRow, Key, fmtEur, useGrown, useTip } from './common';
 
 export const PART_COLOR: Record<BillPart['key'], string> = { cgt: '#f3dcb2', wealth: '#d8b07a', inheritance: '#8a6844' };
 
-export default function BillBars({ bills, show, sortDesc = true, depKey, limit }: { bills: Bill[]; show: BillPart['key'][]; sortDesc?: boolean; depKey: string; limit?: number }) {
+/** What each segment of a bill bar is. */
+export const BillLegend = () => (<>
+  <Key color={PART_COLOR.cgt}>Capital gains tax</Key><Key color={PART_COLOR.wealth}>Wealth taxes</Key>
+  <Key color={PART_COLOR.inheritance}>Inheritance tax</Key><Key hatch>Unknown part</Key>
+</>);
+
+export default function BillBars({ bills, show, sortDesc = true, depKey, limit, lead = 'Country' }: { bills: Bill[]; show: BillPart['key'][]; sortDesc?: boolean; depKey: string; limit?: number; lead?: string }) {
   const rows = bills.map((b) => {
     const parts = b.parts.filter((p) => show.includes(p.key));
     return { b, parts, total: parts.reduce((s, p) => s + p.eur, 0), complete: parts.every((p) => p.known) };
@@ -17,6 +23,7 @@ export default function BillBars({ bills, show, sortDesc = true, depKey, limit }
   const t = useTip<(typeof rows)[number]>();
   return (
     <div className="bills" ref={t.box} onMouseLeave={t.hide}>
+      <AxisRow row="bill-row" lead={lead} min="€0" max={fmtEur(max)} label="tax paid: 20 years + inheritance" value="Total" />
       {rows.map((r) => (
         <div className="bill-row" key={r.b.code} onMouseMove={t.show(r)} onClick={t.show(r)}>
           <div className="rank-name">{r.b.name}</div>

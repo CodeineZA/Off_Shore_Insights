@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Dashboard } from '../data/types';
 import { SAMPLE, SAMPLE_ASSUMPTIONS, sampleBill, type Basis } from '../data/model';
 import { nameOf } from '../data/insights';
-import BillBars, { PART_COLOR } from './BillBars';
+import BillBars, { BillLegend } from './BillBars';
 import { Card, Seg, fmtEur } from './common';
 import { trio } from './C1HeadToHead';
 
@@ -17,12 +17,12 @@ export default function C4ThreeHomes({ d, code }: { d: Dashboard; code: string }
     <Card id="c4" title="Same client, three homes"
       metric={{ value: fmtEur(Math.max(0, saving)), label: 'saved against the cheaper hub', sub: `${nameOf(d, code)} ${fmtEur(bills[0].total)}` }} purpose={`One number each: what the €2m client pays living in ${nameOf(d, code)}, Mauritius or Seychelles`}
       controls={<Seg label="Rate basis" opts={[['top', 'Top band'], ['entry', 'Entry band']]} cur={basis} on={setBasis} />}
+      legend={<BillLegend />}
       foot={<>
-        <div className="legend"><span><i style={{ background: PART_COLOR.cgt }} />Capital gains</span><span><i style={{ background: PART_COLOR.wealth }} />Wealth taxes</span><span><i style={{ background: PART_COLOR.inheritance }} />Inheritance</span></div>
         {saving > 0 && <div>Difference against the cheaper hub: <b>{fmtEur(saving)}</b> over 20 years and inheritance.</div>}
         <div>Model: {SAMPLE_ASSUMPTIONS(client).join(' · ')}.</div>
       </>}>
-      <BillBars bills={bills} show={['cgt', 'wealth', 'inheritance']} sortDesc={false} depKey={code + basis} />
+      <BillBars bills={bills} show={['cgt', 'wealth', 'inheritance']} sortDesc={false} depKey={code + basis} lead="Client lives in" />
     </Card>
   );
 }

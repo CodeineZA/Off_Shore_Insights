@@ -4,9 +4,9 @@ import type { Dashboard } from '../data/types';
 import { WEALTH_LABEL, gateCells, latestWealth, marketMetric, sampleBill } from '../data/model';
 import { fmtCount, nameOf } from '../data/insights';
 import { niceMax } from '../ui/geom';
-import { Card, GATE_COLOR, fmtEur, useGrown, useTip } from './common';
+import { Card, GATE_COLOR, Key, fmtEur, useGrown, useTip } from './common';
 
-const W = 520, H = 280, L = 74, R = 20, T = 16, B = 40;
+const W = 520, H = 290, L = 74, R = 20, T = 30, B = 40;
 
 export default function G3SweetSpot({ d, cc, hub }: { d: Dashboard; cc: string[]; hub: string }) {
   const metric = marketMetric(d);
@@ -28,11 +28,11 @@ export default function G3SweetSpot({ d, cc, hub }: { d: Dashboard; cc: string[]
   return (
     <Card id="g3" title="Sweet spot"
       metric={{ value: inTarget.length, label: 'in the target corner', sub: inTarget.map((p) => p.code).join(', ') || 'none yet' }} purpose="Where a big market meets high tax pain: top right is the target"
+      legend={<>
+        <Key color={GATE_COLOR.green}>Treaty with {hubName}</Key><Key color={GATE_COLOR.amber}>Negotiating</Key>
+        <Key color={GATE_COLOR.red}>No treaty</Key><em>Bubble size = business owners</em>
+      </>}
       foot={<>
-        <div className="legend">
-          <span><i style={{ background: GATE_COLOR.green }} />Treaty with {hubName}</span><span><i style={{ background: GATE_COLOR.amber }} />Negotiating</span>
-          <span><i style={{ background: GATE_COLOR.red }} />No treaty</span><span className="muted">Bubble = business owners</span>
-        </div>
         {missing.length > 0 && <div>Not plotted (no {WEALTH_LABEL[metric].toLowerCase()} figure): {missing.join(', ')}.</div>}
       </>}>
       <div className="plot" ref={t.box} onMouseLeave={t.hide}>
@@ -47,7 +47,7 @@ export default function G3SweetSpot({ d, cc, hub }: { d: Dashboard; cc: string[]
             </g>
           ))}
           <text x={(L + W - R) / 2} y={H - 4} textAnchor="middle" className="axis-label">Market size: {WEALTH_LABEL[metric].toLowerCase()} →</text>
-          <text x={14} y={(T + H - B) / 2} textAnchor="middle" transform={`rotate(-90 14 ${(T + H - B) / 2})`} className="axis-label">Tax pain: sample-client bill →</text>
+          <text x={8} y={14} className="axis-label">↑ Tax pain: what the sample client pays</text>
           {shown.map((p, i) => {
             const r = 8 + 18 * Math.sqrt((p.size ?? 0) / maxS);
             return (

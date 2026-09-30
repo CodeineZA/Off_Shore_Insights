@@ -26,8 +26,9 @@ export default function Country({ d }: { d: Dashboard }) {
           </div>
         </div>
       </section>
-      {/* The country brief is read, not glanced at: it stays open in the centre with the tiles around it. */}
-      <TileGrid key={code} items={[
+      {/* The country brief is read, not glanced at: it stays open in the centre with the tiles around it.
+          No key on the grid: changing country must keep an open tile open, showing the new country. */}
+      <TileGrid items={[
         { id: 'c4', label: 'Same client, three homes', node: <C4ThreeHomes d={d} code={code} /> },
         { id: 'c7', label: 'Country brief', node: <C7CountryBrief d={d} code={code} />, fixed: true },
         { id: 'c3', label: 'The saving gap', node: <C3SavingGap d={d} code={code} /> },

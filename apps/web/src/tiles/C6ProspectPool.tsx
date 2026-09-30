@@ -3,7 +3,7 @@
 import type { Dashboard } from '../data/types';
 import { WEALTH_LABEL, latestWealth, type WealthMetric } from '../data/model';
 import { fmtCount, nameOf } from '../data/insights';
-import { Card, useGrown } from './common';
+import { AxisRow, Card, useGrown } from './common';
 
 const TIERS: { m: WealthMetric; what: string }[] = [
   { m: 'business_owners', what: 'self-employed with employees (Eurostat)' },
@@ -20,8 +20,10 @@ export default function C6ProspectPool({ d, code }: { d: Dashboard; code: string
   return (
     <Card id="c6" title="Prospect pool"
       metric={known[0] ? { value: fmtCount(known[0].w!.value), label: WEALTH_LABEL[known[0].m].toLowerCase(), sub: `${known.length} of ${TIERS.length} tiers known` } : { value: '?', label: 'no wealth figures yet' }} purpose={`How many potential clients ${nameOf(d, code)} has, by wealth tier`}
-      foot={<div>Tiers overlap and come from different reports, so they are not added up. Missing tiers are entered from the wealth reports (manual recipes).</div>}>
+      legend={<em>Number of people per tier · tiers overlap and come from different reports, so they are not added up</em>}
+      foot={<div>Missing tiers are entered from the wealth reports (manual recipes).</div>}>
       <div className="pool">
+        <AxisRow row="pool-row" lead="Tier" min="0" label="people" max={Math.round(max).toLocaleString('en')} value="Count (year)" />
         {rows.map((r) => (
           <div className="pool-row" key={r.m}>
             <div className="pool-label"><b>{WEALTH_LABEL[r.m]}</b><small>{r.what}</small></div>

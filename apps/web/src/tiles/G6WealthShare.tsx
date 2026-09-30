@@ -21,8 +21,8 @@ export default function G6WealthShare({ d, cc }: { d: Dashboard; cc: string[] })
     <Card id="g6" title="Where the wealth is"
       metric={lead ? { value: `${Math.round((lead.value / total) * 100)}%`, label: `in ${lead.name}`, sub: `of ${fmtCount(total)} ${WEALTH_LABEL[metric].toLowerCase()}` } : undefined} purpose="Which of the selected countries holds most of the prospects"
       controls={<Seg label="Measure" opts={METRICS.map((m) => [m, WEALTH_LABEL[m]] as [WealthMetric, string])} cur={metric} on={(m) => { setMetric(m); setHover(null); }} />}
+      legend={items.length > 0 ? <em>Share of {WEALTH_LABEL[metric].toLowerCase()} across the selected countries · {years.join('/')} · {items[0].source}</em> : undefined}
       foot={<>
-        {items.length > 0 && <div>{WEALTH_LABEL[metric]}, latest year {years.join('/')}, source {items[0].source}.</div>}
         {missing.length > 0 && <div>No figure yet: {missing.join(', ')}.</div>}
       </>}>
       {items.length

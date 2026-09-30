@@ -17,8 +17,11 @@ export default function G7Momentum({ d, cc }: { d: Dashboard; cc: string[] }) {
   return (
     <Card id="g7" title="Rate momentum"
       metric={{ value: <>{up}<small>▲</small> {down}<small>▼</small></>, label: 'key rates moved', sub: anyChange ? undefined : 'none since the first check' }} purpose="Is the tax pain rising? A rising rate means a warming market"
-      foot={<div>{anyChange ? '▲ rate went up at its last change · ▼ went down · → no change recorded.'
-        : `No rate changes recorded yet: the history starts ${firstRecorded ? fmtDate(firstRecorded) : 'with the first check'}. Arrows appear as refreshes find changes.`}</div>}>
+      legend={<>
+        <span><b className="mom-key up">▲</b>rose at its last change</span><span><b className="mom-key down">▼</b>fell</span><span><b className="mom-key">→</b>no change recorded</span>
+        <em>Cell = current headline rate</em>
+      </>}
+      foot={anyChange ? undefined : <div>No rate changes recorded yet: the history starts {firstRecorded ? fmtDate(firstRecorded) : 'with the first check'}. Arrows appear as refreshes find changes.</div>}>
       <table className="momentum">
         <thead><tr><th />{types.map((t) => <th key={t.code}>{shortLabel(t)}</th>)}</tr></thead>
         <tbody>

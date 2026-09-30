@@ -11,7 +11,7 @@ export default function C5TreatyBridge({ d, code }: { d: Dashboard; code: string
   return (
     <Card id="c5" title="Treaty bridge"
       metric={{ value: `${inForce.length}/2`, label: 'treaties in force', sub: inForce.map((h) => nameOf(d, h)).join(', ') || 'none' }} purpose={`Whether ${nameOf(d, code)} has a tax treaty with each hub, and what it caps`}
-      foot={<div>Treaty caps are the maximum withholding either side may charge on cross-border dividends and interest. Domestic = what {nameOf(d, code)} charges non-residents without a treaty.</div>}>
+      legend={<><em><b>Cap</b> = the most either side may withhold on cross-border dividends or interest under the treaty</em><em><b>Domestic</b> = what {nameOf(d, code)} charges non-residents without one</em></>}>
       {compact ? (
         <div className="bridge-mini">{['MU', 'SC'].map((hub) => { const g = gateCells(d, code, hub)[0]; const t = d.treaties.find((x) => x.country_a === hub && x.country_b === code); return (
           <div key={hub}><span>{nameOf(d, hub)}</span><span className={'gate-pill ' + g.status} style={{ ['--gc' as string]: GATE_COLOR[g.status] }}>{g.label}</span><small>{t?.in_force_on ? 'since ' + t.in_force_on.slice(0, 4) : ''}</small></div>); })}</div>

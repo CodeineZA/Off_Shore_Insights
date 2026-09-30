@@ -10,8 +10,12 @@ export const useCompact = () => useContext(TileMode) === 'compact';
 /** The tile's immediate metric: a headline value, what it is, and optional context. */
 export interface Metric { value: ReactNode; label: ReactNode; sub?: ReactNode }
 
-export function Card({ title, purpose, controls, children, foot, id, metric }: {
-  title: string; purpose: string; controls?: ReactNode; children: ReactNode; foot?: ReactNode; full?: boolean; id: string; metric?: Metric;
+/**
+ * legend: what every colour, mark and axis means. Shown ABOVE the chart, in the tile and in the
+ * expanded view, so a reader never has to hunt for it. foot: model notes and sources only.
+ */
+export function Card({ title, purpose, controls, children, foot, id, metric, legend }: {
+  title: string; purpose: string; controls?: ReactNode; children: ReactNode; foot?: ReactNode; full?: boolean; id: string; metric?: Metric; legend?: ReactNode;
 }) {
   if (useCompact()) {
     return (
@@ -23,6 +27,7 @@ export function Card({ title, purpose, controls, children, foot, id, metric }: {
             <div className="tile-label">{metric.label}{metric.sub && <span> · {metric.sub}</span>}</div>
           </div>
         )}
+        {legend && <div className="legend tile-legend">{legend}</div>}
         <div className="tile-preview">{children}</div>
       </div>
     );
@@ -36,6 +41,7 @@ export function Card({ title, purpose, controls, children, foot, id, metric }: {
         </div>
         {controls && <div className="card-controls">{controls}</div>}
       </header>
+      {legend && <div className="legend card-legend">{legend}</div>}
       <div className="card-body">{children}</div>
       {foot && <footer className="card-foot">{foot}</footer>}
     </article>
@@ -82,3 +88,25 @@ export function SourceLink({ url }: { url: string | null }) {
 }
 
 export const Hatch = ({ className = '' }: { className?: string }) => <span className={'hatch ' + className} aria-label="unknown">?</span>;
+
+/** A legend chip: colour swatch (or hatch for unknown) + meaning. */
+export const Key = ({ color, hatch, line, children }: { color?: string; hatch?: boolean; line?: boolean; children: ReactNode }) => (
+  <span><i className={(hatch ? 'hatch-dot' : '') + (line ? ' key-line' : '')} style={color ? { background: color } : undefined} />{children}</span>
+);
+
+/**
+ * Axis row placed above a row chart: names the label column, says what the bar measures and its
+ * scale ends, and (optionally) the value column. `row` = the chart's row class so columns align.
+ */
+export function AxisRow({ row, lead, label, min, max, value, pre, centred }: {
+  row: string; lead?: string; label: ReactNode; min?: ReactNode; max?: ReactNode; value?: string; pre?: boolean; centred?: boolean;
+}) {
+  return (
+    <div className={row + ' axis-row'} aria-hidden="true">
+      {pre && <span />}
+      <span className="axis-cap">{lead}</span>
+      <span className={'axis-scale' + (centred ? ' centred' : '')}><b>{min}</b><em>{label}</em><b>{max}</b></span>
+      {value !== undefined && <span className="axis-cap r">{value}</span>}
+    </div>
+  );
+}

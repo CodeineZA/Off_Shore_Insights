@@ -2,7 +2,7 @@
 // reach (equal thirds, each scaled to the best country shown). Unknown parts count as 0, hatched.
 import type { Dashboard } from '../data/types';
 import { GATES, WEALTH_LABEL, marketMetric, opportunities, type Opportunity } from '../data/model';
-import { Card, GATE_COLOR, useCompact, useGrown, useTip } from './common';
+import { AxisRow, Card, GATE_COLOR, Key, useCompact, useGrown, useTip } from './common';
 
 const SEGS = [
   { key: 'market', label: 'Market size', color: '#f3dcb2' },
@@ -20,12 +20,13 @@ export default function G1WhereFirst({ d, cc, hub }: { d: Dashboard; cc: string[
   return (
     <Card id="g1" full title="Where to go first"
       metric={all[0] ? { value: all[0].score, label: `${all[0].name} leads`, sub: `${all.length} countries ranked` } : undefined} purpose={`Countries ranked by how worth it they are for a ${hubName} structure: market size, tax pain and ease of reach`}
+      legend={<>{SEGS.map((s) => <Key key={s.key} color={s.color}>{s.label}</Key>)}<Key hatch>Unknown (counts as 0)</Key></>}
       foot={<>
-        <div className="legend">{SEGS.map((s) => <span key={s.key}><i style={{ background: s.color }} />{s.label}</span>)}<span><i className="hatch-dot" />Unknown (counts as 0)</span></div>
         <div>Each part is scaled 0–100 to the best country shown and weighted equally. Market = {WEALTH_LABEL[marketMetric(d)].toLowerCase()}; tax pain = the sample-client bill (G5); ease = the known gates (G2).</div>
       </>}>
       {!rows.length ? <div className="empty">Select at least one country.</div> : (
         <div className="rank" ref={t.box} onMouseLeave={t.hide}>
+          <AxisRow row="rank-row" pre lead="Country" min="0" max="100" label="each part up to 33 points" value="Score" />
           {rows.map((r, i) => (
             <div className="rank-row" key={r.code} onMouseMove={t.show(r)} onClick={t.show(r)}>
               <div className="rank-no">{i + 1}</div>

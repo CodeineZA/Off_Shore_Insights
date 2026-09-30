@@ -3,7 +3,7 @@ import type { Dashboard, Rate, TaxType } from '../data/types';
 import { compareTypes } from '../data/model';
 import { fmtDate, nameOf, pct, rateOf, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
-import { COUNTRY_COLOR, Card, HUB_COLOR, SourceLink, useCompact, useGrown, useTip } from './common';
+import { AxisRow, COUNTRY_COLOR, Card, HUB_COLOR, Key, SourceLink, useCompact, useGrown, useTip } from './common';
 
 export const trio = (code: string) => [code, 'MU', 'SC'];
 export const trioColor = (c: string) => HUB_COLOR[c] ?? COUNTRY_COLOR;
@@ -34,8 +34,9 @@ export default function C1HeadToHead({ d, code }: { d: Dashboard; code: string }
   return (
     <Card id="c1" full title="Head to head"
       metric={{ value: higher, label: `taxes higher in ${nameOf(d, code)} than Mauritius`, sub: `of ${both.length} comparable` }} purpose={`${nameOf(d, code)} against Mauritius and Seychelles, tax by tax`}
-      foot={<div className="legend">{codes.map((c) => <span key={c}><i style={{ background: trioColor(c) }} />{nameOf(d, c)}</span>)}<span><i className="hatch-dot" />Unknown</span><span className="muted">Scale 0–{max}%</span></div>}>
+      legend={<>{codes.map((c) => <Key key={c} color={trioColor(c)}>{nameOf(d, c)}</Key>)}<Key hatch>Unknown</Key></>}>
       <div className="h2h" ref={tip.box} onMouseLeave={tip.hide}>
+        <AxisRow row="h2h-row" lead="Tax" min="0%" label="headline rate" max={`${max}%`} />
         {types.map((t) => (
           <div className="h2h-row" key={t.code}>
             <div className="h2h-label">{shortLabel(t)}</div>

@@ -3,17 +3,17 @@
 import type { Dashboard } from '../data/types';
 import { GATES, gateCells, type GateCell } from '../data/model';
 import { nameOf } from '../data/insights';
-import { Card, GATE_COLOR, SourceLink, useTip } from './common';
+import { Card, GATE_COLOR, Key, SourceLink, useTip } from './common';
 
 export default function G2OpenDoors({ d, cc, hub }: { d: Dashboard; cc: string[]; hub: string }) {
   const t = useTip<{ name: string; cell: GateCell; gate: string }>();
   const hubName = hub === 'MU' ? 'Mauritius' : 'Seychelles';
   return (
     <Card id="g2" title="Open doors" purpose={`Which countries can use a ${hubName} structure, gate by gate`}
-      foot={<div className="legend">
-        <span><i style={{ background: GATE_COLOR.green }} />Open</span><span><i style={{ background: GATE_COLOR.amber }} />Caution</span>
-        <span><i style={{ background: GATE_COLOR.red }} />Blocked</span><span><i className="hatch-dot" />Unknown</span><span className="muted">Dashed = to verify</span>
-      </div>}>
+      legend={<>
+        <Key color={GATE_COLOR.green}>Open</Key><Key color={GATE_COLOR.amber}>Caution</Key>
+        <Key color={GATE_COLOR.red}>Blocked</Key><Key hatch>Unknown</Key><em>Dashed outline = still to verify</em>
+      </>}>
       {!cc.length ? <div className="empty">Select at least one country.</div> : (
         <div className="gates-wrap" ref={t.box} onMouseLeave={t.hide}>
           <table className="gates">

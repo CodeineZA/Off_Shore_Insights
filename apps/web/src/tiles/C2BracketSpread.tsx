@@ -3,7 +3,7 @@ import type { Dashboard, TaxType } from '../data/types';
 import { compareTypes } from '../data/model';
 import { nameOf, pct, rateOf, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
-import { Card, useCompact, useGrown, useTip } from './common';
+import { AxisRow, Card, Key, useCompact, useGrown, useTip } from './common';
 import { RateTip, trio, trioColor } from './C1HeadToHead';
 
 export default function C2BracketSpread({ d, code }: { d: Dashboard; code: string }) {
@@ -21,8 +21,9 @@ export default function C2BracketSpread({ d, code }: { d: Dashboard; code: strin
   return (
     <Card id="c2" title="Bracket spread"
       metric={w0 ? { value: `${pct(w0.rate_min ?? w0.headline_rate)}–${pct(w0.rate_max ?? w0.headline_rate)}`, label: `widest: ${shortLabel(widest[0])}`, sub: nameOf(d, code) } : undefined} purpose="How wide each tax's bands run: from the entry rate to the top rate"
-      foot={<div className="legend">{codes.map((c) => <span key={c}><i style={{ background: trioColor(c) }} />{nameOf(d, c)}</span>)}<span className="muted">Dot = headline · 0–{max}%</span></div>}>
+      legend={<>{codes.map((c) => <Key key={c} color={trioColor(c)}>{nameOf(d, c)}</Key>)}<em>Line = entry band → top band · dot = headline rate</em></>}>
       <div className="spread" ref={tip.box} onMouseLeave={tip.hide}>
+        <AxisRow row="spread-row" lead="Tax" min="0%" label="rate" max={`${max}%`} />
         {types.map((t) => (
           <div className="spread-row" key={t.code}>
             <div className="h2h-label">{shortLabel(t)}</div>
