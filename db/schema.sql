@@ -42,6 +42,35 @@ create table if not exists offshore_insights.app_user (
   disabled      boolean not null default false,
   created_at    timestamptz not null default now()
 );
+-- is_admin: may manage users (User management page). Only Hentus.
+-- created_here: the login was made by this app (deleting the user deletes the login).
+-- A linked login (shared Auth realm, e.g. Hentus's Neil's Way account) only loses access here.
+alter table offshore_insights.app_user add column if not exists is_admin boolean not null default false;
+alter table offshore_insights.app_user add column if not exists created_here boolean not null default false;
+
+-- The password as last set through this app, shown on the User management page
+-- (Hentus: "not sensitive in this context"). Its own table so that no member, not
+-- even the user themself, can read it through PostgREST: RLS on, no policy.
+-- Only service_role (the login gateway's admin endpoints) reads or writes it.
+create table if not exists offshore_insights.app_user_password (
+  user_id     uuid primary key references offshore_insights.app_user(user_id) on delete cascade,
+  password    text not null,
+  set_at      timestamptz not null default now()
+);
+
+-- User management list for the gateway's admin endpoints. SERVICE ROLE ONLY.
+create or replace function offshore_insights.admin_users()
+returns table (user_id uuid, username text, display_name text, email text, cell text, disabled boolean,
+               is_admin boolean, created_here boolean, created_at timestamptz, auth_email text,
+               last_sign_in_at timestamptz, password text, password_set_at timestamptz)
+language sql stable security definer set search_path = '' as $$
+  select u.user_id, u.username, u.display_name, u.email, u.cell, u.disabled, u.is_admin, u.created_here,
+         u.created_at, au.email::text, au.last_sign_in_at, p.password, p.set_at
+  from offshore_insights.app_user u
+  join auth.users au on au.id = u.user_id
+  left join offshore_insights.app_user_password p on p.user_id = u.user_id
+  order by u.username;
+$$;
 
 -- True when the caller is an active member. SECURITY DEFINER so policies can
 -- call it without granting members read access to every app_user row.
@@ -69,8 +98,8 @@ $$;
 -- Users may sign in with their username, their login email or their contact email.
 drop function if exists offshore_insights.login_directory();
 create function offshore_insights.login_directory()
-returns table (username text, auth_email text, contact_email text) language sql stable security definer set search_path = '' as $$
-  select u.username, au.email::text, u.email
+returns table (username text, auth_email text, contact_email text, user_id uuid, is_admin boolean) language sql stable security definer set search_path = '' as $$
+  select u.username, au.email::text, u.email, u.user_id, u.is_admin
   from offshore_insights.app_user u
   join auth.users au on au.id = u.user_id
   where not u.disabled;
@@ -386,7 +415,7 @@ create or replace function offshore_insights.dashboard()
 returns jsonb language sql stable security invoker set search_path = '' as $$
   select jsonb_build_object(
     'generated_at', now(),
-    'me', (select jsonb_build_object('username', u.username, 'display_name', u.display_name)
+    'me', (select jsonb_build_object('username', u.username, 'display_name', u.display_name, 'is_admin', u.is_admin)
            from offshore_insights.app_user u where u.user_id = auth.uid()),
     'jurisdictions', coalesce((select jsonb_agg(to_jsonb(j) order by j.code) from offshore_insights.jurisdiction j), '[]'),
     'tax_types',     coalesce((select jsonb_agg(to_jsonb(t) order by t.sort_order) from offshore_insights.tax_type t), '[]'),
@@ -556,6 +585,10 @@ revoke all on function offshore_insights.resolve_login(text) from public, anon, 
 grant execute on function offshore_insights.resolve_login(text) to service_role;
 revoke all on function offshore_insights.login_directory() from public, anon, authenticated;
 grant execute on function offshore_insights.login_directory() to service_role;
+revoke all on function offshore_insights.admin_users() from public, anon, authenticated;
+grant execute on function offshore_insights.admin_users() to service_role;
+-- Passwords: not even a SELECT grant for members (RLS below is the second lock).
+revoke all on offshore_insights.app_user_password from anon, authenticated;
 do $$
 declare fn text;
 begin
@@ -586,6 +619,8 @@ alter table offshore_insights.app_user enable row level security;
 drop policy if exists own_row on offshore_insights.app_user;
 create policy own_row on offshore_insights.app_user
   for select to authenticated using (user_id = auth.uid());
+-- RLS on with no policy: nobody but service_role sees a row.
+alter table offshore_insights.app_user_password enable row level security;
 
 -- Tell PostgREST to reload its schema cache.
 notify pgrst, 'reload schema';

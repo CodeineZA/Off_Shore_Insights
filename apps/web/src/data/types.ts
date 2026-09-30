@@ -62,7 +62,7 @@ export interface Run { workflow: string; status: 'running' | 'ok' | 'error'; sta
 
 export interface Dashboard {
   generated_at: string;
-  me: { username: string; display_name: string | null } | null;
+  me: { username: string; display_name: string | null; is_admin?: boolean } | null;
   jurisdictions: Jurisdiction[]; tax_types: TaxType[]; rates: Rate[]; rate_history: RateHistory[];
   treaties: Treaty[]; wealth: Wealth[]; notes: Note[]; signals: Signal[]; flags: Flag[]; runs: Run[];
   gates: Gate[]; fx: Fx[];

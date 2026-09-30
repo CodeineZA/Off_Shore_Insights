@@ -68,3 +68,39 @@ export async function fetchDashboard(s: Session): Promise<{ data: Dashboard; ses
   if (!res.ok) throw new Error(`dashboard ${res.status}`);
   return { data: (await res.json()) as Dashboard, session };
 }
+
+// ── User management (admin only; the gateway checks the token and the admin flag) ──
+export interface AdminUser {
+  user_id: string; username: string; display_name: string | null; email: string | null; cell: string | null;
+  disabled: boolean; is_admin: boolean; created_here: boolean; created_at: string; auth_email: string;
+  last_sign_in_at: string | null; password: string | null; password_set_at: string | null;
+}
+export type UserFields = Partial<{ username: string; display_name: string; email: string; cell: string; password: string; disabled: boolean }>;
+export class AdminError extends Error { constructor(public status: number, message: string) { super(message); } }
+
+// Dev only (stripped from builds): ?fixture talks to an in-memory mock in vite.config.ts.
+const FIXTURE = import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).has('fixture');
+
+async function adminCall<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const base = FIXTURE ? '/__fixture-admin/users' : '/api/admin/users';
+  let s = loadSession();
+  if (!FIXTURE) {
+    if (!s) throw new AuthExpired();
+    if (s.expires_at * 1000 - Date.now() < 60_000) s = await refresh(s);
+  }
+  const go = (tok: string) => fetch(base + path, { ...init,
+    headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) } });
+  let res = await go(s?.access_token ?? '');
+  if (res.status === 401 && s && !FIXTURE) { s = await refresh(s); res = await go(s.access_token); }
+  if (res.status === 401) throw new AuthExpired();
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new AdminError(res.status, body.message
+    || (res.status === 403 ? 'Only the administrator can manage users.' : res.status === 429 ? 'Too many requests: wait a minute and try again.' : 'The server could not do that. Try again.'));
+  return body as T;
+}
+export const admin = {
+  list: () => adminCall<AdminUser[]>(''),
+  create: (f: UserFields) => adminCall<{ user_id: string }>('', { method: 'POST', body: JSON.stringify(f) }),
+  update: (id: string, f: UserFields) => adminCall<{ ok: true }>(`/${id}`, { method: 'PATCH', body: JSON.stringify(f) }),
+  remove: (id: string) => adminCall<{ ok: true }>(`/${id}`, { method: 'DELETE' }),
+};

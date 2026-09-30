@@ -1,0 +1,56 @@
+/* User management (pages/Users.tsx). Uses the dashboard's card, field and pill styles. */
+.users { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.users-sub { margin: 6px 0 0; font: 400 12px Poppins; color: var(--muted); }
+.users-scroll { overflow-x: auto; margin: 0 -6px; scrollbar-color: var(--line-2) transparent; }
+.users-table { width: 100%; border-collapse: collapse; font: 400 12px Poppins; color: var(--text); }
+.users-table th { font: 500 10px/1.2 Poppins; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-2); text-align: left; padding: 6px; white-space: nowrap; }
+.users-table td { padding: 10px 6px; border-top: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere; }
+.users-table td:nth-child(n+3) { white-space: nowrap; }
+.users-table td:nth-child(2) { min-width: 110px; }
+.users-table tr.on td { background: rgba(216, 176, 122, .06); }
+.users-table tr.off td { opacity: .6; }
+.users-table code, .users-facts code { font: 500 12px ui-monospace, Consolas, monospace; color: var(--gold-3); background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; user-select: all; }
+.users .muted { color: var(--muted); }
+.users-name { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; border: 0; background: none; padding: 0;
+  color: var(--text); font: 500 13px Poppins; cursor: pointer; text-align: left; }
+.users-name:hover b { color: var(--gold-3); }
+.users-name em { font-style: normal; font-weight: 400; color: var(--muted); }
+.users-name small { font: 400 11px Poppins; color: var(--muted); }
+.users-status { display: inline-block; padding: 2px 9px; border-radius: 999px; font: 500 11px Poppins; color: #9cc58f; border: 1px solid rgba(156, 197, 143, .35); }
+.users-status.off { color: #d9785f; border-color: rgba(217, 120, 95, .4); }
+.users-actions { display: flex; gap: 14px; justify-content: flex-end; }
+.linkish.danger, .pill.danger { color: #e0907a; }
+.pill.danger { border-color: rgba(217, 120, 95, .45); }
+.pill.danger:hover { background: rgba(217, 120, 95, .1); }
+.pill.solid { background: var(--gold); color: #1a1714; border-color: var(--gold); }
+.pill.solid:hover { background: var(--gold-2); }
+.pill.danger.solid { background: #d9785f; border-color: #d9785f; color: #1a1714; }
+.pill:disabled { opacity: .45; cursor: default; }
+
+.users-detail { max-width: 760px; }
+.users-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; margin: 0; }
+.users-facts > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.users-facts dt { font: 500 10px/1 Poppins; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); }
+.users-facts dd { margin: 0; font: 400 13px/1.45 Poppins; color: var(--text); overflow-wrap: anywhere; }
+.users-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+.users-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+.users-fields .opt { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 400; }
+.users-pw { grid-column: 1 / -1; }
+.users-pw-row { display: flex; gap: 10px; align-items: stretch; }
+.users-pw-row input { flex: 1; min-width: 0; font-family: ui-monospace, Consolas, monospace; }
+.users-hint, .users-note { margin: 0; font: 400 12px/1.5 Poppins; color: var(--muted); }
+.users-note { padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(240, 185, 138, .3); color: #f0b98a; background: rgba(240, 185, 138, .05); }
+.users-done { margin: 0; font: 400 12px Poppins; color: #9cc58f; }
+.users-delete .lead { max-width: none; }
+
+@media (max-width: 640px) {
+  .users-facts, .users-fields { grid-template-columns: minmax(0, 1fr); }
+  /* Phone: username, password and actions; the rest is one tap away in the detail view. */
+  .users-table th:nth-child(2), .users-table td:nth-child(2), .users-table th:nth-child(3), .users-table td:nth-child(3),
+  .users-table th:nth-child(5), .users-table td:nth-child(5) { display: none; }
+}
+@media (max-width: 1100px) {
+  .users-table th:nth-child(6), .users-table td:nth-child(6) { display: none; }
+  .users-actions { flex-direction: column; gap: 6px; align-items: flex-end; }
+}

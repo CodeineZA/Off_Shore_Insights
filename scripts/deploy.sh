@@ -37,6 +37,7 @@ umask 077
   echo "# Written by scripts/deploy.sh from $SB — do not edit"
   echo "SUPABASE_ANON_KEY=$(grep -E '^ANON_KEY=' "$SB" | cut -d= -f2-)"
   echo "SUPABASE_SERVICE_ROLE_KEY=$(grep -E '^SERVICE_ROLE_KEY=' "$SB" | cut -d= -f2-)"
+  echo "SUPABASE_JWT_SECRET=$(grep -E '^JWT_SECRET=' "$SB" | cut -d= -f2-)"   # verifies admin tokens
 } > server/web/.env
 
 # 3. (Re)create containers when asked or when missing. The gateway's code is mounted,

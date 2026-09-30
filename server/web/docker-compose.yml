@@ -29,6 +29,7 @@ services:
     environment:
       SUPABASE_INTERNAL_URL: http://host.docker.internal:8000
       SUPABASE_SCHEMA: offshore_insights
+      AUTH_USERNAME_DOMAIN: users.insights.codeine.cloud
       PORT: "8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"

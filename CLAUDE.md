@@ -103,6 +103,11 @@ Traps already hit here (n8n 2.7):
 ## Users and checks
 
 - `node scripts/user.mjs list|link|create|reset|disable|enable` (see the file header).
+- **User management page** (sidebar, admin only: `app_user.is_admin`, which only `hentus` has): view, edit, disable
+  and delete users through the gateway's `/api/admin/users`. The gateway verifies the token itself (HS256,
+  `SUPABASE_JWT_SECRET`) and rejects non-admins from memory. Passwords set there are kept in
+  `app_user_password` and shown in plain text (Hentus's choice). That table is service_role only. Deleting a user
+  created here deletes the login too. Deleting a linked login (the shared realm, e.g. Hentus) only removes access.
 - The reusable test user is `claude-test`, with its password in `.env` as `TEST_USER_PASSWORD`.
 - `node scripts/verify-access.mjs` is the end-to-end access suite. Run it after any schema, RLS
   or gateway change. When you add a check, prove it fails against a deliberately broken setup.

@@ -32,7 +32,8 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (st.kind === 'login') return <Login notice={st.notice} onLogin={(s) => void load(s)} />;
-  if (st.kind === 'ready') return <Shell data={st.data} onSignOut={() => { void logout(st.session); setSt({ kind: 'login' }); }} />;
+  if (st.kind === 'ready') return <Shell data={st.data} onSignOut={() => { void logout(st.session); setSt({ kind: 'login' }); }}
+    onExpired={() => { void logout(null); setSt({ kind: 'login', notice: 'Your session ended. Please sign in again.' }); }} />;
   return (
     <div className="page">
       <div className="wrap">

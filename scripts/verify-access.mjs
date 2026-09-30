@@ -77,6 +77,14 @@ const w = await req('/rest/v1/tax_rate', { jwt, method: 'POST', body: {
 check('member write to tax_rate is rejected', w.status >= 400, w.status);
 const own = await req('/rest/v1/app_user?select=username', { jwt });
 check('member sees only own app_user row', rows(own) === 1 && own.json[0].username === env.TEST_USER_USERNAME, JSON.stringify(own.json));
+// Passwords shown on User management: service_role only, not even the user's own row
+// (claude-test has a row, so a leak would show). admin_users() likewise.
+const pw = await req('/rest/v1/app_user_password?select=user_id', { jwt });
+check('member cannot read app_user_password (not even own row)', pw.status >= 400 || rows(pw) === 0, `${pw.status} ${rows(pw)}`);
+const au = await req('/rest/v1/rpc/admin_users', { jwt, method: 'POST', body: {} });
+check('member cannot call admin_users()', au.status >= 400, au.status);
+const adm = await fetch(`${GW}/api/admin/users`, { headers: { Authorization: `Bearer ${jwt}` } });
+check('non-admin member gets 403 from the user-management API', adm.status === 403, adm.status);
 
 // 4. non-member login (throwaway) sees nothing
 const tmpEmail = `nonmember-${randomBytes(4).toString('hex')}@${env.AUTH_USERNAME_DOMAIN}`;
