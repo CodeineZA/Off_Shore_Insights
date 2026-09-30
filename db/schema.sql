@@ -87,6 +87,10 @@ create table if not exists offshore_insights.jurisdiction (
   notes            text
 );
 
+-- Map position (degrees) for the dashboard's coverage map.
+alter table offshore_insights.jurisdiction add column if not exists lon numeric(7,3);
+alter table offshore_insights.jurisdiction add column if not exists lat numeric(7,3);
+
 create table if not exists offshore_insights.tax_type (
   code          text primary key,
   label         text not null,
@@ -345,6 +349,36 @@ select * from (
   from offshore_insights.sync_run s order by s.workflow, s.started_at desc
 ) lr;
 
+-- ═══════════════════ Dashboard payload (members, via their JWT) ══════════════
+-- One call per page load returns everything the tiles need (PLAN.md §9).
+-- SECURITY INVOKER: RLS applies, so a non-member gets empty arrays.
+create or replace function offshore_insights.dashboard()
+returns jsonb language sql stable security invoker set search_path = '' as $$
+  select jsonb_build_object(
+    'generated_at', now(),
+    'me', (select jsonb_build_object('username', u.username, 'display_name', u.display_name)
+           from offshore_insights.app_user u where u.user_id = auth.uid()),
+    'jurisdictions', coalesce((select jsonb_agg(to_jsonb(j) order by j.code) from offshore_insights.jurisdiction j), '[]'),
+    'tax_types',     coalesce((select jsonb_agg(to_jsonb(t) order by t.sort_order) from offshore_insights.tax_type t), '[]'),
+    'rates',         coalesce((select jsonb_agg(to_jsonb(r) order by r.jurisdiction_code, r.sort_order) from offshore_insights.v_current_rates r where r.headline_rate is not null), '[]'),  -- unknown = absent
+    'rate_history',  coalesce((select jsonb_agg(jsonb_build_object('id', h.id, 'jurisdiction_code', h.jurisdiction_code,
+                       'tax_type_code', h.tax_type_code, 'headline_rate', h.headline_rate, 'valid_from', h.valid_from,
+                       'valid_to', h.valid_to, 'verified_on', h.verified_on, 'needs_verification', h.needs_verification)
+                       order by h.valid_from) from offshore_insights.tax_rate h), '[]'),
+    'treaties',      coalesce((select jsonb_agg(to_jsonb(t) order by t.country_a, t.country_b) from offshore_insights.treaty t), '[]'),
+    'wealth',        coalesce((select jsonb_agg(to_jsonb(w) order by w.jurisdiction_code, w.year) from offshore_insights.wealth_market w), '[]'),
+    'notes',         coalesce((select jsonb_agg(to_jsonb(n) order by n.jurisdiction_code, n.sort_order) from offshore_insights.jurisdiction_note n), '[]'),
+    'signals',       coalesce((select jsonb_agg(to_jsonb(s) order by s.jurisdiction_code) from offshore_insights.v_market_signal s), '[]'),
+    'flags',         coalesce((select jsonb_agg(jsonb_build_object('id', f.id, 'target_table', f.target_table,
+                       'target_id', f.target_id, 'reason', f.reason, 'status', f.status, 'detail', f.detail,
+                       'raised_on', f.raised_on, 'reviewed_on', f.reviewed_on) order by f.raised_on)
+                       from offshore_insights.review_flag f), '[]'),
+    'runs',          coalesce((select jsonb_agg(to_jsonb(x) order by x.workflow) from (
+                       select distinct on (s.workflow) s.workflow, s.status, s.started_at, s.finished_at, s.rows
+                       from offshore_insights.sync_run s order by s.workflow, s.started_at desc) x), '[]')
+  );
+$$;
+
 -- ═══════════════════ Automation RPCs (n8n, SERVICE ROLE ONLY) ════════════════
 -- Next check date after a confirmation: the day after the jurisdiction's (or its
 -- parent's) next budget if that is still ahead, otherwise ~6 months out.
@@ -499,6 +533,8 @@ begin
     execute format('grant execute on function offshore_insights.%s to service_role', fn);
   end loop;
 end $$;
+revoke all on function offshore_insights.dashboard() from public, anon;
+grant execute on function offshore_insights.dashboard() to authenticated, service_role;
 -- Nothing in this schema is callable or readable by anon.
 revoke usage on schema offshore_insights from anon;
 

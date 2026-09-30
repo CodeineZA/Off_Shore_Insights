@@ -29,10 +29,17 @@ Design rule above all others: **simple, clean, easy to see and compare.**
 Hardware: Raspberry Pi 5, 8 GB, NVMe SSD. Supabase is the **shared** instance already running
 on the Pi (one Postgres schema per app), so there is no second stack.
 
-Frontend stack: Vite, TypeScript, `@supabase/supabase-js`, Apache ECharts, `vite-plugin-pwa`,
-and Capacitor for the APK. **⛔ Frontend gate: no UI work starts until Hentus has put the Claude
-Design output (graphics, style, theme) in this folder.** The website and the APK use that one
-design.
+Frontend stack: Vite + React + TypeScript, with charts drawn as hand-built SVG to match the
+Claude Design output pixel for pixel (the design isn't reproducible with ECharts). No
+supabase-js: the app only needs the login gateway plus one RPC, so it uses plain `fetch`.
+Capacitor wraps the same build for the APK.
+
+The design is in `interactive-graph-designs/` (Claude Design handoff, received 2026-09-30):
+- Theme: charcoal `#121110`→`#232220`, warm gold `#d8b07a`/`#e6c28c`/`#f3dcb2`, text
+  `#ece6dc`/`#9a9185`, font Poppins.
+- Tiles are 300 px tall with 18 px radius. Selecting a tile morph-expands it into a detail view
+  with an insight panel, and the other tiles fly out.
+- Section 9 maps each placeholder tile to real data.
 
 ## 3. Architecture
 
@@ -209,14 +216,17 @@ enforces this.
 - Resolve the Belgium securities-tax conflict. Fill in Belgian regional inheritance, Mauritius, Seychelles, Switzerland, Portugal, withholding rates, and `wealth_market`.
 - ✔ Done when no rows have `needs_verification = true` for the starter countries.
 
-**Phase 3: Automation**
-- W0–W4 and E1 in n8n with Telegram.
-- ✔ Done when a manually aged row (`next_check_on` set to yesterday) produces a Telegram flag, and pressing ✅ updates `verified_on`.
+**Phase 3: Automation** ✔ 2026-09-30 (W2 buttons await Hentus's first real press)
+- W0–W4 and E1 in n8n with Telegram, plus the error alert.
+- ✔ A manually aged row produced a Telegram flag with ✅/✏️ buttons. Confirming a button press
+  updates `verified_on`: waiting on the first real press.
 
-**Phase 4: Dashboard + APK: ⛔ waits for the designs**
-- Starts only after Hentus has put the Claude Design output in this folder. Build the page per
-  section 5 in that design, with one codebase for web and APK.
-- ✔ Done when 1–6 countries can be compared on a tablet and a phone, all toggles work, every value links to its source, and web and APK look the same.
+**Phase 4: Dashboard + APK** (designs received 2026-09-30)
+- Login page → landing page of tiles, built tile by tile per section 9, in the Claude Design theme.
+- ✔ Done when every tile runs on live data, expands with its animation, and shows unknown as
+  grey (never zero) at 768×1024 and 375×812.
+- APK: Capacitor wraps the same `dist/`. It needs the Android SDK on this machine, and comes
+  after the web version is approved.
 
 **Phase 5: Users** (last)
 - Hentus supplies the usernames (with email and cell where available). Create them with `scripts/user.mjs`.
@@ -226,3 +236,66 @@ enforces this.
 - Which languages does the Mauritius partner read? French is assumed; Punjabi is unconfirmed.
 - Should a combined "attractiveness score" per country be computed later? Hold this until the data is verified.
 - Answered: the dashboard is private, with users created by Hentus. It runs on a Pi 5, 8 GB, with the shared Supabase.
+- **Tile 10 (compounding):** what does the structure actually cost per year (trustee and
+  management fees, Mauritius tax)? Until Justus supplies it, the tile uses an explicit 0.5%
+  assumption, shown on screen.
+- **Tile 8:** the design showed "structures set up". If the firm wants to track its own
+  structures or clients, that needs a new table, entered by hand. Until then the tile shows
+  review activity.
+
+## 9. Dashboard tiles: data extraction per tile
+
+**Loading.** The dashboard makes **one** call per page load: `rpc/dashboard()` returns one JSON
+document with everything the tiles need. That's a single light request, which matters on a Pi.
+It runs `security invoker`, so RLS applies and non-members get empty arrays.
+
+The payload holds:
+- jurisdictions (with map coordinates)
+- tax types
+- `v_current_rates`
+- full `tax_rate` history
+- treaties
+- `wealth_market`
+- `jurisdiction_note`
+- `v_market_signal`
+- review flags
+- the last `sync_run` per workflow
+
+Each tile's numbers come from **pure functions** in `apps/web/src/data/insights.ts`, which are
+unit-tested. The rules they follow:
+- Unknown (no row) shows grey or dashed with "?", never zero.
+- A 0% rate is drawn as a flat bar.
+- Every value carries its `source_url` and `verified_on`.
+- Regions inherit their parent's rates (already done by `v_current_rates`), and inherited values
+  are labelled as such.
+
+Countries = `jurisdiction.kind = 'country'` and not a hub. The multi-select defaults to FR, DE,
+BE, GB, ES, ZA. MU and SC appear only as hubs.
+
+| # | Tile (design name → real use) | Extraction | Selected-view insight |
+|---|---|---|---|
+| 1 | **KPI pair → "Data health"**: *Rates tracked* and *Open review flags* | Rates tracked = current rows with a known `headline_rate`. Sparkline = cumulative count by `verified_on`, bucketed per 7d/30d/12m. Flags = `review_flag.raised_on` per bucket; open = `status in (pending, needs_update)` | Peak, average, low and change for the selected series. A click switches series |
+| 2 | **Top rates**: top 5 countries for a tax type | `v_current_rates` for one `tax_type_code`, known only, sorted descending. Segments: Inheritance·children, Inheritance·others, CGT·shares | Selected row: rate, vs average, rank, `threshold_note`, `note`, source link, verified date, "needs verification" badge |
+| 3 | **Market signal radar**: the PLAN's three signals, in five axes | `v_market_signal` per country. **Treaty**: in force 1, signed .75, negotiating .5, none/unknown 0. **Wealth**: HNWI if present, else Eurostat employers, ÷ max across countries. **Inheritance**: top estate rate ÷ max. **Recurring tax**: count of recurring taxes > 0 ÷ max. **CGT**: CGT_FINANCIAL ÷ max. Unknown axes are drawn at 0 and flagged "unknown" in the panel | The five raw values with units, and which wealth metric was used. No combined score (§8) |
+| 4 | **Coverage map**: where we have data | A pin per country (hubs included) at `jurisdiction.lon/lat`. Glow = number of known current rates. The design's news feed is replaced by **notes + change log**: `jurisdiction_note` (warnings first) and that country's recent `review_flag`s | Role (target / home / hub), treaty with MU, top inheritance and CGT, rows needing a check, next budget date |
+| 5 | **Line**: *Employers over time* / *Rate history* | Employers: `wealth_market.business_owners` by year (Eurostat 2020–2025). Rate history: `tax_rate` rows (including closed ones) as steps by `valid_from` year. The history is honest but still flat, because closed rows start appearing as rates change | The year under the cursor: each country's value and its change vs the previous year |
+| 6 | **Columns**: compare countries for one tax type (the PLAN §5 "simple chart") | `v_current_rates.headline_rate` for the selected tax type × selected countries. Unknown = dashed "?" | Highest, lowest, average and number unknown. On hover: rate, vs average, rank |
+| 7 | **Donut**: wealth share of the selected countries | Latest non-null per country for the metric: Employers (Eurostat) / HNWI / Millionaires. Metrics with no data show a "no data yet" state, never an empty donut | Total, largest, share. On hover: count and share |
+| 8 | **Area → "Review activity"** (repurposed: no structures data exists) | `review_flag` per month over 12 months: raised (monthly/cumulative), with confirmed alongside | New this month, running total, best month |
+| 9 | **Stacked**: tax load by category | Sum of known headline rates per category (investment / estate / wealth / anti-offshore) per country. An index, **not a tax bill**, and labelled so. Absolute / 100% | Per segment: category points and share of the country's total |
+| 10 | **Compounding**: €1m over 10/20/30 years at 4/6/8% | **Home** drag per year = return × CGT_FINANCIAL (gains realised yearly) + recurring wealth-type rates that apply to a financial portfolio (WEALTH_NET, WEALTH_SOLIDARITY, SECURITIES_ACCOUNT), using `rate_min` (the entry band, closer to a middle-class millionaire than the top rate). **Structure** drag = 0.5% assumption (§8). Country selectable | The value in the structure, at home, and the difference, with the assumptions spelled out |
+
+**Build order** (one tile at a time, each checked in the browser against the database before
+the next):
+
+0. Login + shell + `rpc/dashboard`
+1. Columns (the core comparison)
+2. Top rates
+3. Radar
+4. Map
+5. KPI
+6. Line
+7. Donut
+8. Stacked
+9. Review activity
+10. Compounding

@@ -143,9 +143,51 @@ async function login(req, res) {
   } finally { inFlight--; }
 }
 
+// Session renewal and sign-out also go through here, under the same in-memory limits,
+// so the app never talks to GoTrue directly.
+async function gotrue(path, init) {
+  if (global.blocked('all') || inFlight >= LIMITS.maxConcurrentGotrue) return { status: 429 };
+  global.add('all'); inFlight++;
+  try {
+    const r = await fetch(`${SUPABASE}/auth/v1${path}`, { ...init, signal: AbortSignal.timeout(10_000) });
+    return { status: r.status, body: await r.json().catch(() => null) };
+  } catch (e) {
+    console.error('gotrue error', e.message);
+    return { status: 503 };
+  } finally { inFlight--; }
+}
+
+async function refresh(req, res) {
+  const ip = clientIp(req);
+  if (ipReqs.blocked(ip)) return tooMany(res, ipReqs.retryAfterS(ip));
+  ipReqs.add(ip);
+  let body;
+  try { body = await readJson(req); } catch { return send(res, 400, { error: 'bad_request' }); }
+  const token = String(body?.refresh_token ?? '');
+  if (!token || token.length > 512) return send(res, 400, { error: 'bad_request' });
+  const r = await gotrue('/token?grant_type=refresh_token', {
+    method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: token }) });
+  if (r.status === 200 && r.body?.access_token) return send(res, 200, r.body);
+  if (r.status === 429) return tooMany(res, 30);
+  if (r.status === 503) return send(res, 503, { error: 'auth_unavailable' });
+  return send(res, 401, { error: 'session_expired' });
+}
+
+async function logout(req, res) {
+  const ip = clientIp(req);
+  if (ipReqs.blocked(ip)) return tooMany(res, ipReqs.retryAfterS(ip));
+  ipReqs.add(ip);
+  const auth = String(req.headers.authorization || '');
+  if (!/^Bearer [A-Za-z0-9._-]{20,2048}$/.test(auth)) return send(res, 204, {});
+  await gotrue('/logout?scope=local', { method: 'POST', headers: { apikey: ANON, Authorization: auth } });
+  return send(res, 204, {});
+}
+
 http.createServer((req, res) => {
   const url = (req.url || '').split('?')[0];
   if (req.method === 'POST' && url === '/api/login') return void login(req, res);
+  if (req.method === 'POST' && url === '/api/refresh') return void refresh(req, res);
+  if (req.method === 'POST' && url === '/api/logout') return void logout(req, res);
   if (req.method === 'GET' && url === '/api/health') {
     return send(res, 200, { ok: directoryAt > 0, users: directory.size,
       directoryAgeS: directoryAt ? Math.round((Date.now() - directoryAt) / 1000) : null });

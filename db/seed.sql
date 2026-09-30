@@ -100,4 +100,14 @@ insert into treaty (country_a, country_b, status, signed_on, in_force_on, mli_no
 on conflict (country_a, country_b) do nothing;
 -- Seychelles treaties: all to research.
 
+
+-- ---- map coordinates (approximate centroids, degrees) ----
+update jurisdiction j set lon = v.lon, lat = v.lat
+from (values ('MU', 57.55, -20.25), ('SC', 55.45, -4.68), ('ZA', 24.70, -29.00), ('FR', 2.30, 46.60),
+             ('DE', 10.40, 51.10), ('BE', 4.50, 50.60), ('GB', -2.50, 53.50), ('IT', 12.50, 42.80),
+             ('ES', -3.70, 40.30), ('PT', -8.20, 39.60), ('CH', 8.20, 46.80), ('ES-MD', -3.70, 40.40),
+             ('ES-AN', -4.60, 37.50), ('BE-VLG', 4.40, 51.00), ('BE-BRU', 4.35, 50.85), ('BE-WAL', 4.80, 50.40)
+     ) v(code, lon, lat)
+where j.code = v.code and (j.lon is null or j.lat is null);
+
 reset search_path;

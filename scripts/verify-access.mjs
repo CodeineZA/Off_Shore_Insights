@@ -64,6 +64,10 @@ if (!jwt) { console.log('\ncannot continue without a session'); process.exit(1);
 // 3. member reads, cannot write
 const m = await req(RATES, { jwt });
 check('member reads FR/ES current rates', rows(m) > 0, `${m.status} ${rows(m)}`);
+const dash = await req('/rest/v1/rpc/dashboard', { jwt, method: 'POST', body: {} });
+check('member dashboard() returns rates + jurisdictions', dash.status === 200 && dash.json.rates?.length > 0 && dash.json.jurisdictions?.length > 0, dash.status);
+const anonDash = await req('/rest/v1/rpc/dashboard', { method: 'POST', body: {} });
+check('anon cannot call dashboard()', anonDash.status >= 400, anonDash.status);
 const w = await req('/rest/v1/tax_rate', { jwt, method: 'POST', body: {
   jurisdiction_code: 'FR', tax_type_code: 'INCOME_TOP', headline_rate: 1, valid_from: '2026-01-01',
   verified_on: '2026-01-01', next_check_on: '2026-01-01' } });
@@ -87,6 +91,9 @@ try {
     if (rows(r) !== 0) leaks.push(`${t}(${r.status}/${rows(r)})`);
   }
   check(`logged-in NON-member reads 0 rows from all ${TABLES.length} tables`, leaks.length === 0, leaks.join(' '));
+  const nd = await req('/rest/v1/rpc/dashboard', { jwt: njwt, method: 'POST', body: {} });
+  const ndLeak = nd.status === 200 ? Object.entries(nd.json).filter(([, v]) => Array.isArray(v) && v.length).map(([k, v]) => k + '=' + v.length) : [];
+  check('logged-in NON-member gets an empty dashboard()', nd.status >= 400 || ndLeak.length === 0, ndLeak.join(' ') || nd.status);
 } finally {
   await req(`/auth/v1/admin/users/${created.json.id}`, { key: SR, method: 'DELETE', profile: false });
 }
