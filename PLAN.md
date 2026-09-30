@@ -248,33 +248,43 @@ enforces this.
 
 ## 9. Dashboards and tiles
 
-**Two dashboards, one sidebar** (decided by Hentus, 2026-09-30). The rule is simplicity,
-minimalism, and a clear separation of use.
+**Two modes, one sidebar** (spec from Hentus, 2026-09-30). The rule is simplicity, minimalism,
+and a clear separation of use. The Claude Design output defines the look only. Every tile's
+question, data, axes and legend are agreed first, then built **one at a time** and checked
+against the database.
 
-| Dashboard | Question it answers | Shape |
-|---|---|---|
-| **A. Global comparison** (`#/compare`) | How do countries compare on one statistic? | One statistic, many countries. Country-specific stats side by side |
-| **B. Country eligibility** (`#/eligibility`) | Can a client from *this* country benefit from a Mauritius / Seychelles structure, and which one? | One country. Its eligibility per structure type: trust, company, real estate, investments, bank account |
+### Mode 1: Global (all countries compared), `#/global`
 
-The ten Claude Design tiles were removed: the design defined the look, not the data. The
-chart building blocks ported from the design stay in `apps/web/src/ui/charts.tsx` and are
-reused as tiles are added.
+Every chart here is filtered by the **country slicer** and the **tax-type toggles** (category
+plus applies-to).
 
-**Adding a tile, one at a time.** Agree each of these with Hentus before building:
-1. **Question**: the one thing the tile answers.
-2. **Data**: which table and columns, including what counts as "unknown" (never shown as 0).
-3. **Chart**: which building block, what's on each axis, and what the legend shows.
-4. **Selected view**: what the insight panel adds when the tile is opened.
+| # | Graph | Use | Data it presents | Data status (2026-09-30) |
+|---|---|---|---|---|
+| G1 | Ranked horizontal bar (default view) | "Which countries first?" at a glance | Opportunity score per country, sorted high to low. Bar segments = market size, tax pain, ease of reach | ⚠️ **Needs the score formula**: how each segment is measured and weighted. Inputs are partly available |
+| G2 | Gate matrix (traffic-light grid) | Which countries are blocked | Rows = countries. Columns = treaty, blacklist status, trust recognition, cross-border marketing allowed. Green / amber / red / grey (unknown) | ⚠️ Treaty exists. The other gates are **not stored**: new `jurisdiction_gate` table |
+| G3 | Bubble chart (market vs pain) | The sweet spot: big market, high tax pain | X = HNWI count (or per 1,000 adults), Y = worked-example total tax, size = business owners, colour = treaty status | ⚠️ HNWI, adult population and the G5 model are missing |
+| G4 | Tax heatmap | Where the pain is, by tax type | Countries × tax types. Colour intensity = headline_rate. Grey = unknown, never zero | ✅ **Built first** |
+| G5 | Stacked bar (worked example) | Many rates → one euro figure | Total tax on a sample client (€2m invested, 20 years, then inherited) per country, stacked by tax type | ⚠️ **Needs the sample-client model** agreed |
+| G6 | Donut | Where the wealthy people are | Share of `hnwi_count` across the selected countries. Switchable to millionaires or business owners | ⚠️ Only business owners so far (Eurostat) |
+| G7 | Trend arrows (small table) | Rising pain = hot market | Direction of each key rate (up / down / flat) from the `valid_from` history | ⚠️ No closed history rows yet, so all flat |
 
-Then build it, check it against the database, and deploy.
+### Mode 2: 1 : 2 (one country vs Mauritius and Seychelles), `#/country`
 
-**Data note for dashboard B.** Today's database holds tax rates, treaties and wealth figures.
-Eligibility needs facts per *home country × structure type* that aren't stored yet, for example:
-- whether the home country recognises or looks through trusts
-- CFC / attribution rules
-- whether the Mauritius or Seychelles route is available to its residents: real-estate
-  schemes, residence, banking
+| # | Graph | Use | Data it presents | Data status |
+|---|---|---|---|---|
+| C1 | Grouped bar | The plain comparison, three bars per tax type | headline_rate: chosen country, Mauritius, Seychelles | ⚠️ Hub rates not researched, so they show unknown |
+| C2 | Range bar | Taxes with more than one rate | rate_min–rate_max per tax type for the three jurisdictions. Tooltip: threshold, note, source, verified date | ⚠️ Same |
+| C3 | Diverging bar (the gap) | The sales argument: the biggest difference | Country rate − hub rate per tax type; positive = the country taxes more | ⚠️ Same |
+| C4 | Stacked bar (worked example) | One number per jurisdiction | Total tax on the same sample client in each of the three, by tax type | ⚠️ Needs the G5 model and hub rates |
+| C5 | Treaty card | Does the handshake exist, and what is it worth? | Treaty status with each hub, signed and in-force dates, treaty WHT on dividends and interest vs domestic | ⚠️ Status and dates exist. Treaty WHT and domestic WHT rates not seeded |
+| C6 | Donut | The country has prospects | Wealth split: millionaires, HNWI, UHNWI, business owners | ⚠️ Business owners only |
+| C7 | Info panel | The "why" and the caveats | Gate badges + `jurisdiction_note` items, warnings first | ⚠️ Notes exist. Gates need `jurisdiction_gate` |
 
-These get their own table, designed together with the first eligibility tile.
+**Known gap:** Mauritius and Seychelles rates aren't researched yet. The seed has Mauritius
+treaty rows but no tax rates for either hub, so C1–C4 show "unknown" until Phase 2 fills them.
 
-Tiles agreed so far: *none yet*.
+### Build order
+
+G4 → then the tiles whose data exists, while the decisions for the others are agreed.
+
+Tiles built so far: G4.
