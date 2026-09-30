@@ -143,7 +143,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1100,
+        1320,
         0
       ],
       "credentials": {
@@ -159,7 +159,7 @@
         "genericAuthType": "httpCustomAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ workflow: 'W0_gitsync', started_at: $('Extract').item.json.StartedAt, finished_at: $now.toISO(), status: $('Sync & deploy on Pi').item.json.code === 0 ? 'ok' : 'error', error: $('Sync & deploy on Pi').item.json.code === 0 ? null : String(($('Sync & deploy on Pi').item.json.stdout || '') + '\n' + ($('Sync & deploy on Pi').item.json.stderr || '') + ($('Sync & deploy on Pi').item.json.error ? ' ' + JSON.stringify($('Sync & deploy on Pi').item.json.error) : '')).slice(-800) }) }}",
+        "jsonBody": "={{ JSON.stringify({ workflow: $json.workflow, started_at: $json.started_at, finished_at: $json.finished_at, status: $json.status, error: $json.error || null }) }}",
         "options": {}
       },
       "onError": "continueRegularOutput"
@@ -170,7 +170,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1320,
+        1540,
         0
       ],
       "parameters": {
@@ -184,11 +184,11 @@
           "conditions": [
             {
               "id": "c3",
-              "leftValue": "={{ $('Sync & deploy on Pi').item.json.code }}",
-              "rightValue": 0,
+              "leftValue": "={{ $('Summarize').item.json.status }}",
+              "rightValue": "error",
               "operator": {
-                "type": "number",
-                "operation": "notEquals"
+                "type": "string",
+                "operation": "equals"
               }
             }
           ],
@@ -203,7 +203,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1540,
+        1760,
         -80
       ],
       "credentials": {
@@ -214,7 +214,7 @@
       },
       "parameters": {
         "chatId": "6688393980",
-        "text": "={{ '⚠️ Off_Shore_Insights deploy FAILED (exit ' + $('Sync & deploy on Pi').item.json.code + ')\n\n' + String(($('Sync & deploy on Pi').item.json.stdout || '') + '\n' + ($('Sync & deploy on Pi').item.json.stderr || '') + ($('Sync & deploy on Pi').item.json.error ? JSON.stringify($('Sync & deploy on Pi').item.json.error) : '')).slice(-1500) }}",
+        "text": "={{ '⚠️ Off_Shore_Insights deploy FAILED\n\n' + $('Summarize').item.json.error }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -234,6 +234,53 @@
         "height": 220,
         "color": 4,
         "content": "## Off_Shore_Insights deploy (repo: n8n/W0-gitsync.json)\nPush to main → fetch; exits NOOP if nothing changed (spoofed webhooks cost one fetch, no DB write). flock prevents overlapping deploys. `--restart` is read from the real commit, not the payload. Then scripts/deploy.sh. Non-zero exit → sync_run error row + Telegram alert."
+      }
+    },
+    {
+      "id": "w0-10",
+      "name": "Summarize",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s1",
+              "name": "workflow",
+              "type": "string",
+              "value": "W0_gitsync"
+            },
+            {
+              "id": "s2",
+              "name": "started_at",
+              "type": "string",
+              "value": "={{ $('Extract').item.json.StartedAt }}"
+            },
+            {
+              "id": "s3",
+              "name": "finished_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "id": "s4",
+              "name": "status",
+              "type": "string",
+              "value": "={{ $json.code === 0 ? 'ok' : 'error' }}"
+            },
+            {
+              "id": "s5",
+              "name": "error",
+              "type": "string",
+              "value": "={{ $json.code === 0 ? '' : [$json.stdout, $json.stderr, $json.error ? JSON.stringify($json.error) : ''].join(' ').slice(-800) }}"
+            }
+          ]
+        },
+        "options": {}
       }
     }
   ],
@@ -287,7 +334,7 @@
       "main": [
         [
           {
-            "node": "Record sync_run",
+            "node": "Summarize",
             "type": "main",
             "index": 0
           }
@@ -316,6 +363,17 @@
           }
         ],
         []
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Record sync_run",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   }
