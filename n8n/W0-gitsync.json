@@ -214,9 +214,10 @@
       },
       "parameters": {
         "chatId": "6688393980",
-        "text": "={{ '⚠️ Off_Shore_Insights deploy FAILED\n\n' + $('Summarize').item.json.error }}",
+        "text": "=⚠️ <b>Off_Shore_Insights deploy FAILED</b>\n\n<pre>{{ String($('Summarize').item.json.error).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre>",
         "additionalFields": {
-          "appendAttribution": false
+          "appendAttribution": false,
+          "parse_mode": "HTML"
         }
       }
     },
