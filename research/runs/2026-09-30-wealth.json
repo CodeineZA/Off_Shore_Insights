@@ -1,0 +1,20 @@
+{
+  "run": "2026-09-30-wealth",
+  "note": "Manual recipes, from reports Hentus downloaded to PDFs/ (gitignored). Each value was read from the table named below; Knight Frank rows were checked against the report's own % change column.",
+  "wealth": [
+    { "source": "UBS Global Wealth Report 2026", "recipe": "ubs-gwr-millionaires", "where": "p.21 'The UBS Millionaire Index', USD millionaires in thousands, end 2025",
+      "source_url": "https://www.ubs.com/global/en/wealthmanagement/insights/global-wealth-report.html", "year": 2025, "column": "millionaires",
+      "values": { "DE": 2648000, "GB": 2428000, "FR": 2388000, "IT": 1235000, "ES": 1077000, "CH": 944000, "BE": 556000, "PT": 181000, "ZA": 97000 } },
+    { "source": "Knight Frank Wealth Report 2026", "recipe": "knightfrank-uhnwi", "where": "Databank 'Global wealth populations by market', UHNWI (US$30m+), 2026 column",
+      "source_url": "https://www.knightfrank.com/wealthreport", "year": 2026, "column": "uhnwi_count",
+      "values": { "DE": 38215, "GB": 27876, "FR": 21518, "CH": 17692, "IT": 15433, "ES": 9186, "PT": 2187, "ZA": 1347 },
+      "missing": { "BE": "Belgium is not in the table" } },
+    { "source": "Knight Frank Wealth Report 2026", "recipe": "knightfrank-uhnwi", "where": "same table, 2021 column",
+      "source_url": "https://www.knightfrank.com/wealthreport", "year": 2021, "column": "uhnwi_count",
+      "values": { "DE": 28942, "GB": 24871, "FR": 17737, "CH": 12724, "IT": 12547, "ES": 6478, "PT": 1462, "ZA": 1047 } },
+    { "source": "DBT Business Population Estimates 2025", "recipe": "gb-bpe-employers", "where": "Detailed tables, Table 1 'All employers' (businesses with at least one employee), start of 2025",
+      "source_url": "https://www.gov.uk/government/statistics/business-population-estimates-2025", "year": 2025, "column": "business_owners",
+      "values": { "GB": 1417730 },
+      "caveat": "Counts businesses with employees, not people as Eurostat does: a close stand-in for business owners." }
+  ]
+}

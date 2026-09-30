@@ -79,7 +79,8 @@ const recipes = [
     cells: ['wealth_market.business_owners'], automation: 'node research/fetch-eurostat.mjs (run by /update-offshore-insights); n8n E1 exists but is paused',
     extract: 'JSON-stat: value × 1000 per geo per year.' },
   { id: 'ubs-gwr-millionaires', method: 'manual', url: 'https://www.ubs.com/global/en/wealthmanagement/insights/global-wealth-report.html', cells: ['wealth_market.millionaires'],
-    extract: 'UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source "UBS Global Wealth Report <edition>".' },
+    extract: 'UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source "UBS Global Wealth Report <edition>". '
+      + '2026 edition: main report p.21 "The UBS Millionaire Index" (thousands, end 2025) covers all our countries. The upper bands (5-10m, 10-50m, 50-100m) are growth rates only.' },
   { id: 'capgemini-hnwi', method: 'manual', url: 'https://www.capgemini.com/insights/research-library/world-wealth-report/', cells: ['wealth_market.hnwi_count'],
     extract: 'Capgemini World Wealth Report: HNWI population per country (largest markets only). '
       + 'CHECKED 2026-09-30: the 2026 edition (interactive copy at https://wwr2026.s3.us-east-1.amazonaws.com/index.html; the PDF download link was broken) '
@@ -87,7 +88,10 @@ const recipes = [
       + '(population: Europe +6.5%, France +2.7%, Germany +11.1%, UK +2.6%, Africa +4.1%). Its text is rendered as images and its charts as videos. '
       + 'Needs a per-country source; growth alone cannot give a count.' },
   { id: 'knightfrank-uhnwi', method: 'manual', url: 'https://www.knightfrank.com/wealthreport', cells: ['wealth_market.uhnwi_count'],
-    extract: 'Knight Frank Wealth Report: UHNWI (> US$30m) population per country.' },
+    extract: 'Knight Frank Wealth Report: UHNWI (> US$30m) population per country. '
+      + '2026 edition: Databank "Global wealth populations by market" (2021, 2026, 2031f). Read with pdftotext -table (the -layout text shifts rows) and check each row against its % change column. Belgium is not listed.' },
+  { id: 'gb-bpe-employers', method: 'manual', url: 'https://www.gov.uk/government/statistics/business-population-estimates-2025', cells: ['wealth_market.business_owners:GB'],
+    extract: 'UK has no Eurostat figure. DBT Business Population Estimates, detailed tables xlsx, Table 1 "All employers" (businesses with at least one employee, start of year). Counts businesses, not people: a close stand-in.' },
 ];
 
 writeFileSync(new URL('./recipes.json', import.meta.url), JSON.stringify({ version: 1, updated: '2026-09-30', recipes }, null, 2) + '\n');
