@@ -246,59 +246,35 @@ enforces this.
   structures or clients, that needs a new table, entered by hand. Until then the tile shows
   review activity.
 
-## 9. Dashboard tiles: data extraction per tile
+## 9. Dashboards and tiles
 
-**Loading.** The dashboard makes **one** call per page load: `rpc/dashboard()` returns one JSON
-document with everything the tiles need. That's a single light request, which matters on a Pi.
-It runs `security invoker`, so RLS applies and non-members get empty arrays.
+**Two dashboards, one sidebar** (decided by Hentus, 2026-09-30). The rule is simplicity,
+minimalism, and a clear separation of use.
 
-The payload holds:
-- jurisdictions (with map coordinates)
-- tax types
-- `v_current_rates`
-- full `tax_rate` history
-- treaties
-- `wealth_market`
-- `jurisdiction_note`
-- `v_market_signal`
-- review flags
-- the last `sync_run` per workflow
+| Dashboard | Question it answers | Shape |
+|---|---|---|
+| **A. Global comparison** (`#/compare`) | How do countries compare on one statistic? | One statistic, many countries. Country-specific stats side by side |
+| **B. Country eligibility** (`#/eligibility`) | Can a client from *this* country benefit from a Mauritius / Seychelles structure, and which one? | One country. Its eligibility per structure type: trust, company, real estate, investments, bank account |
 
-Each tile's numbers come from **pure functions** in `apps/web/src/data/insights.ts`, which are
-unit-tested. The rules they follow:
-- Unknown (no row) shows grey or dashed with "?", never zero.
-- A 0% rate is drawn as a flat bar.
-- Every value carries its `source_url` and `verified_on`.
-- Regions inherit their parent's rates (already done by `v_current_rates`), and inherited values
-  are labelled as such.
+The ten Claude Design tiles were removed: the design defined the look, not the data. The
+chart building blocks ported from the design stay in `apps/web/src/ui/charts.tsx` and are
+reused as tiles are added.
 
-Countries = `jurisdiction.kind = 'country'` and not a hub. The multi-select defaults to FR, DE,
-BE, GB, ES, ZA. MU and SC appear only as hubs.
+**Adding a tile, one at a time.** Agree each of these with Hentus before building:
+1. **Question**: the one thing the tile answers.
+2. **Data**: which table and columns, including what counts as "unknown" (never shown as 0).
+3. **Chart**: which building block, what's on each axis, and what the legend shows.
+4. **Selected view**: what the insight panel adds when the tile is opened.
 
-| # | Tile (design name → real use) | Extraction | Selected-view insight |
-|---|---|---|---|
-| 1 | **KPI pair → "Data health"**: *Rates tracked* and *Open review flags* | Rates tracked = current rows with a known `headline_rate`. Sparkline = cumulative count by `verified_on`, bucketed per 7d/30d/12m. Flags = `review_flag.raised_on` per bucket; open = `status in (pending, needs_update)` | Peak, average, low and change for the selected series. A click switches series |
-| 2 | **Top rates**: top 5 countries for a tax type | `v_current_rates` for one `tax_type_code`, known only, sorted descending. Segments: Inheritance·children, Inheritance·others, CGT·shares | Selected row: rate, vs average, rank, `threshold_note`, `note`, source link, verified date, "needs verification" badge |
-| 3 | **Market signal radar**: the PLAN's three signals, in five axes | `v_market_signal` per country. **Treaty**: in force 1, signed .75, negotiating .5, none/unknown 0. **Wealth**: HNWI if present, else Eurostat employers, ÷ max across countries. **Inheritance**: top estate rate ÷ max. **Recurring tax**: count of recurring taxes > 0 ÷ max. **CGT**: CGT_FINANCIAL ÷ max. Unknown axes are drawn at 0 and flagged "unknown" in the panel | The five raw values with units, and which wealth metric was used. No combined score (§8) |
-| 4 | **Coverage map**: where we have data | A pin per country (hubs included) at `jurisdiction.lon/lat`. Glow = number of known current rates. The design's news feed is replaced by **notes + change log**: `jurisdiction_note` (warnings first) and that country's recent `review_flag`s | Role (target / home / hub), treaty with MU, top inheritance and CGT, rows needing a check, next budget date |
-| 5 | **Line**: *Employers over time* / *Rate history* | Employers: `wealth_market.business_owners` by year (Eurostat 2020–2025). Rate history: `tax_rate` rows (including closed ones) as steps by `valid_from` year. The history is honest but still flat, because closed rows start appearing as rates change | The year under the cursor: each country's value and its change vs the previous year |
-| 6 | **Columns**: compare countries for one tax type (the PLAN §5 "simple chart") | `v_current_rates.headline_rate` for the selected tax type × selected countries. Unknown = dashed "?" | Highest, lowest, average and number unknown. On hover: rate, vs average, rank |
-| 7 | **Donut**: wealth share of the selected countries | Latest non-null per country for the metric: Employers (Eurostat) / HNWI / Millionaires. Metrics with no data show a "no data yet" state, never an empty donut | Total, largest, share. On hover: count and share |
-| 8 | **Area → "Review activity"** (repurposed: no structures data exists) | `review_flag` per month over 12 months: raised (monthly/cumulative), with confirmed alongside | New this month, running total, best month |
-| 9 | **Stacked**: tax load by category | Sum of known headline rates per category (investment / estate / wealth / anti-offshore) per country. An index, **not a tax bill**, and labelled so. Absolute / 100% | Per segment: category points and share of the country's total |
-| 10 | **Compounding**: €1m over 10/20/30 years at 4/6/8% | **Home** drag per year = return × CGT_FINANCIAL (gains realised yearly) + recurring wealth-type rates that apply to a financial portfolio (WEALTH_NET, WEALTH_SOLIDARITY, SECURITIES_ACCOUNT), using `rate_min` (the entry band, closer to a middle-class millionaire than the top rate). **Structure** drag = 0.5% assumption (§8). Country selectable | The value in the structure, at home, and the difference, with the assumptions spelled out |
+Then build it, check it against the database, and deploy.
 
-**Build order** (one tile at a time, each checked in the browser against the database before
-the next):
+**Data note for dashboard B.** Today's database holds tax rates, treaties and wealth figures.
+Eligibility needs facts per *home country × structure type* that aren't stored yet, for example:
+- whether the home country recognises or looks through trusts
+- CFC / attribution rules
+- whether the Mauritius or Seychelles route is available to its residents: real-estate
+  schemes, residence, banking
 
-0. Login + shell + `rpc/dashboard`
-1. Columns (the core comparison)
-2. Top rates
-3. Radar
-4. Map
-5. KPI
-6. Line
-7. Donut
-8. Stacked
-9. Review activity
-10. Compounding
+These get their own table, designed together with the first eligibility tile.
+
+Tiles agreed so far: *none yet*.

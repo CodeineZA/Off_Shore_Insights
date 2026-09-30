@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AuthExpired, fetchDashboard, loadSession, logout, type Session } from './api';
 import type { Dashboard as Data } from './data/types';
-import Dashboard from './ui/Dashboard';
+import Shell from './ui/Shell';
 import Login from './ui/Login';
 
 type State = { kind: 'login'; notice?: string } | { kind: 'loading'; session: Session } | { kind: 'ready'; session: Session; data: Data } | { kind: 'error'; session: Session; message: string };
@@ -32,13 +32,13 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (st.kind === 'login') return <Login notice={st.notice} onLogin={(s) => void load(s)} />;
-  if (st.kind === 'ready') return <Dashboard data={st.data} onSignOut={() => { void logout(st.session); setSt({ kind: 'login' }); }} />;
+  if (st.kind === 'ready') return <Shell data={st.data} onSignOut={() => { void logout(st.session); setSt({ kind: 'login' }); }} />;
   return (
     <div className="page">
       <div className="wrap">
         <div className="kicker">Off_Shore_Insights · Dashboard</div>
         {st.kind === 'loading' ? (
-          <div className="grid">{Array.from({ length: 6 }, (_, i) => <div key={i} className="tile" style={{ opacity: 0.5, animation: `fadeUp .6s ${i * 80}ms both` }} />)}</div>
+          <p className="lead" style={{ animation: 'fadeUp .6s both' }}>Loading…</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'flex-start' }}>
             <p className="lead">{st.message}</p>

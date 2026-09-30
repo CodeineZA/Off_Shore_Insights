@@ -36,10 +36,10 @@ Work in `D:\Claude_Projects\Off_Shore_Insights`. Never edit the Pi checkout (and
 
 ## Frontend (`apps/web`)
 
-Vite + React + TS, hand-built SVG charts ported from the design. Data is one call,
-`rpc/dashboard()`. `src/data/insights.ts` holds the per-tile extraction, with unit tests
-(`npm test`). `src/tiles/tiles.tsx` has each tile's compact face and expanded view, and
-`src/ui/Dashboard.tsx` the grid and morph-expand.
+Vite + React + TS. `src/ui/Shell.tsx` has the sidebar and two dashboards (Global comparison,
+Country eligibility), both empty until tiles are agreed one by one (PLAN.md §9). Chart
+building blocks ported from the design are in `src/ui/charts.tsx`, and shared data helpers
+in `src/data/insights.ts`.
 
 - Dev: `npm run env:local` once (writes the gitignored `.env.local`), then preview
   "offshore-insights-web" (port 5190) in `D:Claude_Projects.claudelaunch.json`. `/api` is
