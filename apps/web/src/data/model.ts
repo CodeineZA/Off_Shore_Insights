@@ -123,8 +123,10 @@ export const latestWealth = (d: Dashboard, code: string, m: WealthMetric) => {
   const row = d.wealth.filter((w) => w.jurisdiction_code === code && w[m] != null).sort((a, b) => b.year - a.year)[0];
   return row ? { value: row[m] as number, year: row.year, source: row.source } : null;
 };
-/** HNWI once any country has it, otherwise business owners (Eurostat employers). */
-export const marketMetric = (d: Dashboard): WealthMetric => (d.wealth.some((w) => w.hnwi_count != null) ? 'hnwi_count' : 'business_owners');
+/** Market size = USD millionaires (UBS: one source covering every country; Hentus, 2026-09-30).
+ *  Business owners only while no millionaire figures are stored. */
+export const MARKET_METRICS: WealthMetric[] = ['millionaires', 'business_owners'];
+export const marketMetric = (d: Dashboard): WealthMetric => MARKET_METRICS.find((m) => d.wealth.some((w) => w[m] != null)) ?? MARKET_METRICS[0];
 
 // ── G1 · Where to go first ───────────────────────────────────────────────────
 export interface Segment { v01: number; known: boolean; raw: number | null; note: string }

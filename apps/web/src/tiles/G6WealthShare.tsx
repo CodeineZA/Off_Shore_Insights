@@ -6,11 +6,11 @@ import { fmtCount, nameOf } from '../data/insights';
 import { Donut } from '../ui/charts';
 import { Card, Seg } from './common';
 
-const METRICS: WealthMetric[] = ['hnwi_count', 'millionaires', 'business_owners'];
+const METRICS: WealthMetric[] = ['millionaires', 'uhnwi_count', 'business_owners', 'hnwi_count'];
 
 export default function G6WealthShare({ d, cc }: { d: Dashboard; cc: string[] }) {
   const available = METRICS.filter((m) => d.wealth.some((w) => w[m] != null));
-  const [metric, setMetric] = useState<WealthMetric>(available[0] ?? 'hnwi_count');
+  const [metric, setMetric] = useState<WealthMetric>(available[0] ?? 'millionaires');
   const [hover, setHover] = useState<number | null>(null);
   const items = cc.map((code) => ({ code, name: nameOf(d, code), w: latestWealth(d, code, metric) }))
     .filter((x) => x.w).map((x) => ({ code: x.code, name: x.name, value: x.w!.value, year: x.w!.year, source: x.w!.source }));

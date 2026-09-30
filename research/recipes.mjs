@@ -90,8 +90,8 @@ const recipes = [
   { id: 'knightfrank-uhnwi', method: 'manual', url: 'https://www.knightfrank.com/wealthreport', cells: ['wealth_market.uhnwi_count'],
     extract: 'Knight Frank Wealth Report: UHNWI (> US$30m) population per country. '
       + '2026 edition: Databank "Global wealth populations by market" (2021, 2026, 2031f). Read with pdftotext -table (the -layout text shifts rows) and check each row against its % change column. Belgium is not listed.' },
-  { id: 'gb-bpe-employers', method: 'manual', url: 'https://www.gov.uk/government/statistics/business-population-estimates-2025', cells: ['wealth_market.business_owners:GB'],
-    extract: 'UK has no Eurostat figure. DBT Business Population Estimates, detailed tables xlsx, Table 1 "All employers" (businesses with at least one employee, start of year). Counts businesses, not people: a close stand-in.' },
+  { id: 'ilo-employers', method: 'api', url: 'https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_NB,1.0/', cells: ['wealth_market.business_owners:GB', 'wealth_market.business_owners:ZA'],
+    extract: 'node research/fetch-ilo.mjs. Employers (ICSE-93 status 2) from the national labour force survey via the ILO SDMX API, for the countries Eurostat lacks. Same definition as Eurostat SELF_S (France 2024: 1,382k vs 1,375k). Needs an explicit Accept-Language header.' },
 ];
 
 writeFileSync(new URL('./recipes.json', import.meta.url), JSON.stringify({ version: 1, updated: '2026-09-30', recipes }, null, 2) + '\n');

@@ -6,10 +6,10 @@ import { fmtCount, nameOf } from '../data/insights';
 import { AxisRow, Card, useGrown } from './common';
 
 const TIERS: { m: WealthMetric; what: string }[] = [
-  { m: 'business_owners', what: 'self-employed with employees (Eurostat)' },
-  { m: 'millionaires', what: 'net worth over US$1m (UBS)' },
-  { m: 'hnwi_count', what: 'investable assets over US$1m (Capgemini)' },
-  { m: 'uhnwi_count', what: 'over US$30m (Knight Frank)' },
+  { m: 'business_owners', what: 'run a business with employees' },
+  { m: 'millionaires', what: 'net worth over US$1m' },
+  { m: 'hnwi_count', what: 'investable assets over US$1m' },
+  { m: 'uhnwi_count', what: 'net worth over US$30m' },
 ];
 
 export default function C6ProspectPool({ d, code }: { d: Dashboard; code: string }) {
@@ -26,7 +26,7 @@ export default function C6ProspectPool({ d, code }: { d: Dashboard; code: string
         <AxisRow row="pool-row" lead="Tier" min="0" label="people" max={Math.round(max).toLocaleString('en')} value="Count (year)" />
         {rows.map((r) => (
           <div className="pool-row" key={r.m}>
-            <div className="pool-label"><b>{WEALTH_LABEL[r.m]}</b><small>{r.what}</small></div>
+            <div className="pool-label"><b>{WEALTH_LABEL[r.m]}</b><small>{r.what}{r.w ? ` · ${r.w.source}` : ' · no source yet'}</small></div>
             <div className="pool-bar">{r.w
               ? <div className="h2h-bar" style={{ width: grown ? `${Math.max(1, (r.w.value / max) * 100)}%` : 0, background: '#d8b07a' }} />
               : <div className="h2h-bar unknown" style={{ width: grown ? '8%' : 0 }} />}</div>

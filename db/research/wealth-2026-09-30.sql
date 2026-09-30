@@ -49,5 +49,5 @@ insert into offshore_insights.wealth_market (jurisdiction_code, year, uhnwi_coun
   on conflict (jurisdiction_code, year, source) do update set uhnwi_count = excluded.uhnwi_count, source_url = excluded.source_url, verified_on = excluded.verified_on;
 insert into offshore_insights.wealth_market (jurisdiction_code, year, uhnwi_count, source, source_url, verified_on) values ('ZA', 2021, 1047, 'Knight Frank Wealth Report 2026', 'https://www.knightfrank.com/wealthreport', '2026-09-30')
   on conflict (jurisdiction_code, year, source) do update set uhnwi_count = excluded.uhnwi_count, source_url = excluded.source_url, verified_on = excluded.verified_on;
-insert into offshore_insights.wealth_market (jurisdiction_code, year, business_owners, source, source_url, verified_on) values ('GB', 2025, 1417730, 'DBT Business Population Estimates 2025', 'https://www.gov.uk/government/statistics/business-population-estimates-2025', '2026-09-30')
-  on conflict (jurisdiction_code, year, source) do update set business_owners = excluded.business_owners, source_url = excluded.source_url, verified_on = excluded.verified_on;
+-- The DBT business count for GB was replaced by ILO employers (see the run file).
+delete from offshore_insights.wealth_market where source = 'DBT Business Population Estimates 2025';

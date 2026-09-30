@@ -82,6 +82,14 @@ describe('opportunities', () => {
     expect(o[0].score).toBe(83);
     expect(o[1]).toMatchObject({ code: 'YY', market: { v01: 0.5 }, ease: { v01: 0, known: true } });
   });
+  it('market size uses millionaires once stored, even where business owners say otherwise', () => {
+    const dm = { ...d, wealth: [...d.wealth,
+      { jurisdiction_code: 'XX', year: 2025, business_owners: null, hnwi_count: null, millionaires: 100, uhnwi_count: null, source: 'U' },
+      { jurisdiction_code: 'YY', year: 2025, business_owners: null, hnwi_count: null, millionaires: 400, uhnwi_count: null, source: 'U' }] } as unknown as Dashboard;
+    const o = opportunities(dm, ['XX', 'YY'], 'MU');
+    expect(o.find((x) => x.code === 'YY')!.market).toMatchObject({ v01: 1, raw: 400 });   // business owners would give YY 0.5
+    expect(o.find((x) => x.code === 'XX')!.market).toMatchObject({ v01: 0.25, raw: 100 });
+  });
 });
 
 describe('momentum', () => {
