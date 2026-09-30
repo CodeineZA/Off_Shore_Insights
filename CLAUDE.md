@@ -35,6 +35,41 @@ spec is in [PLAN.md](PLAN.md). Owner: **Hentus** (not "Hentu"). Built and mainta
 Work in `D:\Claude_Projects\Off_Shore_Insights`. Never edit the Pi checkout (and never through
 `Z:`).
 
+## n8n workflows
+
+Edit `n8n/build.mjs` (structure) and `n8n/src/*.js` (Code-node logic). Then run
+`node n8n/build.mjs && node n8n/push.mjs [W1 …]`. `push.mjs` creates or updates by name,
+activates, and writes the IDs to `.env`. W0 (`n8n/W0-gitsync.json`) is edited directly.
+Business logic lives in SQL RPCs (`due_checks`, `confirm_flag`, `flag_needs_update`,
+`apply_budget_dates`, `monthly_summary`), which can be tested in a `begin … rollback` block.
+
+| WF | When (Europe/Madrid) | What |
+|---|---|---|
+| W0 | GitHub push | deploy (see above) |
+| W1 | daily 06:00 | re-check due sources, then flags with ✅/✏️ buttons in Telegram |
+| W2 | button press | ✅ confirm / ✏️ needs update (whitelisted Telegram IDs only) |
+| W3 | 1st, 08:00 | monthly summary to Telegram |
+| W4 | daily 05:30 | pull rows forward after a budget date passes |
+| E1 | 2nd, 05:00 | Eurostat employers → `wealth_market.business_owners` |
+| Error alert | on any failure | `sync_run` error row + Telegram |
+
+Traps already hit here (n8n 2.7):
+- The error workflow must be **active**, or n8n silently skips it.
+- Inside `{{ }}` expressions, **don't use `\n` escapes** ("invalid syntax"). Use real newlines
+  in a `=text {{ expr }}` template.
+- Telegram messages use `parse_mode: HTML`, with `& < >` escaped. The default Markdown eats
+  `_` and rejects unbalanced `*`/`_`.
+- A Code node in "run once for each item" mode returns `{ json }`, not `[{ json }]`.
+- The Code node can call `this.helpers.httpRequest`, but `require('crypto')` is blocked (hence
+  the inline SHA-256 in W1).
+- Re-activating W2 re-registers the Telegram webhook, which Telegram rate-limits (push.mjs retries).
+- To test a scheduled workflow, set its cron a couple of minutes ahead, push, check, then
+  rebuild and push again. Git Bash has **no timezone data** (`TZ=Europe/Madrid date` prints UTC),
+  so compute Madrid time as `date -u -d '+2 hours'` in summer and `+1 hour` in winter.
+- The n8n container is owned by `~/server/services/n8n/docker-compose.yml`, not
+  `~/server/docker-compose.yml`, which has a stale n8n block. The Pi and n8n both run on
+  Europe/Madrid.
+
 ## Users and checks
 
 - `node scripts/user.mjs list|link|create|reset|disable|enable` (see the file header).

@@ -182,6 +182,8 @@ create table if not exists offshore_insights.review_flag (
 );
 create index if not exists review_flag_pending_idx
   on offshore_insights.review_flag (target_table, target_id) where status = 'pending';
+-- Hash of the source page as observed by W1; stored into source_hash on ✅ confirm.
+alter table offshore_insights.review_flag add column if not exists observed_hash text;
 
 -- ════════════════════════════ Operations ═════════════════════════════════════
 -- Every n8n workflow writes one row per run.
@@ -280,10 +282,23 @@ select * from offshore_insights.treaty where country_a in ('MU', 'SC');
 -- The three "worth marketing to?" signals per country, side by side. Raw
 -- signals only: a combined score is on hold until the data is verified.
 create view offshore_insights.v_market_signal with (security_invoker = on) as
-with wm as (
-  select distinct on (jurisdiction_code) jurisdiction_code, year, millionaires, hnwi_count, uhnwi_count, business_owners
-  from offshore_insights.wealth_market
-  order by jurisdiction_code, year desc, verified_on desc
+with latest as (   -- newest non-null value per metric (each source fills different columns)
+  select jurisdiction_code, metric, value, year from (
+    select w.jurisdiction_code, m.metric, m.value, w.year,
+           row_number() over (partition by w.jurisdiction_code, m.metric order by w.year desc, w.verified_on desc) as rn
+    from offshore_insights.wealth_market w
+    cross join lateral (values ('millionaires', w.millionaires), ('hnwi_count', w.hnwi_count),
+                               ('uhnwi_count', w.uhnwi_count), ('business_owners', w.business_owners)) m(metric, value)
+    where m.value is not null
+  ) x where rn = 1
+), wm as (
+  select jurisdiction_code,
+         max(value) filter (where metric = 'millionaires')    as millionaires,
+         max(value) filter (where metric = 'hnwi_count')      as hnwi_count,
+         max(year)  filter (where metric = 'hnwi_count')      as year,
+         max(value) filter (where metric = 'uhnwi_count')     as uhnwi_count,
+         max(value) filter (where metric = 'business_owners') as business_owners
+  from latest group by jurisdiction_code
 ), taxes as (
   select jurisdiction_code,
          count(*) filter (where is_recurring and headline_rate > 0)                         as recurring_taxes,
@@ -330,6 +345,134 @@ select * from (
   from offshore_insights.sync_run s order by s.workflow, s.started_at desc
 ) lr;
 
+-- ═══════════════════ Automation RPCs (n8n, SERVICE ROLE ONLY) ════════════════
+-- Next check date after a confirmation: the day after the jurisdiction's (or its
+-- parent's) next budget if that is still ahead, otherwise ~6 months out.
+create or replace function offshore_insights.next_cycle(p_jurisdiction text)
+returns date language sql stable security definer set search_path = '' as $$
+  select case when b > current_date then b + 1 else current_date + 182 end
+  from (select coalesce(j.next_budget_date, p.next_budget_date) as b
+        from offshore_insights.jurisdiction j
+        left join offshore_insights.jurisdiction p on p.code = j.parent_code
+        where j.code = p_jurisdiction) x;
+$$;
+
+-- W1: current rows due for a check that don't already have an open flag.
+create or replace function offshore_insights.due_checks()
+returns table (target_table text, target_id bigint, jurisdiction_code text, label text,
+               current_value text, source_url text, source_hash text)
+language sql stable security definer set search_path = '' as $$
+  select 'tax_rate', r.id, r.jurisdiction_code, j.name || ': ' || t.label,
+         coalesce(trim_scale(r.headline_rate)::text || '%', 'unknown')
+           || case when r.rate_min is distinct from r.rate_max and r.rate_min is not null
+                   then ' (' || trim_scale(r.rate_min) || '–' || trim_scale(r.rate_max) || '%)' else '' end,
+         r.source_url, r.source_hash
+  from offshore_insights.tax_rate r
+  join offshore_insights.tax_type t on t.code = r.tax_type_code
+  join offshore_insights.jurisdiction j on j.code = r.jurisdiction_code
+  where r.valid_to is null and r.next_check_on <= current_date
+    and not exists (select 1 from offshore_insights.review_flag f where f.target_table = 'tax_rate'
+                    and f.target_id = r.id and f.status in ('pending', 'needs_update'))
+  union all
+  select 'treaty', tr.id, tr.country_b, a.name || ' – ' || b.name || ' treaty', tr.status::text,
+         tr.source_url, tr.source_hash
+  from offshore_insights.treaty tr
+  join offshore_insights.jurisdiction a on a.code = tr.country_a
+  join offshore_insights.jurisdiction b on b.code = tr.country_b
+  where tr.next_check_on <= current_date
+    and not exists (select 1 from offshore_insights.review_flag f where f.target_table = 'treaty'
+                    and f.target_id = tr.id and f.status in ('pending', 'needs_update'))
+  order by 1, 3, 2;
+$$;
+
+-- W2 ✅: the value is still correct. Idempotent: a second press reports the state.
+create or replace function offshore_insights.confirm_flag(p_flag_id bigint, p_reviewer text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare f offshore_insights.review_flag; nxt date;
+begin
+  select * into f from offshore_insights.review_flag where id = p_flag_id for update;
+  if not found then return 'flag ' || p_flag_id || ' not found'; end if;
+  if f.status <> 'pending' then return 'already ' || f.status::text; end if;
+  if f.target_table = 'tax_rate' then
+    update offshore_insights.tax_rate r
+       set verified_on = current_date,
+           next_check_on = offshore_insights.next_cycle(r.jurisdiction_code),
+           source_hash = coalesce(f.observed_hash, r.source_hash)
+     where r.id = f.target_id returning r.next_check_on into nxt;
+  elsif f.target_table = 'treaty' then
+    update offshore_insights.treaty t
+       set verified_on = current_date, next_check_on = current_date + 182,
+           source_hash = coalesce(f.observed_hash, t.source_hash)
+     where t.id = f.target_id returning t.next_check_on into nxt;
+  end if;
+  update offshore_insights.review_flag
+     set status = 'confirmed', reviewed_by = p_reviewer, reviewed_on = now() where id = p_flag_id;
+  return 'confirmed; next check ' || coalesce(nxt::text, '?');
+end $$;
+
+-- W2 ✏️: needs a human edit in Studio (close the row with valid_to, insert the
+-- new one), then set the flag to 'resolved'.
+create or replace function offshore_insights.flag_needs_update(p_flag_id bigint, p_reviewer text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare f offshore_insights.review_flag;
+begin
+  select * into f from offshore_insights.review_flag where id = p_flag_id for update;
+  if not found then return 'flag ' || p_flag_id || ' not found'; end if;
+  if f.status <> 'pending' then return 'already ' || f.status::text; end if;
+  update offshore_insights.review_flag
+     set status = 'needs_update', reviewed_by = p_reviewer, reviewed_on = now() where id = p_flag_id;
+  return 'marked needs update';
+end $$;
+
+-- W4: once a jurisdiction's budget date has passed, pull its current rows that
+-- were last verified on/before that budget forward to today (W1 then flags them).
+-- Rows verified after the budget are left alone, so this doesn't repeat daily.
+create or replace function offshore_insights.apply_budget_dates()
+returns int language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  update offshore_insights.tax_rate r
+     set next_check_on = current_date
+    from offshore_insights.jurisdiction j
+    left join offshore_insights.jurisdiction p on p.code = j.parent_code
+   where r.jurisdiction_code = j.code and r.valid_to is null
+     and coalesce(j.next_budget_date, p.next_budget_date) <= current_date
+     and r.verified_on <= coalesce(j.next_budget_date, p.next_budget_date)
+     and r.next_check_on > current_date;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
+-- W3: numbers for the monthly Telegram summary.
+create or replace function offshore_insights.monthly_summary()
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'month', to_char(date_trunc('month', current_date) - interval '1 day', 'YYYY-MM'),
+    'flags_raised', (select count(*) from offshore_insights.review_flag
+                     where raised_on >= date_trunc('month', current_date) - interval '1 month'
+                       and raised_on <  date_trunc('month', current_date)),
+    'flags_by_status', (select coalesce(jsonb_object_agg(status, n), '{}'::jsonb) from (
+                          select status::text, count(*) n from offshore_insights.review_flag
+                          where raised_on >= date_trunc('month', current_date) - interval '1 month'
+                            and raised_on <  date_trunc('month', current_date) group by 1) s),
+    'open_pending', (select count(*) from offshore_insights.review_flag where status = 'pending'),
+    'open_needs_update', (select count(*) from offshore_insights.review_flag where status = 'needs_update'),
+    'due_next_month', (select count(*) from offshore_insights.tax_rate where valid_to is null
+                         and next_check_on >= date_trunc('month', current_date)
+                         and next_check_on <  date_trunc('month', current_date) + interval '1 month')
+                    + (select count(*) from offshore_insights.treaty
+                         where next_check_on >= date_trunc('month', current_date)
+                           and next_check_on <  date_trunc('month', current_date) + interval '1 month'),
+    'needs_verification', (select count(*) from offshore_insights.tax_rate where valid_to is null and needs_verification),
+    'needs_verification_list', (select coalesce(jsonb_agg(x order by x), '[]'::jsonb) from (
+                                  select r.jurisdiction_code || ' ' || r.tax_type_code as x
+                                  from offshore_insights.tax_rate r where r.valid_to is null and r.needs_verification) v),
+    'workflow_errors', (select count(*) from offshore_insights.sync_run where status = 'error'
+                          and started_at >= date_trunc('month', current_date) - interval '1 month'
+                          and started_at <  date_trunc('month', current_date))
+  );
+$$;
+
 -- ════════════════════════════ Grants + RLS ═══════════════════════════════════
 revoke all on schema offshore_insights from public;
 grant usage on schema offshore_insights to authenticated, service_role;
@@ -347,6 +490,15 @@ revoke all on function offshore_insights.resolve_login(text) from public, anon, 
 grant execute on function offshore_insights.resolve_login(text) to service_role;
 revoke all on function offshore_insights.login_directory() from public, anon, authenticated;
 grant execute on function offshore_insights.login_directory() to service_role;
+do $$
+declare fn text;
+begin
+  foreach fn in array array['next_cycle(text)', 'due_checks()', 'confirm_flag(bigint, text)',
+                            'flag_needs_update(bigint, text)', 'apply_budget_dates()', 'monthly_summary()'] loop
+    execute format('revoke all on function offshore_insights.%s from public, anon, authenticated', fn);
+    execute format('grant execute on function offshore_insights.%s to service_role', fn);
+  end loop;
+end $$;
 -- Nothing in this schema is callable or readable by anon.
 revoke usage on schema offshore_insights from anon;
 

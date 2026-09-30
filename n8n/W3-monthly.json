@@ -1,0 +1,217 @@
+{
+  "name": "Off_Shore_Insights - W3 Monthly summary",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid",
+    "errorWorkflow": "__ERROR_WORKFLOW_ID__"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -240
+      ],
+      "parameters": {
+        "content": "## W3 Monthly summary (1st, 08:00 Madrid)\nrpc/monthly_summary → Telegram: flags raised/confirmed/pending, rows due this month, rows with conflicting sources, workflow errors.",
+        "width": 640,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 1 * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Start",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "st",
+              "name": "StartedAt",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Monthly numbers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/rpc/monthly_summary",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// n8n Code node — W3 \"Format summary\". Input: rpc/monthly_summary (one object).\nconst s = $json;\nconst esc = (x) => String(x ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst byStatus = Object.entries(s.flags_by_status || {}).map(([k, v]) => `${k} ${v}`).join(', ') || 'none';\nconst lines = [\n  `📊 <b>Off_Shore_Insights — ${esc(s.month)}</b>`,\n  `Flags raised: <b>${s.flags_raised}</b> (${esc(byStatus)})`,\n  `Open: ${s.open_pending} pending, ${s.open_needs_update} needing an update in Studio`,\n  `Due for re-check this month: ${s.due_next_month}`,\n  `Rates with conflicting sources: ${s.needs_verification}` +\n    (s.needs_verification ? `\\n  ${esc((s.needs_verification_list || []).join(', '))}` : ''),\n  `Workflow errors last month: ${s.workflow_errors}`,\n];\nreturn { json: { text: lines.join('\\n') } };\n"
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Send summary",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "chatId": "6688393980",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "8TArObNpJNKLfwlM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Record sync_run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/sync_run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: 'W3_monthly', started_at: $('Start').first().json.StartedAt, finished_at: $now.toISO(), status: 'ok', rows: 1 }) }}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      },
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Monthly numbers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monthly numbers": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Send summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send summary": {
+      "main": [
+        [
+          {
+            "node": "Record sync_run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

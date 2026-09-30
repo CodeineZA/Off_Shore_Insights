@@ -1,0 +1,265 @@
+{
+  "name": "Off_Shore_Insights - W2 Telegram buttons",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid",
+    "errorWorkflow": "__ERROR_WORKFLOW_ID__"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -240
+      ],
+      "parameters": {
+        "content": "## W2 Telegram buttons\n✅ → rpc/confirm_flag (verified_on = today, next_check_on = next budget cycle, source_hash updated). ✏️ → rpc/flag_needs_update (a human edits the rate in Studio, then resolves the flag). Only whitelisted Telegram user IDs; both RPCs are idempotent.",
+        "width": 640,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {
+          "userIds": "6688393980"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "8TArObNpJNKLfwlM",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "a3c1f0e2-7b44-4d0c-9a51-0ff5b0e1a0f2"
+    },
+    {
+      "id": "n3",
+      "name": "Parse button press",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// n8n Code node — W2 \"Parse button press\". Input: Telegram Trigger callback_query update.\n// Only whitelisted Telegram user IDs may act (the trigger also filters; this is the 2nd check).\nconst ALLOWED = ['6688393980']; // TELEGRAM_ALLOWED_USER_IDS\nconst esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst q = $json.callback_query || {};\nconst from = q.from || {};\nconst m = String(q.data || '').match(/^(ok|upd):(\\d+)$/);\nreturn { json: {\n  allowed: ALLOWED.includes(String(from.id)) && !!m,\n  fn: m ? (m[1] === 'ok' ? 'confirm_flag' : 'flag_needs_update') : null,\n  flag_id: m ? Number(m[2]) : null,\n  reviewer: 'telegram:' + (from.username || from.id),\n  callback_id: q.id,\n  chat_id: q.message?.chat?.id,\n  message_id: q.message?.message_id,\n  original_html: esc(q.message?.text || ''),\n} };\n"
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c3",
+              "leftValue": "={{ $json.allowed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Apply decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        -100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://192.168.0.50:8000/rest/v1/rpc/{{ $json.fn }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_flag_id: $json.flag_id, p_reviewer: $json.reviewer }) }}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Answer button",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -100
+      ],
+      "parameters": {
+        "resource": "callback",
+        "operation": "answerQuery",
+        "queryId": "={{ $('Parse button press').item.json.callback_id }}",
+        "additionalFields": {
+          "text": "={{ String($json.data ?? $json) }}"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "8TArObNpJNKLfwlM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Update message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $('Parse button press').item.json.chat_id }}",
+        "messageId": "={{ $('Parse button press').item.json.message_id }}",
+        "text": "={{ $('Parse button press').item.json.original_html }}\n\n→ <b>{{ String($('Apply decision').item.json.data ?? $('Apply decision').item.json).replace(/&/g, '&amp;').replace(/</g, '&lt;') }}</b> ({{ $('Parse button press').item.json.reviewer }})",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "8TArObNpJNKLfwlM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "n8",
+      "name": "Refuse",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        120
+      ],
+      "parameters": {
+        "resource": "callback",
+        "operation": "answerQuery",
+        "queryId": "={{ $json.callback_id }}",
+        "additionalFields": {
+          "text": "Not allowed.",
+          "show_alert": true
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "8TArObNpJNKLfwlM",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse button press",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse button press": {
+      "main": [
+        [
+          {
+            "node": "Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Allowed?": {
+      "main": [
+        [
+          {
+            "node": "Apply decision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply decision": {
+      "main": [
+        [
+          {
+            "node": "Answer button",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer button": {
+      "main": [
+        [
+          {
+            "node": "Update message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

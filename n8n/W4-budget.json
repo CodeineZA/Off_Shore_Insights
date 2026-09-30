@@ -1,0 +1,157 @@
+{
+  "name": "Off_Shore_Insights - W4 Budget watcher",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid",
+    "errorWorkflow": "__ERROR_WORKFLOW_ID__"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -240
+      ],
+      "parameters": {
+        "content": "## W4 Budget watcher (05:30 Madrid, before W1)\nrpc/apply_budget_dates: once a jurisdiction's budget date has passed, its rows verified on/before that date get next_check_on = today, so W1 flags them at 06:00. Does not repeat once re-verified.",
+        "width": 640,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 5 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Start",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "st",
+              "name": "StartedAt",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Apply budget dates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/rpc/apply_budget_dates",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Record sync_run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/sync_run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: 'W4_budget', started_at: $('Start').first().json.StartedAt, finished_at: $now.toISO(), status: 'ok', rows: Number($('Apply budget dates').first().json.data ?? 0) }) }}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      },
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Apply budget dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply budget dates": {
+      "main": [
+        [
+          {
+            "node": "Record sync_run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "name": "Off_Shore_Insights - E1 Eurostat business owners",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid",
+    "errorWorkflow": "__ERROR_WORKFLOW_ID__"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -240
+      ],
+      "parameters": {
+        "content": "## E1 Eurostat (2nd of month, 05:00 Madrid)\nlfsa_egaps, SELF_S = self-employed with employees (employers), last ~6 years → upsert wealth_market.business_owners (unique jurisdiction+year+source). Other wealth figures stay manual.",
+        "width": 640,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 2 * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Start",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "st",
+              "name": "StartedAt",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Countries",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.50:8000/rest/v1/jurisdiction?kind=eq.country&is_offshore_hub=eq.false&select=code",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Fetch Eurostat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// n8n Code node (Run Once for All Items) — E1 \"Fetch Eurostat\".\n// Input: jurisdiction rows {code} (countries, not hubs). Output: one item {rows:[...]} for a\n// single bulk upsert into wealth_market. Only business_owners comes from here; the other\n// wealth figures are entered by hand from the UBS / Capgemini / Knight Frank reports.\nconst DATASET = 'lfsa_egaps'; // Employed persons by professional status; SELF_S = employers\nconst SOURCE = 'Eurostat lfsa_egaps (SELF_S)';\nconst TO_EUROSTAT = { GB: 'UK', GR: 'EL' };\nconst codes = $input.all().map((i) => i.json.code).filter((c) => /^[A-Z]{2}$/.test(c));\nconst geo = codes.map((c) => TO_EUROSTAT[c] || c);\nconst back = Object.fromEntries(codes.map((c) => [TO_EUROSTAT[c] || c, c]));\nconst since = new Date().getFullYear() - 6;\nconst url = `https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/${DATASET}?format=JSON&lang=EN` +\n  `&wstatus=SELF_S&sex=T&age=Y15-74&unit=THS_PER&sinceTimePeriod=${since}` + geo.map((g) => `&geo=${g}`).join('');\nconst j = await this.helpers.httpRequest({ url, json: true, timeout: 30000 });\nif (!j || !j.dimension) throw new Error('Unexpected Eurostat response: ' + JSON.stringify(j).slice(0, 300));\nconst dims = j.id, size = j.size;\nconst idx = (dim, key) => j.dimension[dim].category.index[key];\nconst today = new Date().toISOString().slice(0, 10);\nconst rows = [];\nfor (const g of Object.keys(j.dimension.geo.category.index)) {\n  for (const t of Object.keys(j.dimension.time.category.index)) {\n    // Flat index over all dimensions (every dimension except geo/time has size 1 here).\n    let flat = 0;\n    for (let d = 0; d < dims.length; d++) {\n      const pos = dims[d] === 'geo' ? idx('geo', g) : dims[d] === 'time' ? idx('time', t) : 0;\n      flat = flat * size[d] + pos;\n    }\n    const v = j.value[flat];\n    if (v === undefined || v === null || !back[g]) continue;\n    rows.push({ jurisdiction_code: back[g], year: Number(t), business_owners: Math.round(v * 1000),\n      source: SOURCE, source_url: `https://ec.europa.eu/eurostat/databrowser/view/${DATASET}/default/table`,\n      verified_on: today });\n  }\n}\nif (!rows.length) throw new Error('Eurostat returned no values for ' + geo.join(','));\nreturn [{ json: { rows, count: rows.length } }];\n"
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Upsert wealth_market",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/wealth_market?on_conflict=jurisdiction_code,year,source",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.rows) }}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Record sync_run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/sync_run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: 'E1_eurostat', started_at: $('Start').first().json.StartedAt, finished_at: $now.toISO(), status: 'ok', rows: $('Fetch Eurostat').first().json.count }) }}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      },
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Countries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Countries": {
+      "main": [
+        [
+          {
+            "node": "Fetch Eurostat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Eurostat": {
+      "main": [
+        [
+          {
+            "node": "Upsert wealth_market",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert wealth_market": {
+      "main": [
+        [
+          {
+            "node": "Record sync_run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

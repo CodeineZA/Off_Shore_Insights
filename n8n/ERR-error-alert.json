@@ -1,0 +1,141 @@
+{
+  "name": "Off_Shore_Insights - Error alert",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "n2",
+      "name": "Summarize",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1",
+              "name": "workflow",
+              "type": "string",
+              "value": "={{ $json.workflow.name }}"
+            },
+            {
+              "id": "e2",
+              "name": "error",
+              "type": "string",
+              "value": "={{ [$json.execution.lastNodeExecuted, $json.execution.error && $json.execution.error.message].filter(Boolean).join(': ').slice(0, 800) }}"
+            },
+            {
+              "id": "e3",
+              "name": "url",
+              "type": "string",
+              "value": "={{ $json.execution.url || \"\" }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Record sync_run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/sync_run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: $json.workflow, finished_at: $now.toISO(), status: 'error', error: $json.error }) }}"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "n4",
+      "name": "Telegram alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "chatId": "6688393980",
+        "text": "=⚠️ <b>{{ $('Summarize').item.json.workflow.replace(/&/g, '&amp;').replace(/</g, '&lt;') }} FAILED</b>\n\n<pre>{{ $('Summarize').item.json.error.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre>\n{{ $('Summarize').item.json.url }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "8TArObNpJNKLfwlM",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Record sync_run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record sync_run": {
+      "main": [
+        [
+          {
+            "node": "Telegram alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
