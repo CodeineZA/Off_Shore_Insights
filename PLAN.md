@@ -221,10 +221,13 @@ enforces this.
 - ✔ A manually aged row produced a Telegram flag with ✅/✏️ buttons. Confirming a button press
   updates `verified_on`: waiting on the first real press.
 
-**Phase 4: Dashboard + APK** (designs received 2026-09-30)
+**Phase 4: Dashboard + APK** (designs received 2026-09-30; web live 2026-09-30 at https://insights.codeine.cloud)
 - Login page → landing page of tiles, built tile by tile per section 9, in the Claude Design theme.
 - ✔ Done when every tile runs on live data, expands with its animation, and shows unknown as
   grey (never zero) at 768×1024 and 375×812.
+- ✔ Web: all ten tiles on live data, with expand animation and insight panels, checked at
+  desktop, 768×1024 and 375×812 (no sideways scroll). The login is verified at API level (the
+  access suite). The first browser sign-in is Hentus's.
 - APK: Capacitor wraps the same `dist/`. It needs the Android SDK on this machine, and comes
   after the web version is approved.
 

@@ -5,9 +5,8 @@ spec is in [PLAN.md](PLAN.md). Owner: **Hentus** (not "Hentu"). Built and mainta
 
 ## Hard rules
 
-- **⛔ Frontend gate.** Don't build any UI (`apps/web`, Capacitor, styling) until Hentus has put
-  the Claude Design output (graphics, style, theme) in this folder. The website and the APK must
-  always share that one design.
+- **The design is law.** `interactive-graph-designs/` (Claude Design handoff) defines the theme,
+  tiles and animation. The website and the APK must always share it (one codebase).
 - **Scope is tax insights only.** Website analytics and search data belong to the website
   project (`Off_Shore_Trust`). Its own n8n workflow will fill the insight tables here later
   (`site_page`, `search_daily`, `search_query_monthly`, `analytics_daily`). Don't pull that data
@@ -34,6 +33,23 @@ spec is in [PLAN.md](PLAN.md). Owner: **Hentus** (not "Hentu"). Built and mainta
 
 Work in `D:\Claude_Projects\Off_Shore_Insights`. Never edit the Pi checkout (and never through
 `Z:`).
+
+## Frontend (`apps/web`)
+
+Vite + React + TS, hand-built SVG charts ported from the design. Data is one call,
+`rpc/dashboard()`. `src/data/insights.ts` holds the per-tile extraction, with unit tests
+(`npm test`). `src/tiles/tiles.tsx` has each tile's compact face and expanded view, and
+`src/ui/Dashboard.tsx` the grid and morph-expand.
+
+- Dev: `npm run env:local` once (writes the gitignored `.env.local`), then preview
+  "offshore-insights-web" (port 5190) in `D:Claude_Projects.claudelaunch.json`. `/api` is
+  proxied to the live gateway.
+- **`?fixture` (dev only, stripped from builds)** renders `apps/web/.fixture.json` (a gitignored
+  copy of a real payload) without signing in. Use it to check the UI. Don't type credentials into
+  the browser.
+- The world map is pre-computed: `npm run gen:map` → `src/map/landDots.ts`.
+- Deploy: `deploy.sh` builds into `dist-next` and swaps it in only after tests, `tsc` and the
+  secret scan pass. nginx mounts `apps/web` (not `dist`), so the swap is seen.
 
 ## n8n workflows
 
