@@ -12,11 +12,33 @@ const byOrder = (a: string, b: string) => {
 
 export const HUBS = ['MU', 'SC'];
 
-/** Countries a client can come from: kind = country, not an offshore hub. */
+/** The country a jurisdiction belongs to (a region's parent; a country itself). */
+export const countryOf = (d: Dashboard, code: string) => d.jurisdictions.find((j) => j.code === code)?.parent_code ?? code;
+
+/**
+ * Where a client can come from, as selectable entities (no hubs). A country that sets taxes
+ * per region is listed as its regions. Its national entry stays only when it has its own rate for
+ * every regional tax (Spain's state rules do); otherwise it is incomplete and left out (Belgium).
+ */
 export function countries(d: Dashboard): Jurisdiction[] {
-  return d.jurisdictions.filter((j) => j.kind === 'country' && !j.is_offshore_hub).sort((a, b) => byOrder(a.code, b.code));
+  const own = (code: string, t: string) => d.rates.some((r) => r.jurisdiction_code === code && r.tax_type_code === t && !r.inherited);
+  const out: Jurisdiction[] = [];
+  for (const c of d.jurisdictions.filter((j) => j.kind === 'country' && !j.is_offshore_hub)) {
+    const regions = d.jurisdictions.filter((r) => r.parent_code === c.code && !r.is_offshore_hub).sort((a, b) => a.name.localeCompare(b.name));
+    if (!regions.length || (c.regional_tax_types ?? []).every((t) => own(c.code, t))) out.push(c);
+    out.push(...regions);
+  }
+  // Regions sit right after their country.
+  return out.sort((a, b) => byOrder(a.parent_code ?? a.code, b.parent_code ?? b.code) || (a.parent_code ? 1 : 0) - (b.parent_code ? 1 : 0));
 }
-export const nameOf = (d: Dashboard, code: string) => d.jurisdictions.find((j) => j.code === code)?.name ?? code;
+/** Display name. A region carries its country code, "Flanders (BE)"; a country listed next to its
+ *  regions is its national rules, "Spain (national rules)". */
+export const nameOf = (d: Dashboard, code: string) => {
+  const j = d.jurisdictions.find((x) => x.code === code);
+  if (!j) return code;
+  if (j.parent_code) return `${j.name.replace(/\s*\(.*\)\s*$/, '')} (${j.parent_code})`;
+  return d.jurisdictions.some((r) => r.parent_code === code) ? `${j.name} (national rules)` : j.name;
+};
 export const rateOf = (d: Dashboard, code: string, taxType: string): Rate | undefined =>
   d.rates.find((r) => r.jurisdiction_code === code && r.tax_type_code === taxType);
 export const taxLabel = (d: Dashboard, code: string) => d.tax_types.find((t) => t.code === code)?.label ?? code;

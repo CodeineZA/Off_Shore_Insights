@@ -46,7 +46,11 @@ in `src/data/insights.ts`.
   proxied to the live gateway.
 - **`?fixture` (dev only, stripped from builds)** renders `apps/web/.fixture.json` (a gitignored
   copy of a real payload) without signing in. Use it to check the UI. Don't type credentials into
-  the browser.
+  the browser. Refresh the copy with `node scripts/fixture.mjs` (signs in as the test user).
+- **Regions:** a country that sets taxes per region (`jurisdiction.regional_tax_types`, e.g. BE and ES inheritance)
+  is listed as its regions ("Flanders (BE)"). Regions inherit every other national rate plus the country's treaty and
+  gates, but never a regional tax: missing means unknown. The national entry stays only if it has its own regional-tax rates.
+- **Treaty:** always the Mauritius one, for both hubs (structures are set up in Mauritius and moved to Seychelles).
 - The world map is pre-computed: `npm run gen:map` → `src/map/landDots.ts`.
 - Deploy: `deploy.sh` builds into `dist-next` and swaps it in only after tests, `tsc` and the
   secret scan pass. nginx mounts `apps/web` (not `dist`), so the swap is seen.

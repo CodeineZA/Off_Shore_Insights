@@ -2,7 +2,7 @@
 // toggles drive the tax tiles; the hub switch drives treaty/blacklist gates (PLAN.md §9).
 import { useState } from 'react';
 import type { Dashboard } from '../data/types';
-import { CATEGORIES, countries, filterTaxTypes, type AppliesTo } from '../data/insights';
+import { CATEGORIES, countries, filterTaxTypes, nameOf, type AppliesTo } from '../data/insights';
 import G1WhereFirst from '../tiles/G1WhereFirst';
 import G2OpenDoors from '../tiles/G2OpenDoors';
 import G3SweetSpot from '../tiles/G3SweetSpot';
@@ -39,7 +39,7 @@ export default function Global({ d }: { d: Dashboard }) {
           <div className="chips">
             {all.map((c) => (
               <button key={c.code} className={'chip' + (cc.includes(c.code) ? ' on' : '')} aria-pressed={cc.includes(c.code)}
-                onClick={() => setCc(toggle(cc, c.code, all.map((x) => x.code)))}>{c.name}</button>
+                onClick={() => setCc(toggle(cc, c.code, all.map((x) => x.code)))}>{nameOf(d, c.code)}</button>
             ))}
             <button className="chip ghost" onClick={() => setCc(cc.length === all.length ? [] : all.map((c) => c.code))}>{cc.length === all.length ? 'None' : 'All'}</button>
           </div>

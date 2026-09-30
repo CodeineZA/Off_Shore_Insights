@@ -64,6 +64,14 @@ describe('gates', () => {
     expect(g.map((x) => x.status)).toEqual(['green', 'red', 'unknown', 'unknown']);
     expect(gateCells(d, 'YY', 'MU')[0]).toMatchObject({ status: 'red', label: 'No treaty' });
   });
+  it('the Mauritius treaty counts for Seychelles too; a region uses its country\'s treaty and lists', () => {
+    const dd = { ...d, jurisdictions: [...d.jurisdictions, J('XX-R', 'EUR', { kind: 'region', parent_code: 'XX' })],
+      treaties: [...d.treaties, { country_a: 'SC', country_b: 'XX', status: 'none', in_force_on: null, mli_note: null, source_url: null }] } as unknown as Dashboard;
+    expect(gateCells(dd, 'XX', 'SC')[0]).toMatchObject({ status: 'green', label: 'In force' });   // not SC's "none"
+    expect(gateCells(dd, 'XX', 'SC')[0].note).toMatch(/Via Mauritius/);
+    const r = gateCells(dd, 'XX-R', 'MU');
+    expect(r.map((x) => x.status)).toEqual(['green', 'red', 'unknown', 'unknown']);
+  });
 });
 
 describe('opportunities', () => {

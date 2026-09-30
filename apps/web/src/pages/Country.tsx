@@ -1,7 +1,7 @@
 // Mode 2 · 1 : 2: one country against Mauritius and Seychelles (PLAN.md §9).
 import { useState } from 'react';
 import type { Dashboard } from '../data/types';
-import { countries } from '../data/insights';
+import { countries, nameOf } from '../data/insights';
 import { defaultCountry } from '../data/model';
 import C1HeadToHead from '../tiles/C1HeadToHead';
 import C2BracketSpread from '../tiles/C2BracketSpread';
@@ -21,7 +21,7 @@ export default function Country({ d }: { d: Dashboard }) {
           <span className="filter-k">Country</span>
           <div className="chips">
             {countries(d).map((c) => (
-              <button key={c.code} className={'chip' + (c.code === code ? ' on' : '')} aria-pressed={c.code === code} onClick={() => setCode(c.code)}>{c.name}</button>
+              <button key={c.code} className={'chip' + (c.code === code ? ' on' : '')} aria-pressed={c.code === code} onClick={() => setCode(c.code)}>{nameOf(d, c.code)}</button>
             ))}
           </div>
         </div>

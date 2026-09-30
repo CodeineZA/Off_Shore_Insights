@@ -121,6 +121,9 @@ create table if not exists offshore_insights.jurisdiction (
 -- Map position (degrees) for the dashboard's coverage map.
 alter table offshore_insights.jurisdiction add column if not exists lon numeric(7,3);
 alter table offshore_insights.jurisdiction add column if not exists lat numeric(7,3);
+-- Taxes this country sets per region (e.g. Belgian and Spanish inheritance). Its regions
+-- never inherit the national rate for these: a missing regional rate stays unknown.
+alter table offshore_insights.jurisdiction add column if not exists regional_tax_types text[] not null default '{}';
 
 create table if not exists offshore_insights.tax_type (
   code          text primary key,
@@ -315,7 +318,8 @@ drop view if exists offshore_insights.v_market_signal;
 drop view if exists offshore_insights.v_hub_treaties;
 drop view if exists offshore_insights.v_current_rates;
 
--- Current rates; regions fall back to their parent country's rates.
+-- Current rates; regions fall back to their parent country's rates, except for the taxes
+-- the parent sets per region (jurisdiction.regional_tax_types): those stay unknown until researched.
 create view offshore_insights.v_current_rates with (security_invoker = on) as
 with cur as (
   select * from offshore_insights.tax_rate where valid_to is null
@@ -337,7 +341,9 @@ select j.code as jurisdiction_code, j.name, j.parent_code, t.code as tax_type_co
 from offshore_insights.jurisdiction j
 cross join offshore_insights.tax_type t
 left join cur r on r.jurisdiction_code = j.code and r.tax_type_code = t.code
-left join cur p on p.jurisdiction_code = j.parent_code and p.tax_type_code = t.code;
+left join offshore_insights.jurisdiction pj on pj.code = j.parent_code
+left join cur p on p.jurisdiction_code = j.parent_code and p.tax_type_code = t.code
+                and not (t.code = any(pj.regional_tax_types));
 
 create view offshore_insights.v_hub_treaties with (security_invoker = on) as
 select * from offshore_insights.treaty where country_a in ('MU', 'SC');

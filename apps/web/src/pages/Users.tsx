@@ -114,7 +114,7 @@ export default function Users({ me, onExpired }: { me: string; onExpired: () => 
 
       {cur && mode.kind === 'edit' && (
         <UserForm key={cur.user_id} title={`Edit ${cur.username}`} draft={draftOf(cur)} busy={busy} error={error}
-          note={cur.created_here ? undefined : `Linked login: signs in with ${cur.auth_email}; the email here is the contact email. A new password changes it for this login everywhere it is used (e.g. Neil's Way).`}
+          note={cur.created_here ? undefined : `Linked login: signs in with ${cur.auth_email}; the email here is the contact email. A new password changes it for this login everywhere it is used (e.g. Neil's Way), so it must be 6 to 72 characters.`}
           onCancel={() => open({ kind: 'view', id: cur.user_id })}
           onSave={(f) => act(() => admin.update(cur.user_id, f), { kind: 'view', id: cur.user_id }, 'Saved.')} />
       )}
@@ -173,9 +173,9 @@ function UserForm({ title, draft, create, busy, error, note, onSave, onCancel }:
             <button type="button" className="pill quiet" onClick={() => setD({ ...d, password: newPassword() })}>Generate</button>
           </div></div>
       </div>
-      <p className="users-hint">Username: 2–32 characters, a–z 0–9 . _ -. Password: 8 or more characters. They can sign in with the username or the email.</p>
+      <p className="users-hint">Username: 2–32 characters, a–z 0–9 . _ -. Password: anything, any length (1 to 1,000 characters). They can sign in with the username or the email.</p>
       <div className="users-buttons">
-        <button className="pill solid" type="submit" disabled={busy || !d.username.trim() || (create && d.password.length < 8)}>{busy ? 'Saving…' : create ? 'Create user' : 'Save'}</button>
+        <button className="pill solid" type="submit" disabled={busy || !d.username.trim() || (create && !d.password)}>{busy ? 'Saving…' : create ? 'Create user' : 'Save'}</button>
         <button className="pill quiet" type="button" onClick={onCancel}>Cancel</button>
       </div>
       {error && <p className="error" role="alert">{error}</p>}

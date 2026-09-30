@@ -18,7 +18,7 @@
 // PATCH  /api/admin/users/:id    any of {username, password, email, cell, display_name, disabled}
 // DELETE /api/admin/users/:id    created here → login deleted too; linked login → access removed only
 import http from 'node:http';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const PORT = Number(process.env.PORT || 8080);
 const SUPABASE = process.env.SUPABASE_INTERNAL_URL;          // e.g. http://host.docker.internal:8000
@@ -38,7 +38,8 @@ const LIMITS = {
   globalGotruePerMin: 20,                     // total password checks reaching GoTrue
   maxConcurrentGotrue: 2,
   maxTracked: 50_000,                         // cap on limiter map size (memory DoS guard)
-  maxBody: 1024,
+  maxBody: 8192,                              // a 1000-character password in 4-byte characters fits
+  maxPassword: 1000,                          // characters; anything else goes (Hentus: any size, any combination)
 };
 
 // ── Directory cache ───────────────────────────────────────────────────────────
@@ -70,6 +71,16 @@ async function refreshDirectory() {
 }
 await refreshDirectory();
 setInterval(refreshDirectory, LIMITS.directoryRefreshMs).unref();
+
+// The auth service only takes 6 characters to 72 bytes (bcrypt reads 72 bytes; updates refuse
+// under 6). A password outside that range is turned into a fixed 50-character value, the same way
+// at login and when it is set, so any password works (Hentus: any size, any combination). Only
+// logins made here may use that: a linked login (shared with e.g. Neil's Way, which signs in
+// without this gateway) must stay inside the range.
+const AUTH_MIN = 6, BCRYPT_MAX = 72;
+const chars = (p) => [...p].length;              // characters as people count them (an emoji is one)
+const nativeOk = (p) => chars(p) >= AUTH_MIN && Buffer.byteLength(p, 'utf8') <= BCRYPT_MAX;
+const authPassword = (p) => (nativeOk(p) ? p : 'sha256:' + createHash('sha256').update(p, 'utf8').digest('base64url'));
 
 // ── In-memory sliding-window counters ─────────────────────────────────────────
 class Window {
@@ -128,7 +139,7 @@ async function login(req, res) {
   try { body = await readJson(req); } catch { return send(res, 400, { error: 'bad_request' }); }
   const login = String(body?.username ?? '').trim().toLowerCase(); // username or email
   const password = String(body?.password ?? '');
-  if (!login || !password || login.length > 254 || password.length > 256) return send(res, 400, { error: 'bad_request' });
+  if (!login || !password || login.length > 254 || chars(password) > LIMITS.maxPassword) return send(res, 400, { error: 'bad_request' });
 
   // Unknown or disabled → reject from memory. No DB, no GoTrue.
   // (Not counted per name: that map would only grow with junk names.)
@@ -145,7 +156,7 @@ async function login(req, res) {
     const r = await fetch(`${SUPABASE}/auth/v1/token?grant_type=password`, {
       method: 'POST',
       headers: { apikey: ANON, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password: authPassword(password) }),
       signal: AbortSignal.timeout(10_000),
     });
     const session = await r.json().catch(() => null);
@@ -261,7 +272,7 @@ function fields(b, { create }) {
   }
   if (b.password !== undefined || create) {
     const p = String(b.password ?? '');
-    if (p.length < 8 || p.length > 72) throw new Bad(400, 'bad_password', 'Password: 8–72 characters.');
+    if (!p.length || chars(p) > LIMITS.maxPassword) throw new Bad(400, 'bad_password', `Password: 1 to ${LIMITS.maxPassword} characters, anything goes.`);
     out.password = p;
   }
   if (b.disabled !== undefined) out.disabled = !!b.disabled;
@@ -291,7 +302,7 @@ async function createUser(b) {
   const f = fields(b, { create: true });
   if (directory.has(f.username)) throw new Bad(409, 'username_taken', 'That username is taken.');
   const created = await svc('/auth/v1/admin/users', { method: 'POST', body: JSON.stringify({
-    email: f.email || synthetic(f.username), password: f.password, email_confirm: true,
+    email: f.email || synthetic(f.username), password: authPassword(f.password), email_confirm: true,
     user_metadata: { app: 'offshore_insights', username: f.username } }) });
   if (created.status === 422 && /already|exists|registered/i.test(JSON.stringify(created.body))) throw new Bad(409, 'email_in_use', 'That email already has a login in the shared realm (e.g. Neil\'s Way).');
   if (!created.ok || !created.body?.id) throw new Error(`auth create ${created.status}`);
@@ -324,7 +335,11 @@ async function updateUser(id, b, self) {
     const nextEmail = (f.email !== undefined ? f.email : cur.email) || synthetic(patch.username ?? cur.username);
     auth.email = nextEmail; auth.email_confirm = true;
   }
-  if (f.password !== undefined) auth.password = f.password;
+  if (f.password !== undefined) {
+    if (!cur.created_here && !nativeOk(f.password)) throw new Bad(400, 'linked_password',
+      'This login is shared with other apps (e.g. Neil\'s Way), which need 6 to 72 characters (fewer with emoji). Choose a password in that range for it.');
+    auth.password = authPassword(f.password);
+  }
   if (Object.keys(auth).length) {
     try { await authUpdate(id, auth); }
     catch (e) {                                                // keep app_user and the login consistent
@@ -366,7 +381,7 @@ async function admin(req, res, url) {
     if (req.method === 'GET' && !id) return send(res, 200, await listUsers());
     let body = {};
     if (req.method === 'POST' || req.method === 'PATCH') {
-      try { body = await readJson(req, 4096); } catch { return send(res, 400, { error: 'bad_request' }); }
+      try { body = await readJson(req, LIMITS.maxBody); } catch { return send(res, 400, { error: 'bad_request' }); }
       if (!body || typeof body !== 'object') return send(res, 400, { error: 'bad_request' });
     }
     if (req.method === 'POST' && !id) { const newId = await createUser(body); await refreshDirectory(); return send(res, 201, { user_id: newId }); }

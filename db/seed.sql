@@ -111,3 +111,7 @@ from (values ('MU', 57.55, -20.25), ('SC', 55.45, -4.68), ('ZA', 24.70, -29.00),
 where j.code = v.code and (j.lon is null or j.lat is null);
 
 reset search_path;
+
+-- Taxes set per region: regions never inherit the national rate for these.
+update offshore_insights.jurisdiction set regional_tax_types = '{INHERITANCE_DIRECT,INHERITANCE_OTHER}' where code = 'BE';
+update offshore_insights.jurisdiction set regional_tax_types = '{INHERITANCE_DIRECT,INHERITANCE_OTHER,WEALTH_NET}' where code = 'ES';

@@ -12,7 +12,7 @@ export default function G2OpenDoors({ d, cc, hub }: { d: Dashboard; cc: string[]
     <Card id="g2" title="Open doors" purpose={`Which countries can use a ${hubName} structure, gate by gate`}
       legend={<>
         <Key color={GATE_COLOR.green}>Open</Key><Key color={GATE_COLOR.amber}>Caution</Key>
-        <Key color={GATE_COLOR.red}>Blocked</Key><Key hatch>Unknown</Key><em>Dashed outline = still to verify</em>
+        <Key color={GATE_COLOR.red}>Blocked</Key><Key hatch>Unknown</Key><em>Dashed outline = still to verify</em><em>Tax treaty = with Mauritius for both hubs (set up there first)</em>
       </>}>
       {!cc.length ? <div className="empty">Select at least one country.</div> : (
         <div className="gates-wrap" ref={t.box} onMouseLeave={t.hide}>

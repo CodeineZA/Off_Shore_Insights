@@ -24,12 +24,11 @@ export default function G3SweetSpot({ d, cc, hub }: { d: Dashboard; cc: string[]
   const inTarget = shown.filter((p) => p.x! >= mx / 2 && p.y >= my / 2);
   const grown = useGrown([cc.join(), hub]);
   const t = useTip<(typeof pts)[number]>();
-  const hubName = hub === 'MU' ? 'Mauritius' : 'Seychelles';
   return (
     <Card id="g3" title="Sweet spot"
       metric={{ value: inTarget.length, label: 'in the target corner', sub: inTarget.map((p) => p.code).join(', ') || 'none yet' }} purpose="Where a big market meets high tax pain: top right is the target"
       legend={<>
-        <Key color={GATE_COLOR.green}>Treaty with {hubName}</Key><Key color={GATE_COLOR.amber}>Negotiating</Key>
+        <Key color={GATE_COLOR.green}>Treaty with Mauritius</Key><Key color={GATE_COLOR.amber}>Negotiating</Key>
         <Key color={GATE_COLOR.red}>No treaty</Key><em>Bubble size = business owners</em>
       </>}
       foot={<>
@@ -65,7 +64,7 @@ export default function G3SweetSpot({ d, cc, hub }: { d: Dashboard; cc: string[]
             <div className="tip-k">{t.tip.data.name}</div>
             <div className="tip-l">Market: {t.tip.data.x != null ? Math.round(t.tip.data.x).toLocaleString('en') : '—'} {WEALTH_LABEL[metric].toLowerCase()}</div>
             <div className="tip-l">Sample-client bill: {fmtEur(t.tip.data.y)}{t.tip.data.complete ? '' : ' (incomplete)'}</div>
-            <div className="tip-l">Treaty with {hubName}: {t.tip.data.treaty.label}</div>
+            <div className="tip-l">Treaty with Mauritius: {t.tip.data.treaty.label}</div>
           </div>
         )}
       </div>

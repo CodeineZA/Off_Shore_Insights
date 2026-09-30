@@ -1,7 +1,7 @@
 // Calculations behind the tiles (PLAN.md §9). Pure functions over the dashboard() payload.
 // Every assumption is exported and shown on screen next to the numbers it produces.
 import type { Dashboard, Gate, Rate, TreatyStatus } from './types';
-import { countries, nameOf, rateOf } from './insights';
+import { countries, countryOf, nameOf, rateOf } from './insights';
 
 // ── Currency ─────────────────────────────────────────────────────────────────
 export const currencyOf = (d: Dashboard, code: string): string => {
@@ -95,15 +95,21 @@ const TREATY_GATE: Record<TreatyStatus, { status: GateStatus; label: string }> =
   in_force: { status: 'green', label: 'In force' }, signed_not_in_force: { status: 'amber', label: 'Signed' },
   negotiating: { status: 'amber', label: 'Negotiating' }, none: { status: 'red', label: 'No treaty' }, unknown: { status: 'unknown', label: 'Unknown' },
 };
+/** Structures are set up in Mauritius first and moved to Seychelles afterwards (Hentus, 2026-09-30),
+ *  so the Mauritius treaty is the one that counts for both hubs. */
+export const TREATY_HUB = 'MU';
 export function gateCells(d: Dashboard, code: string, hub: string): GateCell[] {
+  const country = countryOf(d, code);   // regions share their country's treaty and lists
   return GATES.map((g) => {
     if (g.key === 'treaty') {
-      const t = d.treaties.find((x) => x.country_a === hub && x.country_b === code);
+      const t = d.treaties.find((x) => x.country_a === TREATY_HUB && x.country_b === country);
       const s = TREATY_GATE[t?.status ?? 'unknown'];
       const since = t?.in_force_on ? ` (in force ${t.in_force_on.slice(0, 4)})` : '';
-      return { key: g.key, ...s, note: t ? (t.mli_note ?? s.label) + since : 'No treaty data yet', source: t?.source_url ?? null, check: false };
+      const via = hub === TREATY_HUB ? '' : 'Via Mauritius: structures are set up there first, then moved. ';
+      return { key: g.key, ...s, note: via + (t ? (t.mli_note ?? s.label) + since : 'No treaty data yet'), source: t?.source_url ?? null, check: false };
     }
-    const row: Gate | undefined = d.gates.find((x) => x.jurisdiction_code === code && x.gate === g.key && (g.hubSpecific ? x.hub === hub : x.hub == null));
+    const find = (c: string) => d.gates.find((x) => x.jurisdiction_code === c && x.gate === g.key && (g.hubSpecific ? x.hub === hub : x.hub == null));
+    const row: Gate | undefined = find(code) ?? find(country);
     return row ? { key: g.key, status: row.status, label: row.label, note: row.note, source: row.source_url, check: row.needs_verification }
       : { key: g.key, status: 'unknown', label: 'Unknown', note: g.key === 'marketing' ? 'To be decided per country (Justus)' : 'Not researched yet', source: null, check: false };
   });
@@ -150,7 +156,8 @@ export function opportunities(d: Dashboard, cc: string[], hub: string): Opportun
 export const MOMENTUM_TYPES = ['INCOME_TOP', 'CGT_FINANCIAL', 'INHERITANCE_DIRECT', 'WEALTH_NET'];
 export type Direction = 'up' | 'down' | 'flat' | 'unknown';
 export function momentum(d: Dashboard, code: string, taxType: string) {
-  const h = d.rate_history.filter((x) => x.jurisdiction_code === code && x.tax_type_code === taxType && x.headline_rate != null)
+  const src = rateOf(d, code, taxType)?.inherited ? countryOf(d, code) : code;   // a region's national tax moves with the country
+  const h = d.rate_history.filter((x) => x.jurisdiction_code === src && x.tax_type_code === taxType && x.headline_rate != null)
     .sort((a, b) => a.valid_from.localeCompare(b.valid_from));
   if (!h.length) return { dir: 'unknown' as Direction, now: null, prev: null, since: null };
   const now = h[h.length - 1], prev = h.length > 1 ? h[h.length - 2] : null;

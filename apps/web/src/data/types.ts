@@ -7,6 +7,8 @@ export interface Jurisdiction {
   code: string; name: string; parent_code: string | null; kind: 'country' | 'region';
   currency: string; tax_year_start: string | null; next_budget_date: string | null;
   is_offshore_hub: boolean; notes: string | null; lon: number | null; lat: number | null;
+  /** Taxes this country sets per region; its regions never inherit these national rates. */
+  regional_tax_types?: string[];
 }
 export interface TaxType {
   code: string; label: string; category: TaxCategory; applies_to: string[];

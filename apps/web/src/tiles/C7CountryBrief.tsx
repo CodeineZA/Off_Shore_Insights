@@ -2,13 +2,14 @@
 // (warnings first), and which of this country's figures still need verifying.
 import type { Dashboard } from '../data/types';
 import { GATES, gateCells } from '../data/model';
-import { nameOf, shortLabel } from '../data/insights';
+import { countryOf, nameOf, shortLabel } from '../data/insights';
 import { Card, GATE_COLOR, SourceLink } from './common';
 
 const TOPIC_ORDER = ['warning', 'anti_avoidance', 'residency', 'crs', 'sales_angle'];
 
 export default function C7CountryBrief({ d, code }: { d: Dashboard; code: string }) {
-  const notes = d.notes.filter((n) => n.jurisdiction_code === code)
+  const country = countryOf(d, code);   // a region shows its own notes and its country's
+  const notes = d.notes.filter((n) => n.jurisdiction_code === code || n.jurisdiction_code === country)
     .sort((a, b) => (TOPIC_ORDER.indexOf(a.topic) + 99) % 99 - (TOPIC_ORDER.indexOf(b.topic) + 99) % 99 || a.sort_order - b.sort_order);
   const toCheck = d.rates.filter((r) => r.jurisdiction_code === code && r.needs_verification && !r.inherited);
   return (
