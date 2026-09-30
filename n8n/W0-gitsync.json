@@ -1,0 +1,322 @@
+{
+  "name": "Off_Shore_Insights - Git_sync",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid"
+  },
+  "nodes": [
+    {
+      "id": "w0-01",
+      "name": "GitHub push",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "b7a4e0c2-5d1f-4c1e-9d0a-0ff5b0e1a001",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "offshore-insights-github-update",
+        "options": {}
+      }
+    },
+    {
+      "id": "w0-02",
+      "name": "Extract",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "Branch",
+              "type": "string",
+              "value": "={{ ($json.body.ref || '').split('/').pop() }}"
+            },
+            {
+              "id": "a2",
+              "name": "StartedAt",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "w0-03",
+      "name": "If main",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.Branch }}",
+              "rightValue": "main",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "w0-04",
+      "name": "Sync & deploy on Pi",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        660,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "credentials": {
+        "sshPassword": {
+          "id": "nZmKD2zpcXzQfzzy",
+          "name": "SSH Password account"
+        }
+      },
+      "parameters": {
+        "command": "set -e\ncd /home/codeine/Off_Shore_Insights\nexec 9>/tmp/offshore-insights-deploy.lock\nflock -n 9 || { echo \"NOOP: deploy already running\"; exit 0; }\ngit fetch -q origin main\nif [ \"$(git rev-parse HEAD)\" = \"$(git rev-parse origin/main)\" ] && [ -z \"$(git status --porcelain)\" ]; then echo \"NOOP: up to date at $(git log --oneline -1)\"; exit 0; fi\n[ -z \"$(git status --porcelain)\" ] || git stash -u -q\ngit checkout -q main\ngit merge -q --ff-only origin/main || git reset -q --hard origin/main\nR=\"\"; if git log -1 --format=%B | grep -q -- \"--restart\"; then R=restart; fi\nbash scripts/deploy.sh $R 2>&1"
+      }
+    },
+    {
+      "id": "w0-05",
+      "name": "Real deploy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ String($json.stdout || '') }}",
+              "rightValue": "NOOP:",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "w0-06",
+      "name": "Record sync_run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        0
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "T99Hh92H20OWbJov",
+          "name": "Offshore Insights - Supabase service_role"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.50:8000/rest/v1/sync_run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: 'W0_gitsync', started_at: $('Extract').item.json.StartedAt, finished_at: $now.toISO(), status: $('Sync & deploy on Pi').item.json.code === 0 ? 'ok' : 'error', error: $('Sync & deploy on Pi').item.json.code === 0 ? null : String(($('Sync & deploy on Pi').item.json.stdout || '') + '\n' + ($('Sync & deploy on Pi').item.json.stderr || '') + ($('Sync & deploy on Pi').item.json.error ? ' ' + JSON.stringify($('Sync & deploy on Pi').item.json.error) : '')).slice(-800) }) }}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "w0-07",
+      "name": "Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c3",
+              "leftValue": "={{ $('Sync & deploy on Pi').item.json.code }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "w0-08",
+      "name": "Telegram alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1540,
+        -80
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "8TArObNpJNKLfwlM",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "6688393980",
+        "text": "={{ '⚠️ Off_Shore_Insights deploy FAILED (exit ' + $('Sync & deploy on Pi').item.json.code + ')\n\n' + String(($('Sync & deploy on Pi').item.json.stdout || '') + '\n' + ($('Sync & deploy on Pi').item.json.stderr || '') + ($('Sync & deploy on Pi').item.json.error ? JSON.stringify($('Sync & deploy on Pi').item.json.error) : '')).slice(-1500) }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "id": "w0-09",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "parameters": {
+        "width": 700,
+        "height": 220,
+        "color": 4,
+        "content": "## Off_Shore_Insights deploy (repo: n8n/W0-gitsync.json)\nPush to main → fetch; exits NOOP if nothing changed (spoofed webhooks cost one fetch, no DB write). flock prevents overlapping deploys. `--restart` is read from the real commit, not the payload. Then scripts/deploy.sh. Non-zero exit → sync_run error row + Telegram alert."
+      }
+    }
+  ],
+  "connections": {
+    "GitHub push": {
+      "main": [
+        [
+          {
+            "node": "Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract": {
+      "main": [
+        [
+          {
+            "node": "If main",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If main": {
+      "main": [
+        [
+          {
+            "node": "Sync & deploy on Pi",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Sync & deploy on Pi": {
+      "main": [
+        [
+          {
+            "node": "Real deploy?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Real deploy?": {
+      "main": [
+        [
+          {
+            "node": "Record sync_run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Record sync_run": {
+      "main": [
+        [
+          {
+            "node": "Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed?": {
+      "main": [
+        [
+          {
+            "node": "Telegram alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  }
+}

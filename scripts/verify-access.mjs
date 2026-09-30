@@ -59,8 +59,7 @@ check('gateway rejects an unknown username (401)', unk.status === 401, unk.statu
 const ok = await gatewayLogin(env.TEST_USER_USERNAME, env.TEST_USER_PASSWORD);
 const jwt = ok.json?.access_token;
 check('test user logs in through the gateway', ok.status === 200 && !!jwt, `${ok.status} ${JSON.stringify(ok.json)}`);
-if (!jwt) { console.log('
-cannot continue without a session'); process.exit(1); }
+if (!jwt) { console.log('\ncannot continue without a session'); process.exit(1); }
 
 // 3. member reads, cannot write
 const m = await req(RATES, { jwt });
