@@ -5,6 +5,7 @@
 # Exits non-zero on any failure — the workflow alerts Telegram on a non-zero code.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+echo "deliberate failure test (reverted in the next commit)" >&2; exit 3
 PORT=8094
 CONTAINER=offshore-insights-web
 
