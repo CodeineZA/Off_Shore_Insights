@@ -8,21 +8,27 @@ cd "$(dirname "$0")/.."
 PORT=8094
 CONTAINER=offshore-insights-web
 
-# 1. Build the frontend, once it exists (it waits for the designs).
-if [ -f apps/web/package.json ]; then
-  (cd apps/web && npm ci --no-audit --no-fund && npm run build)
-  # The bundle may only ever carry the anon key.
-  SB=/home/codeine/server/services/supabase/.env
-  for k in SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD; do
-    v=$(grep -E "^$k=" "$SB" | cut -d= -f2-)
-    if [ -n "$v" ] && grep -rqF -- "$v" apps/web/dist; then
-      echo "ABORT: $k found in apps/web/dist" >&2; exit 1
-    fi
-  done
-  SRC=apps/web/dist/index.html
-else
-  SRC=server/web/placeholder/index.html
-fi
+# 1. Build the frontend into dist-next, then swap it in. A failed build (or failed tests,
+#    typecheck or secret scan) leaves the current site untouched.
+SB=/home/codeine/server/services/supabase/.env
+WEB=apps/web
+{
+  echo "VITE_SUPABASE_URL=$(grep -E '^SUPABASE_PUBLIC_URL=' "$SB" | cut -d= -f2-)"
+  echo "VITE_SUPABASE_ANON_KEY=$(grep -E '^ANON_KEY=' "$SB" | cut -d= -f2-)"
+  echo "VITE_SUPABASE_SCHEMA=offshore_insights"
+} > "$WEB/.env.local"
+(cd "$WEB" && npm ci --no-audit --no-fund && npm test && npx tsc -b && npx vite build --outDir dist-next --emptyOutDir)
+# The bundle may only ever carry the anon key.
+for k in SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD; do
+  v=$(grep -E "^$k=" "$SB" | cut -d= -f2-)
+  if [ -n "$v" ] && grep -rqF -- "$v" "$WEB/dist-next"; then
+    rm -rf "$WEB/dist-next"; echo "ABORT: $k found in the build" >&2; exit 1
+  fi
+done
+rm -rf "$WEB/dist.old"
+[ -d "$WEB/dist" ] && mv "$WEB/dist" "$WEB/dist.old"
+mv "$WEB/dist-next" "$WEB/dist"
+SRC=$WEB/dist/index.html
 
 # 2. Keys for the login gateway, always fresh from the shared Supabase master (gitignored).
 SB=/home/codeine/server/services/supabase/.env

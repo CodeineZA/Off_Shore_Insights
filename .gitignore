@@ -8,6 +8,9 @@ db/seed-private.sql
 
 node_modules/
 dist/
+apps/web/dist-next/
+apps/web/dist.old/
 *.log
 .DS_Store
 *.tsbuildinfo
+apps/web/.fixture.json
