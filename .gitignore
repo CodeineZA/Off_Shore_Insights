@@ -1,0 +1,13 @@
+# Secrets — this repo is PUBLIC. Real values live only in the local .env.
+.env
+.env.*
+!.env.example
+apps/web/.env.local
+secrets/
+db/seed-private.sql
+
+node_modules/
+dist/
+*.log
+.DS_Store
+*.tsbuildinfo

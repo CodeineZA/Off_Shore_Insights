@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Blocks secrets from being committed. This repo is PUBLIC.
+# Enabled per clone with:  git config core.hooksPath .githooks
+set -u
+fail=0
+
+# 1. Files that must never be staged.
+while IFS= read -r f; do
+  case "$f" in
+    .env.example|*/.env.example) ;;
+    .env|.env.*|*/.env|*/.env.*|secrets/*|*/secrets/*|db/seed-private.sql)
+      echo "pre-commit: refusing to commit '$f' (secret file)" >&2; fail=1 ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACMR)
+
+# 2. Secret-shaped strings in added lines.
+added=$(git diff --cached -U0 --no-color --diff-filter=ACMR | grep -E '^\+' | grep -vE '^\+\+\+ ')
+patterns=(
+  'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}'   # JWT (Supabase keys, n8n API key)
+  'ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}'
+  '[0-9]{8,10}:[A-Za-z0-9_-]{35}'                  # Telegram bot token
+  '"private_ke[y]"'                                # Google service-account JSON
+)
+for p in "${patterns[@]}"; do
+  if printf '%s\n' "$added" | grep -qE -- "$p"; then
+    echo "pre-commit: staged change matches secret pattern: $p" >&2; fail=1
+  fi
+done
+
+# 3. Any real secret value from the local .env.
+if [ -f .env ]; then
+  vals=$(grep -E '^[A-Z0-9_]*(KEY|TOKEN|SECRET|PASSWORD|PASS)=' .env | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/' | awk 'length($0) >= 8')
+  if [ -n "$vals" ] && printf '%s\n' "$added" | grep -qF -- "$vals"; then
+    echo "pre-commit: staged change contains a secret value from .env" >&2; fail=1
+  fi
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "pre-commit: commit blocked. Unstage the file(s) above." >&2
+  exit 1
+fi
+exit 0
