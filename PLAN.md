@@ -132,7 +132,7 @@ direct-line exemption. The treaty table covers MU and SC against every target co
 figure is retrieved: `research/recipes.json`. Refreshes: n8n (API sources) or the
 `/update-offshore-insights` skill.
 
-`wealth_market` has no rows yet. Fill it in Phase 2 from the UBS Global Wealth Report, the
+`wealth_market` has Eurostat employer counts (42 rows, 2020–2025, via E1). Millionaires, HNWI and UHNWI come from the UBS Global Wealth Report, the
 Capgemini World Wealth Report, the Knight Frank Wealth Report and Eurostat. Use the latest
 edition of each, and record the year and source on every row. Eurostat's business-owner figure
 is pulled automatically by workflow E1.
