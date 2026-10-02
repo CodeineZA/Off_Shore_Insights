@@ -17,11 +17,11 @@
 .map-legend em { font-style: normal; color: var(--muted); }
 
 /* ── Map ── */
-.worldmap { position: relative; border-radius: 18px; border: 1px solid var(--line); overflow: hidden;
+.worldmap { position: relative; isolation: isolate; contain: paint; border-radius: 18px; border: 1px solid var(--line); overflow: hidden;
   background: radial-gradient(90% 90% at 50% 40%, #1d1b19 0%, #151413 100%); box-shadow: 0 24px 48px -28px rgba(0, 0, 0, .7); }
 .worldmap.loading { min-height: 240px; display: grid; place-items: center; color: var(--muted); font: 400 12px Poppins; }
 .worldmap svg { display: block; width: 100%; height: auto; aspect-ratio: 956 / 429; }
-.map-views { position: absolute; z-index: 3; top: 12px; right: 12px; background: rgba(18, 17, 16, .82); backdrop-filter: blur(4px); }
+.map-views { position: absolute; z-index: 3; top: 12px; right: 12px; background: rgba(18, 17, 16, .92); }
 .map-land { transition: fill-opacity .2s; }
 .map-land.can { cursor: pointer; }
 .map-land.can:hover, .map-land.can:focus-visible { fill-opacity: .72; outline: none; }
@@ -30,7 +30,7 @@
 .map-pinlabel { font: 600 8px Poppins; fill: var(--text); paint-order: stroke; stroke: rgba(18, 17, 16, .85); stroke-width: 2px; }
 .map-hublabel { font: 600 8px Poppins; paint-order: stroke; stroke: rgba(18, 17, 16, .85); stroke-width: 2px; }
 .map-back { position: absolute; z-index: 3; top: 12px; left: 12px; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(216, 176, 122, .45);
-  background: rgba(18, 17, 16, .82); color: var(--gold-3); font: 500 12px Poppins; cursor: pointer; backdrop-filter: blur(4px); }
+  background: rgba(18, 17, 16, .92); color: var(--gold-3); font: 500 12px Poppins; cursor: pointer; }
 .map-back:hover { background: rgba(216, 176, 122, .16); }
 .map-tip { position: fixed; z-index: 30; pointer-events: none; max-width: 260px; padding: 10px 12px; border-radius: 12px; background: #1f1e1c;
   border: 1px solid rgba(255, 236, 210, .12); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, .7); display: flex; flex-direction: column; gap: 3px; font: 400 12px/1.4 Poppins; }

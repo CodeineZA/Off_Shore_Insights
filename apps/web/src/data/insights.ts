@@ -60,3 +60,20 @@ export const SHORT: Record<string, string> = {
   SECURITIES_ACCOUNT: 'Securities account', FOREIGN_ASSET_TAX: 'Foreign assets', FOREIGN_PROPERTY: 'Foreign property',
 };
 export const shortLabel = (t: TaxType) => SHORT[t.code] ?? t.label;
+/** One plain sentence per tax type, spelling out any abbreviation (CGT, WHT) in its short label. Shown softly under the label in the expanded tiles. */
+export const EXPLAIN: Record<string, string> = {
+  CGT_FINANCIAL: 'CGT is capital gains tax: tax on the profit when you sell shares, ETFs or funds.',
+  CGT_PROPERTY: 'CGT is capital gains tax: tax on the profit when you sell a property.',
+  INCOME_TOP: 'The highest rate of income tax, paid on the top slice of what you earn.',
+  WHT_DIVIDEND: 'WHT is withholding tax: tax taken at source from dividends paid to someone abroad.',
+  WHT_INTEREST: 'WHT is withholding tax: tax taken at source from interest paid to someone abroad.',
+  INHERITANCE_DIRECT: 'Inheritance (estate) tax when assets pass to children or a partner.',
+  INHERITANCE_OTHER: 'Inheritance (estate) tax when assets pass to people outside the close family, such as friends or distant relatives.',
+  WEALTH_NET: 'A yearly tax on net wealth: everything you own minus what you owe.',
+  WEALTH_SOLIDARITY: 'An extra yearly levy on very large fortunes, on top of any wealth tax.',
+  WEALTH_PROPERTY: 'A yearly tax on the value of property you own.',
+  SECURITIES_ACCOUNT: 'A yearly tax on the value held in a securities (investment) account.',
+  FOREIGN_ASSET_TAX: 'A yearly tax on financial assets held abroad. It works against going offshore.',
+  FOREIGN_PROPERTY: 'A yearly tax on property held abroad. It works against going offshore.',
+};
+export const explainOf = (t: TaxType) => EXPLAIN[t.code] ?? t.description ?? '';

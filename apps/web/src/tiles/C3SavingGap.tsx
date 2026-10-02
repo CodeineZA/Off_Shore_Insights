@@ -2,7 +2,7 @@
 // country taxes more, i.e. what moving the asset to the hub could save. The sales argument.
 import type { Dashboard } from '../data/types';
 import { savingGap } from '../data/model';
-import { nameOf, shortLabel } from '../data/insights';
+import { explainOf, nameOf, shortLabel } from '../data/insights';
 import { niceMax } from '../ui/geom';
 import { AxisRow, Card, HUB_COLOR, Key, useCompact, useGrown } from './common';
 
@@ -27,7 +27,7 @@ export default function C3SavingGap({ d, code }: { d: Dashboard; code: string })
           : <AxisRow row="gap-row" lead="Tax" centred min={`← −${max}`} label="0" max={`+${max} →`} value="Points" />}
         {rows.map((r) => (
           <div className="gap-row" key={r.t.code}>
-            <div className="h2h-label">{shortLabel(r.t)}</div>
+            <div className="h2h-label">{shortLabel(r.t)}{!compact && <small className="tax-explain">{explainOf(r.t)}</small>}</div>
             <div className="gap-track">
               <span className="gap-axis" />
               {r.gaps.map((g, i) => (

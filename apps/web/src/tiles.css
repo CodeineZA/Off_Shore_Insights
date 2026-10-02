@@ -180,3 +180,7 @@
 .tile-preview .gap-vals { font-size: 10px; }
 .tile-preview .axis-scale.centred em { visibility: visible; }
 @media (max-width: 640px) { .gap-row { grid-template-columns: 92px minmax(0, 1fr) 40px; } }
+
+/* A soft one-line explanation under a tax label in an expanded tile (spells out CGT, WHT...) */
+.tax-explain { display: block; margin-top: 3px; font: 400 10.5px/1.4 Poppins; color: var(--muted-2); }
+@media (min-width: 900px) { .card-full .gap-row { grid-template-columns: 250px minmax(0, 1fr) 56px; } }

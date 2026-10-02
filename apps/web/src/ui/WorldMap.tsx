@@ -41,14 +41,15 @@ const Land = memo(function Land({ shapes, paint, clickable, focusIso, underlay, 
         const fill = !p ? NEUTRAL : p.fill === 'mu' ? HUB_PAINT.MU : p.fill === 'sc' ? HUB_PAINT.SC : p.fill === 'both' ? 'url(#osi-stripes)' : p.fill === 'unknown' ? 'url(#osi-hatch)' : NEUTRAL;
         const outline = p && (p.outlineMu || p.outlineSc);
         const isFocus = s.iso2 === focusIso;
+        const op = s.iso2 === underlay ? 0.18 : dimOthers && !isFocus ? 0.38 : 1;   // on the paint itself: a <g opacity> makes the browser allocate a layer per country
         return (
-          <g key={i} opacity={s.iso2 === underlay ? 0.18 : dimOthers && !isFocus ? 0.38 : 1}>
-            <path d={s.d} fill={fill} fillOpacity={p && (p.fill === 'mu' || p.fill === 'sc') ? 0.82 : 1} stroke={isFocus ? '#f3dcb2' : LAND_LINE} strokeWidth={isFocus ? 1.4 : 0.5} vectorEffect="non-scaling-stroke"
+          <g key={i}>
+            <path d={s.d} fill={fill} fillOpacity={op * (p && (p.fill === 'mu' || p.fill === 'sc') ? 0.82 : 1)} stroke={isFocus ? '#f3dcb2' : LAND_LINE} strokeOpacity={op} strokeWidth={isFocus ? 1.4 : 0.5} vectorEffect="non-scaling-stroke"
               className={can ? 'map-land can' : 'map-land'} role={can ? 'button' : undefined} tabIndex={can ? 0 : undefined} aria-label={can ? `${s.name}: open` : undefined}
               onClick={can ? () => onPick(s.iso2) : undefined} onKeyDown={can ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(s.iso2); } } : undefined}
               onPointerMove={(e) => onHover(s.iso2 || s.name, e)} onPointerLeave={() => onHover(null)} />
-            {outline && p!.outlineSc && <path d={s.d} fill="none" stroke={HUB_PAINT.SC} strokeWidth={p!.outlineMu ? 3 : 1.8} vectorEffect="non-scaling-stroke" pointerEvents="none" />}
-            {outline && p!.outlineMu && <path d={s.d} fill="none" stroke={HUB_PAINT.MU} strokeWidth={1.4} vectorEffect="non-scaling-stroke" pointerEvents="none" />}
+            {outline && p!.outlineSc && <path d={s.d} fill="none" stroke={HUB_PAINT.SC} strokeOpacity={op} strokeWidth={p!.outlineMu ? 3 : 1.8} vectorEffect="non-scaling-stroke" pointerEvents="none" />}
+            {outline && p!.outlineMu && <path d={s.d} fill="none" stroke={HUB_PAINT.MU} strokeOpacity={op} strokeWidth={1.4} vectorEffect="non-scaling-stroke" pointerEvents="none" />}
           </g>
         );
       })}
@@ -116,13 +117,14 @@ export default function WorldMap({ d, focus, onFocus, years, treaty, money, metr
         </div>
       )}
       <svg viewBox={`${vb.__mx} ${vb.__my} ${vb.__mw} ${vb.__mh}`} role="img" aria-label="World map: treaties with Mauritius and Seychelles, and money at each capital. Select a country to focus the page on it.">
+        {/* Diagonal stripes as repeating gradients (a shader), not rotated <pattern> tiles: tiles are re-rasterised on every frame of the zoom */}
         <defs>
-          <pattern id="osi-stripes" width={10 * s} height={10 * s} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width={5 * s} height={10 * s} fill={HUB_PAINT.MU} /><rect x={5 * s} width={5 * s} height={10 * s} fill={HUB_PAINT.SC} />
-          </pattern>
-          <pattern id="osi-hatch" width={6 * s} height={6 * s} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width={6 * s} height={6 * s} fill={DIM} /><rect width={1.6 * s} height={6 * s} fill="rgba(255,255,255,.12)" />
-          </pattern>
+          <linearGradient id="osi-stripes" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={10 * s} y2="0" spreadMethod="repeat" gradientTransform="rotate(45)">
+            <stop offset="0" stopColor={HUB_PAINT.MU} /><stop offset="0.5" stopColor={HUB_PAINT.MU} /><stop offset="0.5" stopColor={HUB_PAINT.SC} /><stop offset="1" stopColor={HUB_PAINT.SC} />
+          </linearGradient>
+          <linearGradient id="osi-hatch" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={6 * s} y2="0" spreadMethod="repeat" gradientTransform="rotate(45)">
+            <stop offset="0" stopColor={DIM} /><stop offset="0.72" stopColor={DIM} /><stop offset="0.72" stopColor="#3b3a38" /><stop offset="1" stopColor="#3b3a38" />
+          </linearGradient>
         </defs>
         <Land shapes={SHAPES} paint={paint} clickable={clickable} focusIso={focus.country} underlay={regionsDrawn ? focus.country : null} dimOthers={!!focus.country}
           onPick={pick} onHover={(k, e) => setHover(k && e ? { key: k, x: e.clientX, y: e.clientY } : null)} />
@@ -148,7 +150,7 @@ export default function WorldMap({ d, focus, onFocus, years, treaty, money, metr
 
         {/* Money: one bar per metric at each capital, each metric scaled to its own highest country */}
         {pins.map((p) => { const [x, y] = project(p.lon, p.lat); const n = p.bars.length; const W = 6, G = 1.5; return (
-          <g key={p.code} transform={`translate(${x} ${y}) scale(${s})`} className="map-pin" pointerEvents="none" opacity={focus.country && focus.country !== p.code ? 0.4 : 1}>
+          <g key={p.code} transform={`translate(${x} ${y}) scale(${s})`} className="map-pin" pointerEvents="none" opacity={focus.country && focus.country !== p.code ? 0.4 : undefined}>
             <circle r={1.6} fill="#f3dcb2" />
             <g transform={`translate(${-(n * (W + G) - G) / 2} 0)`}>
               {p.bars.map((b, i) => { const color = MONEY.find((m) => m.key === b.key)!.color; const hgt = Math.max(2, b.norm * 34); return b.value == null

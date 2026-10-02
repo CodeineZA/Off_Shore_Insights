@@ -279,4 +279,6 @@ trusts); (3) where does the tax hurt, with the hub rate beside it; (4) who do we
 - **Firms:** categories are an open list; sources are classified scrapeable (for Hentus's scraper), Claude-collected, or manual
   (`research/advisors/README.md`). The page lists names, not clickable; contact details stay in the table for the later Excel export.
 
+**Parked (Hentus, 2026-10-02):** the firms search and the "Who to talk to" tile. The tables, the `/find-advisors` skill and the run-file format stay in place; no firms are collected and no tile is added to the page until he restarts it.
+
 How it is built and run is in [CLAUDE.md](CLAUDE.md): `/research-country`, `/find-advisors`, `/update-offshore-insights`, and `node research/audit-country.mjs`.

@@ -39,3 +39,19 @@ describe('shared helpers', () => {
     expect(pct(26.375)).toBe('26.4%');
   });
 });
+
+describe('plain-English explanations of tax types', () => {
+  it('every tax type with a short label has one, and abbreviations are spelled out', async () => {
+    const { EXPLAIN, SHORT } = await import('./insights');
+    for (const code of Object.keys(SHORT)) expect(EXPLAIN[code], code).toBeTruthy();
+    for (const [code, label] of Object.entries(SHORT)) {
+      if (/CGT/.test(label)) expect(EXPLAIN[code], code).toMatch(/capital gains tax/i);
+      if (/WHT/.test(label)) expect(EXPLAIN[code], code).toMatch(/withholding tax/i);
+    }
+  });
+  it('falls back to the stored description for a tax type it does not know', async () => {
+    const { explainOf } = await import('./insights');
+    expect(explainOf({ code: 'NEW_TAX', description: 'Stored text' } as never)).toBe('Stored text');
+    expect(explainOf({ code: 'NEW_TAX', description: null } as never)).toBe('');
+  });
+});

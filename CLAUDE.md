@@ -74,7 +74,7 @@ closes a changed row and opens a new one; unchanged values only refresh `verifie
 - A **new country** goes through **`/research-country <name>`** (codes, capital, same-everywhere-or-per-region check, treaties with both hubs, lists, money,
   three tax years, region shapes). `node research/audit-country.mjs <CODE>` is the one checklist: what is missing, stale (a new tax year began) or
   blocked, and **where Hentus can get what Claude cannot**. **Firms** go through **`/find-advisors <country>`** (format and the scrapeable / Claude /
-  manual classification: `research/advisors/README.md`).
+  manual classification: `research/advisors/README.md`). **Parked by Hentus (2026-10-02): do not run it or add a firms tile until he restarts it.**
 - `manual` recipes (wealth-report databooks) are entered by a human.
 
 Never add a figure without a recipe. Rules are in `research/README.md`.
