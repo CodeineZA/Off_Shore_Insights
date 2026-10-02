@@ -14,12 +14,14 @@ rows with open review flags), or `all` (the default).
 ## 1. Scope
 
 1. Load `research/recipes.json`. This skill runs everything that needs no person:
-   - `api` recipes run as scripts: `node research/fetch-eurostat.mjs` (employers) and
-     `node research/fetch-fx.mjs` (EUR exchange rates). Each writes `db/research/<name>-<date>.sql`,
-     applied in step 4 together with the run.
+   - `api` recipes run as scripts: `node research/fetch-eurostat.mjs` (employers), `node research/fetch-ilo.mjs`
+     (employers where Eurostat has none: UK, South Africa, and any new non-EU country) and
+     `node research/fetch-fx.mjs` (EUR exchange rates). Each reads the country and currency lists from the database,
+     writes `db/research/<name>-<date>.sql`, and is applied in step 4 together with the run.
    - `page-extract` recipes run as described below.
-   - `manual` recipes (UBS, Capgemini, Knight Frank) can't be fetched; list them at the end as
-     reminders for Hentus.
+   - `manual` recipes (UBS millionaires, Knight Frank UHNWI, `be-tax-havens`, `marketing-rules`) can't be fetched by script;
+     read them from the PDFs in `PDFs/` when those are present, otherwise list them at the end as reminders for Hentus.
+     There is no HNWI recipe: no source publishes it per country.
 2. Scheduled automations are **paused** at Hentus's request (2026-09-30): nothing runs daily,
    and he calls this skill when he wants fresh data. If any review flags are still open from
    earlier W1 runs, include those rows:
@@ -76,7 +78,14 @@ node research/apply-run.mjs research/runs/<date>.json      # → db/research/<da
 4. Check the access suite still passes: `node scripts/verify-access.mjs`.
 5. Commit the run file and SQL (the public repo is fine: these are public sources), then push.
 
-## 5. Report
+## 5. Audit
+
+Run `node research/audit-country.mjs all --sql`, apply the SQL it writes, and report the open items. **A new tax year** shows up
+there as `stale` ("Not confirmed for tax year 2026/27"): that is the cue to re-run the country's recipes, which closes the old
+row and opens the new one, so a new year chip appears on the page. Back years missing for a country are `history:<year>` items:
+fill them from dated sources (see `/research-country`, "Back years").
+
+## 6. Report
 
 - What changed and what was newly filled.
 - What is still flagged, and why.

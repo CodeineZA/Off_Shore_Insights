@@ -80,16 +80,13 @@ const recipes = [
     extract: 'JSON-stat: value × 1000 per geo per year.' },
   { id: 'ubs-gwr-millionaires', method: 'manual', url: 'https://www.ubs.com/global/en/wealthmanagement/insights/global-wealth-report.html', cells: ['wealth_market.millionaires'],
     extract: 'UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source "UBS Global Wealth Report <edition>". '
-      + '2026 edition: main report p.21 "The UBS Millionaire Index" (thousands, end 2025) covers all our countries. The upper bands (5-10m, 10-50m, 50-100m) are growth rates only.' },
-  { id: 'capgemini-hnwi', method: 'manual', url: 'https://www.capgemini.com/insights/research-library/world-wealth-report/', cells: ['wealth_market.hnwi_count'],
-    extract: 'Capgemini World Wealth Report: HNWI population per country (largest markets only). '
-      + 'CHECKED 2026-09-30: the 2026 edition (interactive copy at https://wwr2026.s3.us-east-1.amazonaws.com/index.html; the PDF download link was broken) '
-      + 'publishes NO per-country counts: only global (25.3m HNWIs, +7.9%), regional charts and 2025 growth for a few markets '
-      + '(population: Europe +6.5%, France +2.7%, Germany +11.1%, UK +2.6%, Africa +4.1%). Its text is rendered as images and its charts as videos. '
-      + 'Needs a per-country source; growth alone cannot give a count.' },
+      + '2026 edition: main report p.21 "The UBS Millionaire Index" (thousands, end 2025) lists 34 markets; extract every one, not only ours (a market missing from the table is not published, never 0). The upper bands (5-10m, 10-50m, 50-100m) are growth rates only.' },
+  // No HNWI recipe: Capgemini (investable assets > US$1m) publishes only global and regional totals and a few markets in prose,
+  // Henley's lists are top-20 and not a dataset, and Altrata's free report has no country table (checked 2026-09-30 and 2026-10-02).
+  // The US$1m tier is the UBS millionaire count above; the US$30m tier is Knight Frank below.
   { id: 'knightfrank-uhnwi', method: 'manual', url: 'https://www.knightfrank.com/wealthreport', cells: ['wealth_market.uhnwi_count'],
     extract: 'Knight Frank Wealth Report: UHNWI (> US$30m) population per country. '
-      + '2026 edition: Databank "Global wealth populations by market" (2021, 2026, 2031f). Read with pdftotext -table (the -layout text shifts rows) and check each row against its % change column. Belgium is not listed.' },
+      + '2026 edition: Databank "Global wealth populations by market" (2021, 2026, 2031f). Read with pdftotext -table (the -layout text shifts rows) and check each row against its % change column. About 50 markets are listed (markets under 500 UHNWIs are not); extract every one. Belgium is not listed.' },
   { id: 'ilo-employers', method: 'api', url: 'https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_NB,1.0/', cells: ['wealth_market.business_owners:GB', 'wealth_market.business_owners:ZA'],
     extract: 'node research/fetch-ilo.mjs. Employers (ICSE-93 status 2) from the national labour force survey via the ILO SDMX API, for the countries Eurostat lacks. Same definition as Eurostat SELF_S (France 2024: 1,382k vs 1,375k). Needs an explicit Accept-Language header.' },
 ];

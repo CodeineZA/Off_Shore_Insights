@@ -1,7 +1,7 @@
 # Off_Shore_Insights: instructions for Claude
 
-Tax-comparison dashboard: Mauritius and Seychelles hubs against European countries. The full
-spec is in [PLAN.md](PLAN.md). Owner: **Hentus** (not "Hentu"). Built and maintained by Claude.
+One-country tax and market dashboard for the Mauritius and Seychelles hubs. A world map is the slicer; there is
+no global comparison. The spec is in [PLAN.md](PLAN.md). Owner: **Hentus** (not "Hentu"). Built and maintained by Claude.
 
 ## Hard rules
 
@@ -36,24 +36,30 @@ Work in `D:\Claude_Projects\Off_Shore_Insights`. Never edit the Pi checkout (and
 
 ## Frontend (`apps/web`)
 
-Vite + React + TS. `src/ui/Shell.tsx` has the sidebar and two dashboards (Global comparison,
-Country eligibility), both empty until tiles are agreed one by one (PLAN.md §9). Chart
-building blocks ported from the design are in `src/ui/charts.tsx`, and shared data helpers
-in `src/data/insights.ts`.
+Vite + React + TS. One page, `pages/Country.tsx`: **world map → country → region** (Back zooms out one step; the focus is in the URL,
+`#/country/BE-VLG`). Top to bottom: year slicer, country list + layers + legend, the map (`ui/WorldMap.tsx`), then for the selected entity the
+banner (`ui/Banner.tsx`), the regions with their own bar charts (`ui/RegionStrip.tsx`), the tax slicer chart (`ui/TaxSlicer.tsx`: click a market or a
+tax and the page focuses on it), and the tiles. The tiles are the earlier C1–C7 views, kept until each is redesigned **one at a time with Hentus**
+(question → data → chart/axes/legend, then build).
 
-- Dev: `npm run env:local` once (writes the gitignored `.env.local`), then preview
-  "offshore-insights-web" (port 5190) in `D:Claude_Projects.claudelaunch.json`. `/api` is
-  proxied to the live gateway.
-- **`?fixture` (dev only, stripped from builds)** renders `apps/web/.fixture.json` (a gitignored
-  copy of a real payload) without signing in. Use it to check the UI. Don't type credentials into
-  the browser. Refresh the copy with `node scripts/fixture.mjs` (signs in as the test user).
-- **Regions:** a country that sets taxes per region (`jurisdiction.regional_tax_types`, e.g. BE and ES inheritance)
-  is listed as its regions ("Flanders (BE)"). Regions inherit every other national rate plus the country's treaty and
-  gates, but never a regional tax: missing means unknown. The national entry stays only if it has its own regional-tax rates.
-- **Treaty:** always the Mauritius one, for both hubs (structures are set up in Mauritius and moved to Seychelles).
-- The world map is pre-computed: `npm run gen:map` → `src/map/landDots.ts`.
-- Deploy: `deploy.sh` builds into `dist-next` and swaps it in only after tests, `tsc` and the
-  secret scan pass. nginx mounts `apps/web` (not `dist`), so the swap is seen.
+- **Data logic is plain TypeScript** in `src/data/`, tested without a browser: `taxyear.ts` (each country's own tax year), `years.ts` (rate / wealth /
+  treaty for a year, year chips), `mapdata.ts` (treaty colours, money bars, zoom state), `taxbars.ts` (slicer rows and focus), `banner.ts`.
+- **Years.** A selected year is the tax year that *begins* in it, in each country's own calendar (UK 2025 = 6 Apr 2025–5 Apr 2026). A rate is the one
+  in force on the year's first day. A wealth figure belongs to the tax year containing its `ref_date`. The map carries an earlier year's figure forward
+  (paler bar); the panels stay exact. Gates, advisors and notes are "current" and not year-filtered.
+- **Map.** `npm run gen:world` → `src/map/world.ts` (Natural Earth, world-atlas 50m; ~1 MB, lazy chunk). `src/map/project.ts` places a capital with the same
+  projection. Regions: `node scripts/gen-regions.mjs BE <geojson> --key NUTS_ID --map BE1=BE-BRU,...` → `src/map/regions/BE.ts`.
+- **Money.** Individuals ≥US$1m (UBS millionaires), ≥US$30m (Knight Frank UHNWI), business owners (Eurostat/ILO), trusts. **No HNWI**: no source
+  publishes it per country. No traffic light and no invented thresholds: raw figures, each with a year and a source; unknown is a dashed stub, never 0.
+- **Regions:** a country that sets taxes per region (`jurisdiction.regional_tax_types`, e.g. BE and ES inheritance) has its regions as children. A region
+  inherits every other national rate, the treaty, the lists and the money figures (labelled), never a regional tax: missing means unknown.
+- Dev: `npm run env:local` once (writes the gitignored `.env.local`), then preview "offshore-insights-web" (port 5190) in `D:/Claude_Projects/.claude/launch.json`.
+  `/api` is proxied to the live gateway.
+- **`?fixture` (dev only, stripped from builds)** renders `apps/web/.fixture.json` (a gitignored copy of a real payload) without signing in. Don't type
+  credentials into the browser. Refresh it with `node scripts/fixture.mjs` (signs in as the test user). `years.parity.test.ts` pins the client's region rule to
+  the SQL view using that file and skips where it is absent.
+- Screenshots of the preview time out while the pane is hidden: `tabs_select` then `screenshot` in one `browser_batch`, and retry once.
+- Deploy: `deploy.sh` builds into `dist-next` and swaps it in only after tests, `tsc` and the secret scan pass. nginx mounts `apps/web` (not `dist`), so the swap is seen.
 
 ## Data: how figures are retrieved
 
@@ -62,9 +68,13 @@ Every figure has a **recipe** in `research/recipes.json` (edit `research/recipes
 `node research/apply-run.mjs <run>` → `db/research/<date>.sql` → `bash db/apply.sh …`. History mode
 closes a changed row and opens a new one; unchanged values only refresh `verified_on`.
 
-- `api` recipes run in **n8n** (E1 Eurostat).
+- `api` recipes are scripts (`research/fetch-*.mjs`), run by `/update-offshore-insights`. The n8n E1 exists but is paused.
 - `page-extract` recipes run through the project skill **`/update-offshore-insights`**
   (`.claude/skills/`), which shows Hentus the diff before applying.
+- A **new country** goes through **`/research-country <name>`** (codes, capital, same-everywhere-or-per-region check, treaties with both hubs, lists, money,
+  three tax years, region shapes). `node research/audit-country.mjs <CODE>` is the one checklist: what is missing, stale (a new tax year began) or
+  blocked, and **where Hentus can get what Claude cannot**. **Firms** go through **`/find-advisors <country>`** (format and the scrapeable / Claude /
+  manual classification: `research/advisors/README.md`).
 - `manual` recipes (wealth-report databooks) are entered by a human.
 
 Never add a figure without a recipe. Rules are in `research/README.md`.

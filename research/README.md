@@ -25,6 +25,22 @@ Rules for every write (the skill and n8n workflows follow these):
 Applied data lives in `db/research/*.sql`: idempotent and public. Private notes stay in
 `db/seed-private.sql`.
 
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `apply-run.mjs <run.json>` | A run (jurisdictions, rates incl. closed back-year rows, treaties with dates, gates, wealth, gaps) → idempotent SQL |
+| `audit-country.mjs <CODE|all> [--sql]` | The one checklist (`checklist.mjs`) against the database: what is missing, stale or blocked, and where to get it. `--fixture file` runs offline |
+| `apply-advisors.mjs <run.json>` | Firms (and the sources they came from) → SQL. Format: `advisors/README.md` |
+| `fetch-eurostat.mjs`, `fetch-ilo.mjs`, `fetch-fx.mjs` | api recipes. They read the countries and currencies from the database |
+| tests | `node --test research/checklist.test.mjs research/advisors.test.mjs` |
+
+**Years.** A rate row covers `[valid_from, valid_to)` and may not overlap another for the same tax (a database trigger enforces it). Back-year
+rows are closed rows written from a dated source (`from`/`to` in the run); the page maps each country's tax year to the row in force on its first day.
+A figure "as at" a date (`ref_date`) belongs to the tax year containing it.
+
+**New countries:** `/research-country <name>`. **Firms:** `/find-advisors <country>`.
+
 **On demand only (2026-09-30).** No scheduled updates: Hentus calls `/update-offshore-insights`,
 which runs every `api` and `page-extract` recipe. The n8n update workflows (W1–W4, E1) exist but
 are paused.

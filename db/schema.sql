@@ -186,7 +186,6 @@ create table if not exists offshore_insights.wealth_market (
   jurisdiction_code  text not null references offshore_insights.jurisdiction(code),
   year               int not null,
   millionaires       int,        -- net worth > US$1m (UBS Global Wealth Report)
-  hnwi_count         int,        -- investable assets > US$1m (Capgemini World Wealth Report)
   uhnwi_count        int,        -- > US$30m (Knight Frank Wealth Report)
   business_owners    int,        -- self-employed with employees (Eurostat)
   source             text not null,
@@ -318,6 +317,152 @@ drop view if exists offshore_insights.v_market_signal;
 drop view if exists offshore_insights.v_hub_treaties;
 drop view if exists offshore_insights.v_current_rates;
 
+-- ═══════════════════ Country-first additions (2026-10-02, PLAN.md §2–§5) ═══════
+-- Capital and structure: what the map pins, and whether the country has been checked
+-- for taxes set below national level (structure_checked_on is null = not researched yet).
+alter table offshore_insights.jurisdiction
+  add column if not exists capital              text,
+  add column if not exists capital_lon          numeric(7,3),
+  add column if not exists capital_lat          numeric(7,3),
+  add column if not exists iso3                 char(3),
+  add column if not exists structure_checked_on date,
+  add column if not exists structure_note       text,
+  add column if not exists sort_order           int,
+  add column if not exists estate_basis         text;   -- 'heirs' (each heir's share) | 'estate' (the whole estate)
+alter table offshore_insights.jurisdiction drop constraint if exists jurisdiction_estate_basis_chk;
+alter table offshore_insights.jurisdiction add constraint jurisdiction_estate_basis_chk
+  check (estate_basis is null or estate_basis in ('heirs', 'estate'));
+
+-- Money. HNWI (investable assets over US$1m) has no per-country source, so it is gone.
+-- ref_date is the date a figure is "as at": a stock count belongs to the tax year containing it.
+alter table offshore_insights.wealth_market
+  add column if not exists private_wealth_usd_bn   numeric(14,2),
+  add column if not exists trusts_count            bigint,
+  add column if not exists private_companies_count bigint,
+  add column if not exists ref_date                date;
+alter table offshore_insights.wealth_market drop column if exists hnwi_count;
+update offshore_insights.wealth_market
+   set ref_date = case when business_owners is not null then make_date(year, 6, 30) else make_date(year, 12, 31) end
+ where ref_date is null;   -- annual averages (Eurostat/ILO) mid-year, stock counts (UBS, Knight Frank) at year end
+
+-- A rate row covers [valid_from, valid_to). Two rows for the same jurisdiction + tax type may never
+-- cover the same day, so "the rate in force on day X" always has one answer (the partial unique index
+-- above only guards the current row). An AFTER trigger, so `on conflict do nothing` seed rows that are skipped never reach it.
+create or replace function offshore_insights.tax_rate_no_overlap() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  if exists (select 1 from offshore_insights.tax_rate r
+              where r.jurisdiction_code = new.jurisdiction_code and r.tax_type_code = new.tax_type_code
+                and r.id is distinct from new.id
+                and daterange(r.valid_from, r.valid_to, '[)') && daterange(new.valid_from, new.valid_to, '[)')) then
+    raise exception 'tax_rate % % overlaps an existing row for the same dates', new.jurisdiction_code, new.tax_type_code
+      using errcode = '23P01';
+  end if;
+  return new;
+end $$;
+drop trigger if exists tax_rate_no_overlap_trg on offshore_insights.tax_rate;
+create trigger tax_rate_no_overlap_trg after insert or update on offshore_insights.tax_rate
+  for each row execute function offshore_insights.tax_rate_no_overlap();
+
+-- Services Mauritius/Seychelles offer, and the taxes each one can relieve. A candidate list we
+-- maintain (editable data, not a claim about any one client); the page shows it beside the hub rate.
+create table if not exists offshore_insights.service (
+  code        text primary key,
+  label       text not null,
+  description text,
+  sort_order  int not null default 100
+);
+create table if not exists offshore_insights.service_tax (
+  service_code  text not null references offshore_insights.service(code) on delete cascade,
+  tax_type_code text not null references offshore_insights.tax_type(code) on delete cascade,
+  note          text,
+  primary key (service_code, tax_type_code)
+);
+
+-- What is still missing for a country or region, and where to get it (written by research/audit-country.mjs).
+create table if not exists offshore_insights.research_item (
+  jurisdiction_code text not null references offshore_insights.jurisdiction(code) on delete cascade,
+  item              text not null,      -- 'treaty:MU', 'tax:INHERITANCE_DIRECT', 'wealth:millionaires', 'advisors'...
+  status            text not null check (status in ('have', 'missing', 'blocked', 'stale')),
+  detail            text,
+  where_to_get      text,               -- the instruction for Hentus when status = 'blocked'
+  checked_on        date not null default current_date,
+  primary key (jurisdiction_code, item)
+);
+
+-- Firms (law, tax, real estate, citizenship, wealth...). The category list is open: add rows, not code.
+create table if not exists offshore_insights.advisor_category (
+  code       text primary key,
+  label      text not null,
+  sort_order int not null default 100
+);
+-- Where firms are found. `collection` says how they get collected: 'scrapeable' (every required field is
+-- on the listing, machine-readable: a scraper can take it), 'claude' (Claude collects it here), 'manual'
+-- (Hentus exports it; `instructions` says how).
+create table if not exists offshore_insights.advisor_source (
+  id                 bigint generated always as identity primary key,
+  name               text not null,
+  scope              text not null,     -- 'country:BE', 'continent:EU', 'global'
+  country_code       text references offshore_insights.jurisdiction(code),
+  list_url           text not null unique,
+  kind               text,              -- directory | register | ranking | association | search
+  collection         text not null check (collection in ('scrapeable', 'claude', 'manual')),
+  access             text not null default 'open' check (access in ('open', 'login', 'captcha', 'blocked')),
+  fields_present     text[] not null default '{}',   -- which required fields the listing exposes
+  pagination         text,
+  detail_pattern     text,
+  field_map          jsonb,             -- field -> selector / JSON path (the scraper contract)
+  instructions       text,
+  notes              text,
+  sampled_on         date,
+  last_collected_on  date
+);
+create table if not exists offshore_insights.advisor (
+  id                  bigint generated always as identity primary key,
+  name                text not null,
+  registered_name     text,
+  registration_number text,
+  legal_form          text,
+  parent_group        text,
+  founded_year        int,
+  category_code       text not null references offshore_insights.advisor_category(code),
+  categories          text[] not null default '{}',   -- further categories the firm also works in
+  country_code        text not null references offshore_insights.jurisdiction(code),
+  region_code         text references offshore_insights.jurisdiction(code),
+  city                text,
+  address             text,
+  postal_code         text,
+  lat                 numeric(8,5),
+  lon                 numeric(8,5),
+  other_offices       text,
+  phone               text,
+  email               text,
+  website             text,
+  contact_url         text,
+  linkedin_url        text,
+  segment             text,               -- e.g. private clients, corporate, mixed
+  tier                text,               -- ranking / band, with ranking_source
+  ranking_source      text,
+  size_note           text,
+  languages           text[] not null default '{}',
+  practice_areas      text[] not null default '{}',
+  tax_topics          text[] not null default '{}',   -- tax_type codes the firm handles
+  services            text[] not null default '{}',   -- service codes
+  mentions_hubs       boolean,            -- names Mauritius / Seychelles / offshore on its own pages
+  notes               text,
+  source_id           bigint references offshore_insights.advisor_source(id),
+  source_url          text,
+  found_via           text,               -- the search filter / query that found it
+  collected_by        text not null check (collected_by in ('scraper', 'claude', 'manual')),
+  found_on            date not null default current_date,
+  verified_on         date,
+  status              text not null default 'candidate' check (status in ('candidate', 'verified', 'excluded'))
+);
+create unique index if not exists advisor_identity_uq on offshore_insights.advisor
+  (country_code, lower(coalesce(registered_name, name)), coalesce(lower(city), ''));
+create index if not exists advisor_region_idx on offshore_insights.advisor (country_code, region_code);
+
+
 -- Current rates; regions fall back to their parent country's rates, except for the taxes
 -- the parent sets per region (jurisdiction.regional_tax_types): those stay unknown until researched.
 create view offshore_insights.v_current_rates with (security_invoker = on) as
@@ -347,50 +492,6 @@ left join cur p on p.jurisdiction_code = j.parent_code and p.tax_type_code = t.c
 
 create view offshore_insights.v_hub_treaties with (security_invoker = on) as
 select * from offshore_insights.treaty where country_a in ('MU', 'SC');
-
--- The three "worth marketing to?" signals per country, side by side. Raw
--- signals only: a combined score is on hold until the data is verified.
-create view offshore_insights.v_market_signal with (security_invoker = on) as
-with latest as (   -- newest non-null value per metric (each source fills different columns)
-  select jurisdiction_code, metric, value, year from (
-    select w.jurisdiction_code, m.metric, m.value, w.year,
-           row_number() over (partition by w.jurisdiction_code, m.metric order by w.year desc, w.verified_on desc) as rn
-    from offshore_insights.wealth_market w
-    cross join lateral (values ('millionaires', w.millionaires), ('hnwi_count', w.hnwi_count),
-                               ('uhnwi_count', w.uhnwi_count), ('business_owners', w.business_owners)) m(metric, value)
-    where m.value is not null
-  ) x where rn = 1
-), wm as (
-  select jurisdiction_code,
-         max(value) filter (where metric = 'millionaires')    as millionaires,
-         max(value) filter (where metric = 'hnwi_count')      as hnwi_count,
-         max(year)  filter (where metric = 'hnwi_count')      as year,
-         max(value) filter (where metric = 'uhnwi_count')     as uhnwi_count,
-         max(value) filter (where metric = 'business_owners') as business_owners
-  from latest group by jurisdiction_code
-), taxes as (
-  select jurisdiction_code,
-         count(*) filter (where is_recurring and headline_rate > 0)                         as recurring_taxes,
-         max(headline_rate) filter (where category = 'estate')                              as top_inheritance_rate,
-         max(headline_rate) filter (where category = 'wealth')                              as top_wealth_rate,
-         count(*) filter (where category = 'anti_offshore' and headline_rate > 0)            as anti_offshore_taxes,
-         count(*) filter (where headline_rate is not null)                                  as known_rates,
-         count(*) filter (where needs_verification)                                         as unverified_rates
-  from offshore_insights.v_current_rates
-  group by jurisdiction_code
-)
-select j.code as jurisdiction_code, j.name,
-       coalesce(tm.status, 'unknown') as treaty_mu,
-       coalesce(ts.status, 'unknown') as treaty_sc,
-       wm.year as wealth_year, wm.millionaires, wm.hnwi_count, wm.uhnwi_count, wm.business_owners,
-       x.recurring_taxes, x.top_inheritance_rate, x.top_wealth_rate, x.anti_offshore_taxes,
-       x.known_rates, x.unverified_rates
-from offshore_insights.jurisdiction j
-left join offshore_insights.treaty tm on tm.country_a = 'MU' and tm.country_b = j.code
-left join offshore_insights.treaty ts on ts.country_a = 'SC' and ts.country_b = j.code
-left join wm on wm.jurisdiction_code = j.code
-left join taxes x on x.jurisdiction_code = j.code
-where j.kind = 'country' and not j.is_offshore_hub;
 
 -- One row per thing that needs attention, plus the last run of each workflow.
 create view offshore_insights.v_data_health with (security_invoker = on) as
@@ -426,16 +527,21 @@ returns jsonb language sql stable security invoker set search_path = '' as $$
     'jurisdictions', coalesce((select jsonb_agg(to_jsonb(j) order by j.code) from offshore_insights.jurisdiction j), '[]'),
     'tax_types',     coalesce((select jsonb_agg(to_jsonb(t) order by t.sort_order) from offshore_insights.tax_type t), '[]'),
     'rates',         coalesce((select jsonb_agg(to_jsonb(r) order by r.jurisdiction_code, r.sort_order) from offshore_insights.v_current_rates r where r.headline_rate is not null), '[]'),  -- unknown = absent
-    'rate_history',  coalesce((select jsonb_agg(jsonb_build_object('id', h.id, 'jurisdiction_code', h.jurisdiction_code,
-                       'tax_type_code', h.tax_type_code, 'headline_rate', h.headline_rate, 'valid_from', h.valid_from,
-                       'valid_to', h.valid_to, 'verified_on', h.verified_on, 'needs_verification', h.needs_verification)
-                       order by h.valid_from) from offshore_insights.tax_rate h), '[]'),
+    'rate_history',  coalesce((select jsonb_agg(to_jsonb(h) - 'source_hash' order by h.valid_from, h.id) from offshore_insights.tax_rate h), '[]'),
     'treaties',      coalesce((select jsonb_agg(to_jsonb(t) order by t.country_a, t.country_b) from offshore_insights.treaty t), '[]'),
     'wealth',        coalesce((select jsonb_agg(to_jsonb(w) order by w.jurisdiction_code, w.year) from offshore_insights.wealth_market w), '[]'),
     'notes',         coalesce((select jsonb_agg(to_jsonb(n) order by n.jurisdiction_code, n.sort_order) from offshore_insights.jurisdiction_note n), '[]'),
     'gates',         coalesce((select jsonb_agg(to_jsonb(g) order by g.jurisdiction_code, g.gate, g.hub) from offshore_insights.jurisdiction_gate g), '[]'),
     'fx',            coalesce((select jsonb_agg(to_jsonb(x) order by x.currency) from offshore_insights.fx_rate x), '[]'),
-    'signals',       coalesce((select jsonb_agg(to_jsonb(s) order by s.jurisdiction_code) from offshore_insights.v_market_signal s), '[]'),
+    'services',      coalesce((select jsonb_agg(to_jsonb(v) order by v.sort_order, v.code) from offshore_insights.service v), '[]'),
+    'service_tax',   coalesce((select jsonb_agg(to_jsonb(v) order by v.service_code, v.tax_type_code) from offshore_insights.service_tax v), '[]'),
+    'research_items', coalesce((select jsonb_agg(to_jsonb(v) order by v.jurisdiction_code, v.item) from offshore_insights.research_item v), '[]'),
+    'advisor_categories', coalesce((select jsonb_agg(to_jsonb(v) order by v.sort_order, v.label) from offshore_insights.advisor_category v), '[]'),
+    -- Slim rows only: the page lists names by category and region. Contact details stay in the table.
+    'advisors',      coalesce((select jsonb_agg(jsonb_build_object('id', a.id, 'name', a.name, 'category_code', a.category_code,
+                       'categories', a.categories, 'country_code', a.country_code, 'region_code', a.region_code, 'city', a.city,
+                       'tax_topics', a.tax_topics, 'services', a.services, 'status', a.status)
+                       order by a.country_code, a.name) from offshore_insights.advisor a where a.status <> 'excluded'), '[]'),
     'flags',         coalesce((select jsonb_agg(jsonb_build_object('id', f.id, 'target_table', f.target_table,
                        'target_id', f.target_id, 'reason', f.reason, 'status', f.status, 'detail', f.detail,
                        'raised_on', f.raised_on, 'reviewed_on', f.reviewed_on) order by f.raised_on)
@@ -614,6 +720,7 @@ declare t text;
 begin
   foreach t in array array['jurisdiction','tax_type','tax_rate','treaty','wealth_market',
                            'jurisdiction_note','review_flag','sync_run','site_page','jurisdiction_gate','fx_rate',
+                           'service','service_tax','research_item','advisor_category','advisor_source','advisor',
                            'search_daily','search_query_monthly','analytics_daily'] loop
     execute format('alter table offshore_insights.%I enable row level security', t);
     execute format('drop policy if exists members_read on offshore_insights.%I', t);

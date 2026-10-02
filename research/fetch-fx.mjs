@@ -4,10 +4,12 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadDashboard } from './lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const URL_ = 'https://open.er-api.com/v6/latest/EUR';
-const CURRENCIES = ['EUR', 'GBP', 'ZAR', 'CHF', 'MUR', 'SCR'];
+// Every currency a jurisdiction uses (plus EUR), read from the database so a new country needs no edit here.
+const CURRENCIES = [...new Set(['EUR', ...(await loadDashboard()).jurisdictions.map((j) => j.currency)])].sort();
 
 const j = await (await fetch(URL_)).json();
 if (j.result !== 'success') throw new Error('FX API: ' + JSON.stringify(j).slice(0, 200));

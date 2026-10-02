@@ -41,7 +41,14 @@ async function directSignIn(email, password) {
 }
 const TABLES = ['jurisdiction', 'tax_type', 'tax_rate', 'treaty', 'wealth_market', 'jurisdiction_note',
   'review_flag', 'sync_run', 'site_page', 'search_daily', 'search_query_monthly', 'analytics_daily', 'app_user',
-  'jurisdiction_gate', 'fx_rate'];
+  'jurisdiction_gate', 'fx_rate', 'service', 'service_tax', 'research_item', 'advisor_category', 'advisor_source', 'advisor'];
+// Tables that can be empty: a non-member seeing 0 rows proves nothing there, so a sentinel row is inserted
+// (service_role) and the member must see it while the non-member must not. [table, row, FK-free?]
+const SENTINELS = [
+  ['research_item', { jurisdiction_code: 'FR', item: 'verify-access:sentinel', status: 'have' }],
+  ['advisor_source', { name: 'verify-access sentinel', scope: 'global', list_url: 'https://verify-access.invalid/sentinel', collection: 'manual' }],
+  ['advisor', { name: 'verify-access sentinel', category_code: 'other', country_code: 'FR', collected_by: 'manual', status: 'excluded' }],
+];
 const RATES ='/rest/v1/v_current_rates?select=jurisdiction_code,headline_rate&jurisdiction_code=in.(FR,ES)&headline_rate=not.is.null';
 
 // 1. anon
@@ -86,6 +93,23 @@ check('member cannot call admin_users()', au.status >= 400, au.status);
 const adm = await fetch(`${GW}/api/admin/users`, { headers: { Authorization: `Bearer ${jwt}` } });
 check('non-admin member gets 403 from the user-management API', adm.status === 403, adm.status);
 
+// 3b. the new tables: members cannot write them; sentinel rows prove RLS even while they are empty
+for (const [t, row] of SENTINELS) {
+  const mw = await req(`/rest/v1/${t}`, { jwt, method: 'POST', body: row });
+  check(`member write to ${t} is rejected`, mw.status >= 400, mw.status);
+}
+const sentinelIds = [];
+for (const [t, row] of SENTINELS) {
+  const ins = await req(`/rest/v1/${t}`, { key: SR, method: 'POST', body: row });
+  check(`service_role inserts a ${t} sentinel`, ins.status === 201, `${ins.status} ${JSON.stringify(ins.json).slice(0, 160)}`);
+  if (ins.status === 201) sentinelIds.push([t, ins.json[0].id ?? null, row]);
+}
+const sentinelWhere = ([t, id, row]) => id != null ? `id=eq.${id}` : `jurisdiction_code=eq.${row.jurisdiction_code}&item=eq.${encodeURIComponent(row.item)}`;
+for (const s of sentinelIds) {
+  const seen = await req(`/rest/v1/${s[0]}?select=*&${sentinelWhere(s)}`, { jwt });
+  check(`member reads the ${s[0]} sentinel`, rows(seen) === 1, `${seen.status} ${rows(seen)}`);
+}
+
 // 4. non-member login (throwaway) sees nothing
 const tmpEmail = `nonmember-${randomBytes(4).toString('hex')}@${env.AUTH_USERNAME_DOMAIN}`;
 const tmpPass = randomBytes(18).toString('base64url');
@@ -107,6 +131,8 @@ try {
   check('logged-in NON-member gets an empty dashboard()', nd.status >= 400 || ndLeak.length === 0, ndLeak.join(' ') || nd.status);
 } finally {
   await req(`/auth/v1/admin/users/${created.json.id}`, { key: SR, method: 'DELETE', profile: false });
+  // Remove the sentinels (advisor before advisor_source is irrelevant: the sentinel advisor has no source).
+  for (const s of sentinelIds) await req(`/rest/v1/${s[0]}?${sentinelWhere(s)}`, { key: SR, method: 'DELETE' });
 }
 
 // 5. service_role writes

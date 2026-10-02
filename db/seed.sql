@@ -115,3 +115,68 @@ reset search_path;
 -- Taxes set per region: regions never inherit the national rate for these.
 update offshore_insights.jurisdiction set regional_tax_types = '{INHERITANCE_DIRECT,INHERITANCE_OTHER}' where code = 'BE';
 update offshore_insights.jurisdiction set regional_tax_types = '{INHERITANCE_DIRECT,INHERITANCE_OTHER,WEALTH_NET}' where code = 'ES';
+
+-- ═════ Country-first additions (2026-10-02) ═════
+-- Capitals (where the map pins its bars), ISO3 (map geometry), display order, and whether the
+-- death tax is charged on each heir's share ('heirs') or on the whole estate ('estate').
+update offshore_insights.jurisdiction j set
+  capital      = coalesce(j.capital, v.capital),
+  capital_lon  = coalesce(j.capital_lon, v.lon),
+  capital_lat  = coalesce(j.capital_lat, v.lat),
+  iso3         = coalesce(j.iso3, v.iso3),
+  sort_order   = coalesce(j.sort_order, v.ord),
+  estate_basis = coalesce(j.estate_basis, v.basis)
+from (values
+  ('FR', 'Paris',      2.352, 48.857, 'FRA', 1, 'heirs'),  ('DE', 'Berlin',   13.405,  52.520, 'DEU', 2, 'heirs'),
+  ('BE', 'Brussels',   4.352, 50.847, 'BEL', 3, 'heirs'),  ('GB', 'London',   -0.128,  51.507, 'GBR', 4, 'estate'),
+  ('IT', 'Rome',      12.496, 41.903, 'ITA', 5, 'heirs'),  ('ES', 'Madrid',   -3.704,  40.417, 'ESP', 6, 'heirs'),
+  ('ZA', 'Pretoria',  28.188, -25.747, 'ZAF', 7, 'estate'), ('PT', 'Lisbon',  -9.139,  38.722, 'PRT', 8, 'heirs'),
+  ('CH', 'Bern',       7.447, 46.948, 'CHE', 9, 'heirs'),  ('MU', 'Port Louis', 57.502, -20.162, 'MUS', null, null),
+  ('SC', 'Victoria',  55.455, -4.620, 'SYC', null, null)
+) v(code, capital, lon, lat, iso3, ord, basis)
+where j.code = v.code;
+
+-- The two countries whose regional taxes were researched: say what is regional.
+update offshore_insights.jurisdiction set structure_checked_on = coalesce(structure_checked_on, '2026-09-30'),
+  structure_note = coalesce(structure_note, 'Inheritance tax is set by the 3 regions (Flanders, Brussels, Wallonia)') where code = 'BE';
+update offshore_insights.jurisdiction set structure_checked_on = coalesce(structure_checked_on, '2026-09-30'),
+  structure_note = coalesce(structure_note, 'Inheritance tax and net wealth tax are set by the autonomous communities') where code = 'ES';
+
+-- Services Mauritius/Seychelles offer, and the taxes each can relieve. A candidate list we maintain for the
+-- sales view; edit the rows, not the code. Anti-offshore taxes are warnings, never "relieved" by a service.
+insert into offshore_insights.service (code, label, description, sort_order) values
+('trust',              'Trust',                 'Assets held in a Mauritius or Seychelles trust',                     10),
+('foundation',         'Foundation',            'Assets held in a foundation',                                        20),
+('holding_company',    'Holding company',       'Investments and dividends held through a hub company',               30),
+('investment_portfolio','Investment portfolio', 'Portfolio custodied and managed in the hub',                         40),
+('real_estate',        'Real estate',           'Property held or bought through the hub',                            50),
+('bank_account',       'Bank account',          'Deposits and interest held in the hub',                              60),
+('residency',          'Residency',             'Moving tax residence to the hub',                                    70)
+on conflict (code) do nothing;
+insert into offshore_insights.service_tax (service_code, tax_type_code) values
+('trust', 'INHERITANCE_DIRECT'), ('trust', 'INHERITANCE_OTHER'), ('trust', 'CGT_FINANCIAL'), ('trust', 'WEALTH_NET'), ('trust', 'WEALTH_SOLIDARITY'),
+('foundation', 'INHERITANCE_DIRECT'), ('foundation', 'INHERITANCE_OTHER'), ('foundation', 'CGT_FINANCIAL'), ('foundation', 'WEALTH_NET'), ('foundation', 'WEALTH_SOLIDARITY'),
+('holding_company', 'WHT_DIVIDEND'), ('holding_company', 'WHT_INTEREST'), ('holding_company', 'CGT_FINANCIAL'), ('holding_company', 'INCOME_TOP'),
+('investment_portfolio', 'CGT_FINANCIAL'), ('investment_portfolio', 'SECURITIES_ACCOUNT'), ('investment_portfolio', 'WHT_DIVIDEND'), ('investment_portfolio', 'WHT_INTEREST'),
+('real_estate', 'CGT_PROPERTY'), ('real_estate', 'WEALTH_PROPERTY'),
+('bank_account', 'WHT_INTEREST'), ('bank_account', 'SECURITIES_ACCOUNT'),
+('residency', 'INCOME_TOP'), ('residency', 'CGT_FINANCIAL'), ('residency', 'CGT_PROPERTY'), ('residency', 'WEALTH_NET'), ('residency', 'WEALTH_SOLIDARITY'),
+('residency', 'INHERITANCE_DIRECT'), ('residency', 'INHERITANCE_OTHER')
+on conflict do nothing;
+
+-- Firm categories (open list: add rows to add a category).
+insert into offshore_insights.advisor_category (code, label, sort_order) values
+('law_firm',             'Law firm',                      10),
+('estate_planning',      'Trust & estate planning',       20),
+('tax_advisor',          'Tax adviser',                   30),
+('accounting',           'Accounting & audit',            40),
+('notary',               'Notary',                        50),
+('real_estate',          'Real estate',                   60),
+('citizenship_residency','Citizenship & residency',       70),
+('wealth_manager',       'Wealth manager',                80),
+('family_office',        'Family office',                 90),
+('trust_company',        'Trust & corporate services',   100),
+('private_bank',         'Private bank',                 110),
+('insurance',            'Insurance',                    120),
+('other',                'Other',                        999)
+on conflict (code) do nothing;

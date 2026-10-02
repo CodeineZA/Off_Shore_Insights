@@ -137,7 +137,7 @@ Capgemini World Wealth Report, the Knight Frank Wealth Report and Eurostat. Use 
 edition of each, and record the year and source on every row. Eurostat's business-owner figure
 is pulled automatically by workflow E1.
 
-## 5. Dashboard spec
+## 5. Dashboard spec (first draft: superseded by §9)
 
 Single page, Power BI style, simple and clean. It must work well on a tablet in landscape and on a phone in portrait.
 
@@ -254,67 +254,29 @@ enforces this.
   structures or clients, that needs a new table, entered by hand. Until then the tile shows
   review activity.
 
-## 9. Dashboards and tiles
+## 9. The one-country dashboard (replaces the Global / Country-vs-hubs modes, 2026-10-02)
 
-**Two modes, one sidebar** (spec from Hentus, 2026-09-30). The rule is simplicity, minimalism,
-and a clear separation of use. The Claude Design output defines the look only. Every tile's
-question, data, axes and legend are agreed first, then built **one at a time** and checked
-against the database.
+**Decisions (Hentus, 2026-10-02):** there is no global comparison. A **world map is the slicer**; the page shows one country (or one
+region) at a time. The process is run through Claude: Hentus names a country, Claude finds and loads everything the page needs, and
+what it cannot get becomes an instruction for him. No legal commentary: red where a list or a missing treaty blocks, green where it is open.
 
-### Mode 1: Global (all countries compared), `#/global`
+The page answers, in order: (1) is there a treaty with Mauritius and with Seychelles; (2) is there money (individuals, business owners,
+trusts); (3) where does the tax hurt, with the hub rate beside it; (4) who do we talk to (firms).
 
-Every chart here is filtered by the **country slicer** and the **tax-type toggles** (category
-plus applies-to).
+- **Map:** treaties by colour (Mauritius gold, Seychelles teal, both striped, outline = signed or negotiating, hatched = unknown); money as a
+  small bar per measure at each capital (each measure on its own scale); click a country = the slicer, its regions appear with their own bar
+  charts; Back zooms out one step. A Europe view un-crowds the capitals.
+- **Year slicer:** any combination of tax years, each country in its own calendar. Rates for 2024 and 2025 are back-filled from dated
+  sources only; unknown stays unknown.
+- **Banner** (light gold, at the deepest level): both treaties with status and date, the tax year beside when the data was last checked,
+  the lists, and how the country is structured. **Tax slicer chart:** the taxes by market with the Mauritius and Seychelles rate beside each;
+  focusing a market or a tax filters everything below it.
+- **Tiles, one at a time with Hentus:** Open doors, Where the money is, Services that apply, Region by region, Who to talk to, Research status
+  (and optionally the sample-client bill, the only modelled number).
+- **Money:** millionaires (UBS, net worth ≥US$1m), UHNWI (Knight Frank, ≥US$30m), business owners (Eurostat / ILO), trusts. HNWI was dropped:
+  no source publishes it per country (Capgemini gives regional totals and a few markets; Henley's lists are top 20 and not a dataset).
+  No money traffic light and no invented thresholds.
+- **Firms:** categories are an open list; sources are classified scrapeable (for Hentus's scraper), Claude-collected, or manual
+  (`research/advisors/README.md`). The page lists names, not clickable; contact details stay in the table for the later Excel export.
 
-| # | Graph | Use | Data it presents | Data status (2026-09-30) |
-|---|---|---|---|---|
-| G1 | Ranked horizontal bar (default view) | "Which countries first?" at a glance | Opportunity score per country, sorted high to low. Bar segments = market size, tax pain, ease of reach | ⚠️ **Needs the score formula**: how each segment is measured and weighted. Inputs are partly available |
-| G2 | Gate matrix (traffic-light grid) | Which countries are blocked | Rows = countries. Columns = treaty, blacklist status, trust recognition, cross-border marketing allowed. Green / amber / red / grey (unknown) | ⚠️ Treaty exists. The other gates are **not stored**: new `jurisdiction_gate` table |
-| G3 | Bubble chart (market vs pain) | The sweet spot: big market, high tax pain | X = HNWI count (or per 1,000 adults), Y = worked-example total tax, size = business owners, colour = treaty status | ⚠️ HNWI, adult population and the G5 model are missing |
-| G4 | Tax heatmap | Where the pain is, by tax type | Countries × tax types. Colour intensity = headline_rate. Grey = unknown, never zero | ✅ **Built first** |
-| G5 | Stacked bar (worked example) | Many rates → one euro figure | Total tax on a sample client (€2m invested, 20 years, then inherited) per country, stacked by tax type | ⚠️ **Needs the sample-client model** agreed |
-| G6 | Donut | Where the wealthy people are | Share of `hnwi_count` across the selected countries. Switchable to millionaires or business owners | ⚠️ Only business owners so far (Eurostat) |
-| G7 | Trend arrows (small table) | Rising pain = hot market | Direction of each key rate (up / down / flat) from the `valid_from` history | ⚠️ No closed history rows yet, so all flat |
-
-### Mode 2: 1 : 2 (one country vs Mauritius and Seychelles), `#/country`
-
-| # | Graph | Use | Data it presents | Data status |
-|---|---|---|---|---|
-| C1 | Grouped bar | The plain comparison, three bars per tax type | headline_rate: chosen country, Mauritius, Seychelles | ⚠️ Hub rates not researched, so they show unknown |
-| C2 | Range bar | Taxes with more than one rate | rate_min–rate_max per tax type for the three jurisdictions. Tooltip: threshold, note, source, verified date | ⚠️ Same |
-| C3 | Diverging bar (the gap) | The sales argument: the biggest difference | Country rate − hub rate per tax type; positive = the country taxes more | ⚠️ Same |
-| C4 | Stacked bar (worked example) | One number per jurisdiction | Total tax on the same sample client in each of the three, by tax type | ⚠️ Needs the G5 model and hub rates |
-| C5 | Treaty card | Does the handshake exist, and what is it worth? | Treaty status with each hub, signed and in-force dates, treaty WHT on dividends and interest vs domestic | ⚠️ Status and dates exist. Treaty WHT and domestic WHT rates not seeded |
-| C6 | Donut | The country has prospects | Wealth split: millionaires, HNWI, UHNWI, business owners | ⚠️ Business owners only |
-| C7 | Info panel | The "why" and the caveats | Gate badges + `jurisdiction_note` items, warnings first | ⚠️ Notes exist. Gates need `jurisdiction_gate` |
-
-**Known gap:** Mauritius and Seychelles rates aren't researched yet. The seed has Mauritius
-treaty rows but no tax rates for either hub, so C1–C4 show "unknown" until Phase 2 fills them.
-
-### Build order
-
-G4 → then the tiles whose data exists, while the decisions for the others are agreed.
-
-Tiles built so far: **all 14** (2026-09-30), each named for its purpose:
-
-| # | Name | # | Name |
-|---|---|---|---|
-| G1 | Where to go first | C1 | Head to head |
-| G2 | Open doors | C2 | Bracket spread |
-| G3 | Sweet spot | C3 | The saving gap |
-| G4 | Tax pressure map | C4 | Same client, three homes |
-| G5 | Sample client bill | C5 | Treaty bridge |
-| G6 | Where the wealth is | C6 | Prospect pool |
-| G7 | Rate momentum | C7 | Country brief |
-
-Model choices, shown on screen and adjustable (`apps/web/src/data/model.ts`):
-- **Sample client (G5, C4, G1 pain, G3 y):** €2m portfolio, 6% a year, 20 years, gains realised
-  yearly, then inherited by 2 children.
-  - Net wealth vs solidarity tax: the client pays whichever is higher, because the solidarity
-    tax credits the wealth tax.
-  - UK and South Africa tax the estate as a whole.
-  - A top-band / entry-band toggle bounds the progressive taxes.
-- **Opportunity (G1):** equal thirds of market size, tax pain and ease of reach, each scaled to
-  the best country shown. Unknown counts as 0 and is drawn hatched.
-- **Gates (G2, C7):** the treaty comes from `treaty`; blacklist and trust recognition from
-  `jurisdiction_gate`. Marketing stays unknown until Justus decides it.
+How it is built and run is in [CLAUDE.md](CLAUDE.md): `/research-country`, `/find-advisors`, `/update-offshore-insights`, and `node research/audit-country.mjs`.
