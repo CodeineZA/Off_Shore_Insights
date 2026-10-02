@@ -67,6 +67,9 @@ them). A new panel is agreed with Hentus first (question → data → chart/axes
 - **`?fixture` (dev only, stripped from builds)** renders `apps/web/.fixture.json` (a gitignored copy of a real payload) without signing in. Don't type
   credentials into the browser. Refresh it with `node scripts/fixture.mjs` (signs in as the test user). `years.parity.test.ts` pins the client's region rule to
   the SQL view using that file and skips where it is absent.
+- **No browser focus ring on map shapes.** Chrome draws its default `outline: auto` around a focused SVG path in *map units*, so zoomed into a country it
+  became a huge white-and-black band across the map (what Hentus called the "strange black and white bar"). `map.css` sets `outline: none` on the shapes and
+  gives keyboard focus a thin gold edge instead (`:focus-visible`, non-scaling stroke). Any new focusable thing inside the map `<svg>` needs the same.
 - Screenshots of the preview time out while the pane is hidden: `tabs_select` then `screenshot` in one `browser_batch`, and retry once.
 - Deploy: `deploy.sh` builds into `dist-next` and swaps it in only after tests, `tsc` and the secret scan pass. nginx mounts `apps/web` (not `dist`), so the swap is seen.
 

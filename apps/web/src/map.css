@@ -24,7 +24,11 @@
 .map-views { position: absolute; z-index: 3; top: 12px; right: 12px; background: rgba(18, 17, 16, .92); }
 .map-land { transition: fill-opacity .2s; }
 .map-land.can { cursor: pointer; }
-.map-land.can:hover, .map-land.can:focus-visible { fill-opacity: .72; outline: none; }
+.map-land.can:hover, .map-land.can:focus-visible { fill-opacity: .72; }
+/* The browser's own focus ring on an SVG shape is drawn in map units, so zoomed in it becomes a huge white band around the country.
+   No ring; keyboard focus gets a thin gold edge on the shape itself (non-scaling stroke). */
+.map-land.can, .map-region.can { outline: none; }
+.map-land.can:focus-visible, .map-region.can:focus-visible { stroke: #f3dcb2; stroke-width: 2px; stroke-opacity: 1; }
 .map-region.can { cursor: pointer; }
 .map-region.can:hover { fill: rgba(243, 220, 178, .22); }
 .map-pinlabel { font: 600 8px Poppins; fill: var(--text); paint-order: stroke; stroke: rgba(18, 17, 16, .85); stroke-width: 2px; }
