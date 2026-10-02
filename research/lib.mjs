@@ -22,5 +22,9 @@ export async function targetCountries(argv = process.argv) {
   const i = argv.indexOf('--countries');
   const d = await loadDashboard();
   const all = d.jurisdictions.filter((j) => j.kind === 'country' && !j.is_offshore_hub);
-  return { d, countries: i >= 0 ? all.filter((j) => argv[i + 1].split(',').includes(j.code)) : all };
+  // An explicit --countries list may name a country that is not in the database yet (the pilot of a new country):
+  // it gets a minimal row, so its figures can be fetched and written into the same run.
+  if (i < 0) return { d, countries: all };
+  const want = argv[i + 1].split(',');
+  return { d, countries: want.map((code) => all.find((j) => j.code === code) ?? ({ code, name: code, kind: 'country', is_offshore_hub: false })) };
 }

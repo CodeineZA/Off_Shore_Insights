@@ -408,6 +408,51 @@
       "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
     },
     {
+      "id": "pwc-NL-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/netherlands/individual/taxes-on-personal-income",
+      "cells": [
+        "NL:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-NL-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/netherlands/individual/income-determination",
+      "cells": [
+        "NL:CGT_FINANCIAL",
+        "NL:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-NL-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "cells": [
+        "NL:INHERITANCE_DIRECT",
+        "NL:INHERITANCE_OTHER",
+        "NL:WEALTH_NET",
+        "NL:WEALTH_SOLIDARITY",
+        "NL:WEALTH_PROPERTY",
+        "NL:SECURITIES_ACCOUNT",
+        "NL:FOREIGN_ASSET_TAX",
+        "NL:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-NL-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/netherlands/corporate/withholding-taxes",
+      "cells": [
+        "NL:WHT_DIVIDEND",
+        "NL:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
       "id": "pwc-MU-pit",
       "method": "page-extract",
       "url": "https://taxsummaries.pwc.com/mauritius/individual/taxes-on-personal-income",
@@ -696,6 +741,63 @@
         "wealth_market.business_owners:ZA"
       ],
       "extract": "node research/fetch-ilo.mjs. Employers (ICSE-93 status 2) from the national labour force survey via the ILO SDMX API, for the countries Eurostat lacks. Same definition as Eurostat SELF_S (France 2024: 1,382k vs 1,375k). Needs an explicit Accept-Language header."
+    },
+    {
+      "id": "nl-bd-box1",
+      "method": "page-extract",
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/werk-en-inkomen/content/hoeveel-inkomstenbelasting-betalen",
+      "cells": [
+        "NL:INCOME_TOP"
+      ],
+      "extract": "Box 1 brackets and percentages for people below AOW age, current year (2026). Earlier years: Belastingdienst fiscal-information pages https://www.belastingdienst.nl/wps/wcm/connect/fisin/fisin<YEAR>/belastingberekening. Top rate and the bracket above which it applies."
+    },
+    {
+      "id": "nl-bd-box2",
+      "method": "page-extract",
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/boxen_en_tarieven/box_2/box_2",
+      "cells": [
+        "NL:CGT_FINANCIAL"
+      ],
+      "extract": "Box 2 (substantial interest, 5% or more of the shares): the two rates and the bracket limit per year (one table lists 2024, 2025 and 2026). NOTE: the fisin2025 page repeats the 2024 Box 2 text (33% above 67,000): the Box 2 page is the one that matches the law."
+    },
+    {
+      "id": "nl-bd-box3",
+      "method": "page-extract",
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2026",
+      "cells": [
+        "NL:WEALTH_NET"
+      ],
+      "extract": "Box 3 per year (page name ends in the year: berekening-box-3-inkomen-2024 / -2025 / -2026): the tax rate, the heffingsvrij vermogen, the schuldendrempel and the three fixed return percentages (banktegoeden, beleggingen en andere bezittingen, schulden). Effective rate = tax rate x return percentage: derived, so say so in the note."
+    },
+    {
+      "id": "nl-bd-erf",
+      "method": "page-extract",
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting",
+      "cells": [
+        "NL:INHERITANCE_DIRECT",
+        "NL:INHERITANCE_OTHER"
+      ],
+      "extract": "Inheritance tax rates per group (partner/child 10%/20%, grandchildren 18%/36%, others 30%/40%), the bracket limit, and the exemptions page (.../vrijstelling-erfbelasting). The current-year pages are overwritten each January: for 2025 and 2024 use the dated Wayback snapshots or the year-named pages (tarieven-erfbelasting-2024, vrijstelling-erfbelasting-2024). A page titled with the wrong year is not a source for that year."
+    },
+    {
+      "id": "nl-statute-wht",
+      "method": "page-extract",
+      "url": "https://wetten.overheid.nl/BWBR0002515",
+      "cells": [
+        "NL:WHT_DIVIDEND",
+        "NL:WHT_INTEREST"
+      ],
+      "extract": "Wet op de dividendbelasting 1965 art. 5 (15% of the proceeds; versions by date: /2024-01-01, /2025-01-01). Conditional withholding tax: Wet bronbelasting 2021 (BWBR0042952) art. 4.1: the highest corporate income tax percentage, only on payments to affiliated companies in listed low-tax or non-cooperative jurisdictions."
+    },
+    {
+      "id": "nl-low-tax-list",
+      "method": "page-extract",
+      "url": "https://wetten.overheid.nl/BWBR0041785",
+      "cells": [
+        "gate:NL:blacklist:MU",
+        "gate:NL:blacklist:SC"
+      ],
+      "extract": "Regeling laagbelastende staten en niet-coöperatieve rechtsgebieden voor belastingdoeleinden: the jurisdictions named in art. 2 and 2a for the year (versions: /2024-01-01, /2025-01-01, /2026-01-01). Whether Mauritius and Seychelles are named. Seychelles was named as non-cooperative in the 2024 version only."
     }
   ]
 }

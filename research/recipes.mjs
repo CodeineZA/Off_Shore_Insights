@@ -19,7 +19,7 @@ const pwc = (code, slug) => [
 
 const recipes = [
   ...pwc('FR', 'france'), ...pwc('DE', 'germany'), ...pwc('BE', 'belgium'), ...pwc('GB', 'united-kingdom'), ...pwc('IT', 'italy'),
-  ...pwc('ES', 'spain'), ...pwc('ZA', 'south-africa'), ...pwc('PT', 'portugal'), ...pwc('CH', 'switzerland'),
+  ...pwc('ES', 'spain'), ...pwc('ZA', 'south-africa'), ...pwc('PT', 'portugal'), ...pwc('CH', 'switzerland'), ...pwc('NL', 'netherlands'),
   { id: 'pwc-MU-pit', method: 'page-extract', url: P('mauritius', 'individual/taxes-on-personal-income'), cells: ['MU:INCOME_TOP'],
     extract: 'Resident income tax bands and top rate; Fair Share Contribution rate, threshold and the income years it applies to.' },
   { id: 'pwc-MU-other', method: 'page-extract', url: P('mauritius', 'individual/other-taxes'), cells: OTHER.map((t) => `MU:${t}`),
@@ -89,6 +89,19 @@ const recipes = [
       + '2026 edition: Databank "Global wealth populations by market" (2021, 2026, 2031f). Read with pdftotext -table (the -layout text shifts rows) and check each row against its % change column. About 50 markets are listed (markets under 500 UHNWIs are not); extract every one. Belgium is not listed.' },
   { id: 'ilo-employers', method: 'api', url: 'https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_NB,1.0/', cells: ['wealth_market.business_owners:GB', 'wealth_market.business_owners:ZA'],
     extract: 'node research/fetch-ilo.mjs. Employers (ICSE-93 status 2) from the national labour force survey via the ILO SDMX API, for the countries Eurostat lacks. Same definition as Eurostat SELF_S (France 2024: 1,382k vs 1,375k). Needs an explicit Accept-Language header.' },
+  // ── Netherlands: primary sources (Belastingdienst, wetten.overheid.nl) that win over the PwC pages ──
+  { id: 'nl-bd-box1', method: 'page-extract', url: 'https://www.belastingdienst.nl/wps/wcm/connect/nl/werk-en-inkomen/content/hoeveel-inkomstenbelasting-betalen', cells: ['NL:INCOME_TOP'],
+    extract: 'Box 1 brackets and percentages for people below AOW age, current year (2026). Earlier years: Belastingdienst fiscal-information pages https://www.belastingdienst.nl/wps/wcm/connect/fisin/fisin<YEAR>/belastingberekening. Top rate and the bracket above which it applies.' },
+  { id: 'nl-bd-box2', method: 'page-extract', url: 'https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/boxen_en_tarieven/box_2/box_2', cells: ['NL:CGT_FINANCIAL'],
+    extract: 'Box 2 (substantial interest, 5% or more of the shares): the two rates and the bracket limit per year (one table lists 2024, 2025 and 2026). NOTE: the fisin2025 page repeats the 2024 Box 2 text (33% above 67,000): the Box 2 page is the one that matches the law.' },
+  { id: 'nl-bd-box3', method: 'page-extract', url: 'https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2026', cells: ['NL:WEALTH_NET'],
+    extract: 'Box 3 per year (page name ends in the year: berekening-box-3-inkomen-2024 / -2025 / -2026): the tax rate, the heffingsvrij vermogen, the schuldendrempel and the three fixed return percentages (banktegoeden, beleggingen en andere bezittingen, schulden). Effective rate = tax rate x return percentage: derived, so say so in the note.' },
+  { id: 'nl-bd-erf', method: 'page-extract', url: 'https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting', cells: ['NL:INHERITANCE_DIRECT', 'NL:INHERITANCE_OTHER'],
+    extract: 'Inheritance tax rates per group (partner/child 10%/20%, grandchildren 18%/36%, others 30%/40%), the bracket limit, and the exemptions page (.../vrijstelling-erfbelasting). The current-year pages are overwritten each January: for 2025 and 2024 use the dated Wayback snapshots or the year-named pages (tarieven-erfbelasting-2024, vrijstelling-erfbelasting-2024). A page titled with the wrong year is not a source for that year.' },
+  { id: 'nl-statute-wht', method: 'page-extract', url: 'https://wetten.overheid.nl/BWBR0002515', cells: ['NL:WHT_DIVIDEND', 'NL:WHT_INTEREST'],
+    extract: 'Wet op de dividendbelasting 1965 art. 5 (15% of the proceeds; versions by date: /2024-01-01, /2025-01-01). Conditional withholding tax: Wet bronbelasting 2021 (BWBR0042952) art. 4.1: the highest corporate income tax percentage, only on payments to affiliated companies in listed low-tax or non-cooperative jurisdictions.' },
+  { id: 'nl-low-tax-list', method: 'page-extract', url: 'https://wetten.overheid.nl/BWBR0041785', cells: ['gate:NL:blacklist:MU', 'gate:NL:blacklist:SC'],
+    extract: 'Regeling laagbelastende staten en niet-coöperatieve rechtsgebieden voor belastingdoeleinden: the jurisdictions named in art. 2 and 2a for the year (versions: /2024-01-01, /2025-01-01, /2026-01-01). Whether Mauritius and Seychelles are named. Seychelles was named as non-cooperative in the 2024 version only.' },
 ];
 
 writeFileSync(new URL('./recipes.json', import.meta.url), JSON.stringify({ version: 1, updated: '2026-09-30', recipes }, null, 2) + '\n');

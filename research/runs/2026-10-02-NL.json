@@ -1,0 +1,590 @@
+{
+  "run": "2026-10-02",
+  "by": "claude /research-country Netherlands (pilot)",
+  "mode": "history",
+  "defaults": {
+    "valid_from": {
+      "*": "2026-01-01"
+    },
+    "next_check_on": {
+      "*": "2027-01-15"
+    }
+  },
+  "jurisdictions": [
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "currency": "EUR",
+      "tax_year_start": "01-01",
+      "next_budget_date": "2027-09-21",
+      "lon": 5.29,
+      "lat": 52.13,
+      "capital": "Amsterdam",
+      "capital_lon": 4.904,
+      "capital_lat": 52.368,
+      "iso3": "NLD",
+      "sort_order": 10,
+      "estate_basis": "heirs",
+      "regional_tax_types": [],
+      "structure_checked_on": "2026-10-02",
+      "structure_note": "One national regime: income tax, the Box 3 deemed-return tax and inheritance tax are set nationally for the whole country. Only the municipal property tax (OZB) differs by municipality, and it is not counted. European Netherlands only."
+    }
+  ],
+  "rates": [
+    {
+      "j": "NL",
+      "t": "INCOME_TOP",
+      "h": 49.5,
+      "from": "2026-01-01",
+      "min": 35.75,
+      "max": 49.5,
+      "thr": 78426,
+      "thr_note": "The top rate applies above this income (below AOW age). Brackets: 35.75% up to €38,883; 37.56% to €78,426; 49.50% above.",
+      "note": "Box 1: income from work and home ownership. Substantial-interest income (Box 2) and savings and investments (Box 3) are taxed separately: see the capital gains and net wealth rows.",
+      "recipe": "nl-bd-box1",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/nl/werk-en-inkomen/content/hoeveel-inkomstenbelasting-betalen"
+    },
+    {
+      "j": "NL",
+      "t": "INCOME_TOP",
+      "h": 49.5,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "min": 35.82,
+      "max": 49.5,
+      "thr": 76817,
+      "thr_note": "The top rate applies above this income (below AOW age). Brackets: 35.82% up to €38,441; 37.48% to €76,817; 49.50% above.",
+      "note": "Box 1: income from work and home ownership. Substantial-interest income (Box 2) and savings and investments (Box 3) are taxed separately: see the capital gains and net wealth rows.",
+      "recipe": "nl-bd-box1",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/fisin/fisin2025/belastingberekening"
+    },
+    {
+      "j": "NL",
+      "t": "INCOME_TOP",
+      "h": 49.5,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "min": 36.97,
+      "max": 49.5,
+      "thr": 75518,
+      "thr_note": "The top rate applies above this income (below AOW age). Brackets: 36.97% up to €75,518; 49.50% above.",
+      "note": "Box 1: income from work and home ownership. Substantial-interest income (Box 2) and savings and investments (Box 3) are taxed separately: see the capital gains and net wealth rows.",
+      "recipe": "nl-bd-box1",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/fisin/fisin2024/belastingberekening"
+    },
+    {
+      "j": "NL",
+      "t": "CGT_FINANCIAL",
+      "h": 0,
+      "from": "2026-01-01",
+      "min": 0,
+      "max": 31,
+      "thr_note": "Rates above 0 apply only to holdings of 5% or more of a company (substantial interest, Box 2).",
+      "note": "No capital gains tax on a private portfolio: gains and investment income as such are not taxed, and a deemed return is taxed in Box 3 instead (see the net wealth row). Substantial interest (5% or more of the shares), Box 2: 24.5% up to €68,843, 31% above (Belastingdienst Box 2 page: https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/boxen_en_tarieven/box_2/box_2).",
+      "recipe": "pwc-NL-cg",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/individual/income-determination"
+    },
+    {
+      "j": "NL",
+      "t": "CGT_PROPERTY",
+      "h": 0,
+      "from": "2026-01-01",
+      "note": "No capital gains tax when a private person sells property. The own home is taxed in Box 1 on a deemed rental value; second homes and investment property fall in Box 3 (deemed return).",
+      "recipe": "pwc-NL-cg",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/individual/income-determination"
+    },
+    {
+      "j": "NL",
+      "t": "CGT_FINANCIAL",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "min": 0,
+      "max": 31,
+      "thr_note": "Rates above 0 apply only to holdings of 5% or more of a company (substantial interest, Box 2).",
+      "note": "No capital gains tax on a private portfolio: gains and investment income as such are not taxed, and a deemed return is taxed in Box 3 instead (see the net wealth row). Substantial interest (5% or more of the shares), Box 2: 24.5% up to €67,804, 31% above (Belastingdienst Box 2 page: https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/boxen_en_tarieven/box_2/box_2).",
+      "recipe": "pwc-NL-cg",
+      "source_override": "https://web.archive.org/web/20250802231210/https://taxsummaries.pwc.com/netherlands/individual/income-determination",
+      "verified_on": "2025-08-02"
+    },
+    {
+      "j": "NL",
+      "t": "CGT_PROPERTY",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "note": "No capital gains tax when a private person sells property. The own home is taxed in Box 1 on a deemed rental value; second homes and investment property fall in Box 3 (deemed return).",
+      "recipe": "pwc-NL-cg",
+      "source_override": "https://web.archive.org/web/20250802231210/https://taxsummaries.pwc.com/netherlands/individual/income-determination",
+      "verified_on": "2025-08-02"
+    },
+    {
+      "j": "NL",
+      "t": "CGT_FINANCIAL",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "min": 0,
+      "max": 33,
+      "thr_note": "Rates above 0 apply only to holdings of 5% or more of a company (substantial interest, Box 2).",
+      "note": "No capital gains tax on a private portfolio: gains and investment income as such are not taxed, and a deemed return is taxed in Box 3 instead (see the net wealth row). Substantial interest (5% or more of the shares), Box 2: 24.5% up to €67,000, 33% above (Belastingdienst Box 2 page: https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/boxen_en_tarieven/box_2/box_2).",
+      "recipe": "pwc-NL-cg",
+      "source_override": "https://web.archive.org/web/20240917021504/https://taxsummaries.pwc.com/netherlands/individual/income-determination",
+      "verified_on": "2024-09-17"
+    },
+    {
+      "j": "NL",
+      "t": "CGT_PROPERTY",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "note": "No capital gains tax when a private person sells property. The own home is taxed in Box 1 on a deemed rental value; second homes and investment property fall in Box 3 (deemed return).",
+      "recipe": "pwc-NL-cg",
+      "source_override": "https://web.archive.org/web/20240917021504/https://taxsummaries.pwc.com/netherlands/individual/income-determination",
+      "verified_on": "2024-09-17"
+    },
+    {
+      "j": "NL",
+      "t": "WHT_DIVIDEND",
+      "h": 15,
+      "from": "2026-01-01",
+      "min": 15,
+      "max": 25.8,
+      "note": "Dividend tax is 15% of the proceeds (Art. 5 Wet op de dividendbelasting 1965). A conditional withholding tax of 25.8% (the top corporate rate, Art. 4.1 Wet bronbelasting 2021) applies only to payments to affiliated companies in listed low-tax or non-cooperative jurisdictions and in certain abuse situations, not to individuals.",
+      "recipe": "nl-statute-wht",
+      "source_override": "https://wetten.overheid.nl/BWBR0002515"
+    },
+    {
+      "j": "NL",
+      "t": "WHT_INTEREST",
+      "h": 0,
+      "from": "2026-01-01",
+      "min": 0,
+      "max": 25.8,
+      "note": "No general withholding tax on interest. The only Dutch withholding on interest is the conditional tax (25.8%, the top corporate rate) on payments to affiliated companies in listed low-tax or non-cooperative jurisdictions and in certain abuse situations.",
+      "recipe": "pwc-NL-wht",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/corporate/withholding-taxes"
+    },
+    {
+      "j": "NL",
+      "t": "WHT_DIVIDEND",
+      "h": 15,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "min": 15,
+      "max": 25.8,
+      "note": "Dividend tax is 15% of the proceeds (Art. 5 Wet op de dividendbelasting 1965). A conditional withholding tax of 25.8% (the top corporate rate, Art. 4.1 Wet bronbelasting 2021) applies only to payments to affiliated companies in listed low-tax or non-cooperative jurisdictions and in certain abuse situations, not to individuals.",
+      "recipe": "nl-statute-wht",
+      "source_override": "https://wetten.overheid.nl/BWBR0002515/2025-01-01"
+    },
+    {
+      "j": "NL",
+      "t": "WHT_INTEREST",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "min": 0,
+      "max": 25.8,
+      "note": "No general withholding tax on interest. The only Dutch withholding on interest is the conditional tax (25.8%, the top corporate rate) on payments to affiliated companies in listed low-tax or non-cooperative jurisdictions and in certain abuse situations.",
+      "recipe": "pwc-NL-wht",
+      "source_override": "https://web.archive.org/web/20251110173352/https://taxsummaries.pwc.com/netherlands/corporate/withholding-taxes",
+      "verified_on": "2025-11-10"
+    },
+    {
+      "j": "NL",
+      "t": "WHT_DIVIDEND",
+      "h": 15,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "min": 15,
+      "max": 15,
+      "note": "Dividend tax is 15% of the proceeds (Art. 5 Wet op de dividendbelasting 1965). The conditional tax on payments to affiliated companies in listed jurisdictions is not recorded for 2024: the page for that year still quotes the 2023 rate.",
+      "recipe": "nl-statute-wht",
+      "source_override": "https://wetten.overheid.nl/BWBR0002515/2024-01-01"
+    },
+    {
+      "j": "NL",
+      "t": "WHT_INTEREST",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "min": 0,
+      "max": 0,
+      "note": "No general withholding tax on interest. The only Dutch withholding on interest is the conditional tax on payments to affiliated companies in listed low-tax or non-cooperative jurisdictions and in certain abuse situations. Its rate is not recorded for 2024.",
+      "recipe": "pwc-NL-wht",
+      "source_override": "https://web.archive.org/web/20241110130514/https://taxsummaries.pwc.com/netherlands/corporate/withholding-taxes",
+      "verified_on": "2024-11-10"
+    },
+    {
+      "j": "NL",
+      "t": "INHERITANCE_DIRECT",
+      "h": 20,
+      "from": "2026-01-01",
+      "min": 10,
+      "max": 20,
+      "thr": 26230,
+      "thr_note": "Exemption for a child or stepchild (partner €828,035). Applied before the rate. Grandchildren pay 18% up to the bracket limit and 36% above.",
+      "note": "Partner and children: 10% up to €158,669, 20% above, after the exemption. Exemptions: https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/vrijstelling-erfbelasting",
+      "recipe": "nl-bd-erf",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting"
+    },
+    {
+      "j": "NL",
+      "t": "INHERITANCE_OTHER",
+      "h": 40,
+      "from": "2026-01-01",
+      "min": 30,
+      "max": 40,
+      "thr": 2769,
+      "thr_note": "Exemption for other heirs (a sibling, other relative or friend). Applied before the rate.",
+      "note": "Other heirs: 30% up to €158,669, 40% above, after the exemption. Exemptions: https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/vrijstelling-erfbelasting",
+      "recipe": "nl-bd-erf",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting"
+    },
+    {
+      "j": "NL",
+      "t": "INHERITANCE_DIRECT",
+      "h": 20,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "min": 10,
+      "max": 20,
+      "thr": 25490,
+      "thr_note": "Exemption for a child or stepchild (partner €804,698). Applied before the rate. Grandchildren pay 18% up to the bracket limit and 36% above.",
+      "note": "Partner and children: 10% up to €154,197, 20% above, after the exemption. Exemptions: https://web.archive.org/web/20251004162736/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/vrijstelling-erfbelasting",
+      "recipe": "nl-bd-erf",
+      "source_override": "https://web.archive.org/web/20251104114832/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting",
+      "verified_on": "2025-11-04"
+    },
+    {
+      "j": "NL",
+      "t": "INHERITANCE_OTHER",
+      "h": 40,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "min": 30,
+      "max": 40,
+      "thr": 2690,
+      "thr_note": "Exemption for other heirs (a sibling, other relative or friend). Applied before the rate.",
+      "note": "Other heirs: 30% up to €154,197, 40% above, after the exemption. Exemptions: https://web.archive.org/web/20251004162736/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/vrijstelling-erfbelasting",
+      "recipe": "nl-bd-erf",
+      "source_override": "https://web.archive.org/web/20251104114832/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting",
+      "verified_on": "2025-11-04"
+    },
+    {
+      "j": "NL",
+      "t": "INHERITANCE_DIRECT",
+      "h": 20,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "min": 10,
+      "max": 20,
+      "thr": 25187,
+      "thr_note": "Exemption for a child or stepchild (partner €795,156). Applied before the rate. Grandchildren pay 18% up to the bracket limit and 36% above.",
+      "note": "Partner and children: 10% up to €152,368, 20% above, after the exemption. Exemptions: https://web.archive.org/web/20240914170752/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/vrijstelling-erfbelasting-2024",
+      "recipe": "nl-bd-erf",
+      "source_override": "https://web.archive.org/web/20241009231105/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting-2024",
+      "verified_on": "2024-10-09"
+    },
+    {
+      "j": "NL",
+      "t": "INHERITANCE_OTHER",
+      "h": 40,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "min": 30,
+      "max": 40,
+      "thr": 2658,
+      "thr_note": "Exemption for other heirs (a sibling, other relative or friend). Applied before the rate.",
+      "note": "Other heirs: 30% up to €152,368, 40% above, after the exemption. Exemptions: https://web.archive.org/web/20240914170752/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/vrijstelling-erfbelasting-2024",
+      "recipe": "nl-bd-erf",
+      "source_override": "https://web.archive.org/web/20241009231105/https://www.belastingdienst.nl/wps/wcm/connect/nl/erfbelasting/content/tarieven-erfbelasting-2024",
+      "verified_on": "2024-10-09"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_NET",
+      "h": 2.16,
+      "from": "2026-01-01",
+      "min": 0.461,
+      "max": 2.16,
+      "thr": 59357,
+      "thr_note": "Tax-free allowance per person (double for fiscal partners); debts count above €3,800 per person.",
+      "note": "Box 3 is an income tax on a deemed return, not a wealth tax in name, and it works as one. Effective rate = 36% x the deemed return: 2.16% of net assets above the allowance on investments and other assets (36% x 6%), 0.461% on bank balances (36% x 1.28%). Debts are deducted at 2.7% (savings and debt percentages provisional until early 2027). The effective rates are derived from the stated percentages.",
+      "recipe": "nl-bd-box3",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2026"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_NET",
+      "h": 2.117,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "min": 0.493,
+      "max": 2.117,
+      "thr": 57684,
+      "thr_note": "Tax-free allowance per person (double for fiscal partners); debts count above €3,800 per person.",
+      "note": "Box 3 is an income tax on a deemed return, not a wealth tax in name, and it works as one. Effective rate = 36% x the deemed return: 2.117% of net assets above the allowance on investments and other assets (36% x 5.88%), 0.493% on bank balances (36% x 1.37%). Debts are deducted at 2.7%. The effective rates are derived from the stated percentages.",
+      "recipe": "nl-bd-box3",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2025"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_NET",
+      "h": 2.174,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "min": 0.518,
+      "max": 2.174,
+      "thr": 57000,
+      "thr_note": "Tax-free allowance per person (double for fiscal partners); debts count above €3,700 per person.",
+      "note": "Box 3 is an income tax on a deemed return, not a wealth tax in name, and it works as one. Effective rate = 36% x the deemed return: 2.174% of net assets above the allowance on investments and other assets (36% x 6.04%), 0.518% on bank balances (36% x 1.44%). Debts are deducted at 2.61%. The effective rates are derived from the stated percentages.",
+      "recipe": "nl-bd-box3",
+      "source_override": "https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2024"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_SOLIDARITY",
+      "h": 0,
+      "from": "2026-01-01",
+      "note": "None listed in PwC Other taxes. The Netherlands has no wealth tax as such; Box 3 is the net wealth row.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/individual/other-taxes"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_PROPERTY",
+      "h": 0,
+      "from": "2026-01-01",
+      "note": "No national real-estate wealth tax. The municipal property tax (OZB) is a local tax and is not counted here, as for the other countries. Second homes fall in Box 3.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/individual/other-taxes"
+    },
+    {
+      "j": "NL",
+      "t": "SECURITIES_ACCOUNT",
+      "h": 0,
+      "from": "2026-01-01",
+      "note": "None listed in PwC Other taxes (assets are in Box 3).",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/individual/other-taxes"
+    },
+    {
+      "j": "NL",
+      "t": "FOREIGN_ASSET_TAX",
+      "h": 0,
+      "from": "2026-01-01",
+      "note": "None listed in PwC Other taxes.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/individual/other-taxes"
+    },
+    {
+      "j": "NL",
+      "t": "FOREIGN_PROPERTY",
+      "h": 0,
+      "from": "2026-01-01",
+      "note": "None listed in PwC Other taxes.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://taxsummaries.pwc.com/netherlands/individual/other-taxes"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_SOLIDARITY",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "note": "None listed in PwC Other taxes. The Netherlands has no wealth tax as such; Box 3 is the net wealth row.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20250917214645/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2025-09-17"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_PROPERTY",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "note": "No national real-estate wealth tax. The municipal property tax (OZB) is a local tax and is not counted here, as for the other countries. Second homes fall in Box 3.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20250917214645/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2025-09-17"
+    },
+    {
+      "j": "NL",
+      "t": "SECURITIES_ACCOUNT",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "note": "None listed in PwC Other taxes (assets are in Box 3).",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20250917214645/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2025-09-17"
+    },
+    {
+      "j": "NL",
+      "t": "FOREIGN_ASSET_TAX",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "note": "None listed in PwC Other taxes.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20250917214645/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2025-09-17"
+    },
+    {
+      "j": "NL",
+      "t": "FOREIGN_PROPERTY",
+      "h": 0,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "note": "None listed in PwC Other taxes.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20250917214645/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2025-09-17"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_SOLIDARITY",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "note": "None listed in PwC Other taxes. The Netherlands has no wealth tax as such; Box 3 is the net wealth row.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20240813065105/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2024-08-13"
+    },
+    {
+      "j": "NL",
+      "t": "WEALTH_PROPERTY",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "note": "No national real-estate wealth tax. The municipal property tax (OZB) is a local tax and is not counted here, as for the other countries. Second homes fall in Box 3.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20240813065105/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2024-08-13"
+    },
+    {
+      "j": "NL",
+      "t": "SECURITIES_ACCOUNT",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "note": "None listed in PwC Other taxes (assets are in Box 3).",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20240813065105/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2024-08-13"
+    },
+    {
+      "j": "NL",
+      "t": "FOREIGN_ASSET_TAX",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "note": "None listed in PwC Other taxes.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20240813065105/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2024-08-13"
+    },
+    {
+      "j": "NL",
+      "t": "FOREIGN_PROPERTY",
+      "h": 0,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "note": "None listed in PwC Other taxes.",
+      "recipe": "pwc-NL-other",
+      "source_override": "https://web.archive.org/web/20240813065105/https://taxsummaries.pwc.com/netherlands/individual/other-taxes",
+      "verified_on": "2024-08-13"
+    }
+  ],
+  "treaties": [
+    {
+      "a": "MU",
+      "b": "NL",
+      "status": "none",
+      "recipe": "mra-MU-dta",
+      "note": "Not on the Mauritius Revenue Authority list: absent from the 45 treaties in force, the 7 awaiting ratification, the 7 awaiting signature and the 19 being negotiated. Not in the Dutch government treaty overview of 23 Apr 2026 either (under negotiation, agreed or in force)."
+    },
+    {
+      "a": "SC",
+      "b": "NL",
+      "status": "none",
+      "recipe": "src-SC-dta",
+      "note": "No double taxation agreement. The Netherlands appears on the Seychelles Revenue Commission list only under tax information exchange agreements (TIEA)."
+    }
+  ],
+  "gates": [
+    {
+      "j": "NL",
+      "hub": "MU",
+      "gate": "blacklist",
+      "status": "green",
+      "label": "Not listed",
+      "note": "Mauritius is not named in the Dutch Regeling laagbelastende staten en niet-coöperatieve rechtsgebieden (versions of 1 Jan 2024, 2025 and 2026).",
+      "recipe": "nl-low-tax-list"
+    },
+    {
+      "j": "NL",
+      "hub": "SC",
+      "gate": "blacklist",
+      "status": "green",
+      "label": "Not listed",
+      "note": "Seychelles was named as non-cooperative in the 1 Jan 2024 version of the Dutch Regeling laagbelastende staten en niet-coöperatieve rechtsgebieden; it is not named in the 2025 or 2026 versions.",
+      "recipe": "nl-low-tax-list"
+    },
+    {
+      "j": "NL",
+      "hub": null,
+      "gate": "trust_recognition",
+      "status": "green",
+      "label": "Contracting Party",
+      "note": "Hague Trusts Convention 1985: signed 1 Jul 1985, ratified 28 Nov 1995, in force for the Netherlands 1 Feb 1996.",
+      "recipe": "hcch-trusts"
+    }
+  ],
+  "wealth": [
+    {
+      "source": "UBS Global Wealth Report 2026",
+      "recipe": "ubs-gwr-millionaires",
+      "where": "p.21 'The UBS Millionaire Index', USD millionaires in thousands, end 2025 (Netherlands 1,294)",
+      "source_url": "https://www.ubs.com/global/en/wealthmanagement/insights/global-wealth-report.html",
+      "year": 2025,
+      "column": "millionaires",
+      "values": {
+        "NL": 1294000
+      }
+    },
+    {
+      "source": "Knight Frank Wealth Report 2026",
+      "recipe": "knightfrank-uhnwi",
+      "where": "Databank 'Global wealth populations by market', UHNWI (US$30m+), 2026 column. Read with pdftotext -raw (the -layout text shifts rows); Netherlands 4,493 / 5,077 / 5,950(f), checked against its 13.0% and 17.2% change columns",
+      "source_url": "https://www.knightfrank.com/wealthreport",
+      "year": 2026,
+      "column": "uhnwi_count",
+      "values": {
+        "NL": 5077
+      }
+    },
+    {
+      "source": "Knight Frank Wealth Report 2026",
+      "recipe": "knightfrank-uhnwi",
+      "where": "same table, 2021 column",
+      "source_url": "https://www.knightfrank.com/wealthreport",
+      "year": 2021,
+      "column": "uhnwi_count",
+      "values": {
+        "NL": 4493
+      }
+    }
+  ],
+  "gaps": [
+    {
+      "j": "NL",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "The KvK (Chamber of Commerce) pages for the UBO register for trusts publish no count of registered trusts.",
+      "where_to_get": "Ask KvK, or the Ministry of Finance, for the number of trusts registered in the UBO-register trusts (https://www.uboregistertrusts.nl). If a figure is published, save the page or letter in PDFs/ and tell Claude."
+    }
+  ]
+}

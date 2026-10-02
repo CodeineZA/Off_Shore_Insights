@@ -35,7 +35,7 @@ test('a complete country has everything in place', () => {
   d.treaties = ['MU', 'SC'].map((h) => ({ country_a: h, country_b: 'XX', status: 'in_force', signed_on: '2000-01-01', in_force_on: '2001-01-01' }));
   d.gates = [{ jurisdiction_code: 'XX', hub: 'MU', gate: 'blacklist', label: 'Not listed' }, { jurisdiction_code: 'XX', hub: 'SC', gate: 'blacklist', label: 'Not listed' },
     { jurisdiction_code: 'XX', hub: null, gate: 'trust_recognition', label: 'Party' }];
-  d.wealth = [{ jurisdiction_code: 'XX', year: 2025, millionaires: 1, uhnwi_count: 1, business_owners: 1, trusts_count: 1 }];
+  d.wealth = [{ jurisdiction_code: 'XX', year: 2025, millionaires: 1, uhnwi_count: 1, business_owners: 1, trusts_count: 1 }, { jurisdiction_code: 'XX', year: 2024, millionaires: 1, uhnwi_count: 1 }];
   d.advisors = [{ country_code: 'XX' }];
   const items = buildChecklist(d, '2026-10-02');
   assert.deepEqual(items.filter((i) => i.status !== 'have'), []);
@@ -106,4 +106,21 @@ test('checklistSql upserts each item, escapes quotes, and removes rows no longer
   assert.match(sql, /'it''s unknown'/);
   assert.match(sql, /on conflict \(jurisdiction_code, item\) do update/);
   assert.match(sql, /delete from research_item where jurisdiction_code = 'XX' and item <> all \(array\['treaty:MU'\]\)/);
+});
+
+test('back-year money series: the missing year names the report edition that would supply it', () => {
+  const d = empty([J('XX')]);
+  d.wealth = [{ jurisdiction_code: 'XX', year: 2025, millionaires: 1 }];   // UBS 2026 edition: as at end 2025
+  const items = buildChecklist(d, '2026-10-02');
+  const h25 = items.find((i) => i.item === 'history_wealth:2025'), h24 = items.find((i) => i.item === 'history_wealth:2024');
+  assert.equal(h25.status, 'missing');
+  assert.match(h25.detail, /No UHNWI figure for 2025/);
+  assert.match(h25.where_to_get, /Knight Frank Wealth Report 2025/);
+  assert.doesNotMatch(h25.where_to_get, /UBS/);               // the 2025 millionaire count is already held
+  assert.match(h24.where_to_get, /UBS Global Wealth Report 2025 \(count at end 2024\)/);
+  assert.match(h24.where_to_get, /Knight Frank Wealth Report 2024/);
+  d.wealth.push({ jurisdiction_code: 'XX', year: 2025, uhnwi_count: 2 }, { jurisdiction_code: 'XX', year: 2024, millionaires: 3, uhnwi_count: 4 });
+  const done = buildChecklist(d, '2026-10-02');
+  assert.equal(done.find((i) => i.item === 'history_wealth:2025').status, 'have');
+  assert.equal(done.find((i) => i.item === 'history_wealth:2024').status, 'have');
 });
