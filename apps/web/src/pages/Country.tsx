@@ -1,25 +1,20 @@
 // One country at a time. The world map is the slicer: pick a country (or a region) and the page narrows to it.
-// Top to bottom: year slicer, country list + layers + legend, the map, then (once something is picked) the banner,
-// the tax slicer chart, and the tiles. The tiles are replaced one at a time as each is agreed (PLAN.md).
+// Top to bottom: 1 the world map (with its country list, layers and legend), 2 the tax year (and the Sources button),
+// 3 where the tax hurts, 4 the country brief, 5 the prospect pool. A country that sets taxes per region also lists its
+// regions, each with its own bar chart, between the tax year and the tax chart.
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import type { Dashboard } from '../data/types';
 import { WORLD, focusCode, zoomTo, type Focus, type MoneyKey } from '../data/mapdata';
 import { type TaxFocus } from '../data/taxbars';
 import { latestYear, yearsWithData } from '../data/years';
 import type { ViewName } from '../ui/WorldMap';
-import Banner from '../ui/Banner';
+import CountryBrief from '../ui/CountryBrief';
 import MapControls from '../ui/MapControls';
+import ProspectPool from '../ui/ProspectPool';
 import RegionStrip from '../ui/RegionStrip';
+import SourcesButton from '../ui/SourcesButton';
 import TaxSlicer from '../ui/TaxSlicer';
-import TileGrid from '../ui/TileGrid';
 import YearSlicer from '../ui/YearSlicer';
-import C1HeadToHead from '../tiles/C1HeadToHead';
-import C2BracketSpread from '../tiles/C2BracketSpread';
-import C3SavingGap from '../tiles/C3SavingGap';
-import C4ThreeHomes from '../tiles/C4ThreeHomes';
-import C5TreatyBridge from '../tiles/C5TreatyBridge';
-import C6ProspectPool from '../tiles/C6ProspectPool';
-import C7CountryBrief from '../tiles/C7CountryBrief';
 
 const WorldMap = lazy(() => import('../ui/WorldMap'));   // the shapes are ~1 MB of path data: load them when the page opens, not with the login
 
@@ -58,29 +53,21 @@ export default function Country({ d }: { d: Dashboard }) {
 
   return (
     <>
-      <YearSlicer d={d} years={years} value={sel} code={code} hasData={hasData} onChange={setSel} />
       <MapControls d={d} focus={focus} onFocus={move} treaty={treaty} setTreaty={setTreaty} money={money} setMoney={setMoney} metrics={metrics} setMetrics={setMetrics} year={year} />
       <Suspense fallback={<div className="worldmap loading" aria-busy="true">Loading the map…</div>}>
         <WorldMap d={d} focus={focus} onFocus={move} years={sel} treaty={treaty} money={money} metrics={metrics} view={view} onView={setView} />
       </Suspense>
+      <YearSlicer d={d} years={years} value={sel} code={code} hasData={hasData} onChange={setSel}>
+        <SourcesButton d={d} code={code} years={sel} taxFocus={taxFocus} metrics={metrics} treaty={treaty} money={money} />
+      </YearSlicer>
 
-      {!code && <p className="map-hint">Pick a country on the map or from the list. The page narrows to it: its treaties, its money, where its tax hurts and who to talk to.</p>}
+      {!code && <p className="map-hint">Pick a country on the map or from the list. The page narrows to it: where its tax hurts, its country brief and its prospect pool.</p>}
       {code && (
         <>
-          <Banner d={d} code={code} years={sel} />
           <RegionStrip d={d} focus={focus} onFocus={move} years={sel} />
           <TaxSlicer d={d} code={code} years={sel} focus={taxFocus} onFocus={setTaxFocus} />
-          {/* The tiles below are the earlier country views, kept until each is redesigned and agreed. No key on the grid:
-              changing country must keep an open tile open, showing the new country. */}
-          <TileGrid items={[
-            { id: 'c4', label: 'Same client, three homes', node: <C4ThreeHomes d={d} code={code} /> },
-            { id: 'c7', label: 'Country brief', node: <C7CountryBrief d={d} code={code} />, fixed: true },
-            { id: 'c3', label: 'The saving gap', node: <C3SavingGap d={d} code={code} /> },
-            { id: 'c1', label: 'Head to head', node: <C1HeadToHead d={d} code={code} /> },
-            { id: 'c5', label: 'Treaty bridge', node: <C5TreatyBridge d={d} code={code} /> },
-            { id: 'c2', label: 'Bracket spread', node: <C2BracketSpread d={d} code={code} /> },
-            { id: 'c6', label: 'Prospect pool', node: <C6ProspectPool d={d} code={code} /> },
-          ]} />
+          <CountryBrief d={d} code={code} years={sel} />
+          <ProspectPool d={d} code={code} years={sel} filtered={taxFocus != null} />
         </>
       )}
     </>

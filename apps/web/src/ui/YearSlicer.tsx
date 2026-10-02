@@ -1,11 +1,12 @@
 // Year slicer: any combination of tax years. A chip is the tax year that BEGINS in that year, in each country's own
 // calendar (UK 2025 = 6 Apr 2025–5 Apr 2026), and the caption spells the dates out for whatever is in focus.
+import type { ReactNode } from 'react';
 import type { Dashboard } from '../data/types';
 import { taxYearFor, taxYearLine } from '../data/taxyear';
 import { toggleYear } from '../data/years';
 
-export default function YearSlicer({ d, years, value, code, hasData, onChange }: {
-  d: Dashboard; years: number[]; value: number[]; code: string | null; hasData: Set<number>; onChange: (v: number[]) => void;
+export default function YearSlicer({ d, years, value, code, hasData, onChange, children }: {
+  d: Dashboard; years: number[]; value: number[]; code: string | null; hasData: Set<number>; onChange: (v: number[]) => void; children?: ReactNode;
 }) {
   const name = code ? d.jurisdictions.find((j) => j.code === code)?.name : null;
   const caption = code
@@ -24,6 +25,7 @@ export default function YearSlicer({ d, years, value, code, hasData, onChange }:
             onClick={() => onChange(toggleYear(value, y))}>{y}</button>
         ))}
       </div>
+      {children}
       <p className="yearbar-caption">{caption}</p>
     </div>
   );

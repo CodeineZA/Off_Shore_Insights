@@ -260,19 +260,27 @@ enforces this.
 region) at a time. The process is run through Claude: Hentus names a country, Claude finds and loads everything the page needs, and
 what it cannot get becomes an instruction for him. No legal commentary: red where a list or a missing treaty blocks, green where it is open.
 
-The page answers, in order: (1) is there a treaty with Mauritius and with Seychelles; (2) is there money (individuals, business owners,
-trusts); (3) where does the tax hurt, with the hub rate beside it; (4) who do we talk to (firms).
+The page answers: is there a treaty with Mauritius and with Seychelles; is there money (individuals, business owners, trusts); where does the tax
+hurt, with the hub rate beside it. (Who do we talk to, the firms, is parked.) **As built (Hentus, 2026-10-02) the page is five things in this
+order: the world map, the tax year, Where the tax hurts, the Country brief, the Prospect pool.** Every other tile was removed; a **Sources** button
+beside the tax year lists the pages behind whatever is on screen.
 
 - **Map:** treaties by colour (Mauritius gold, Seychelles teal, both striped, outline = signed or negotiating, hatched = unknown); money as a
   small bar per measure at each capital (each measure on its own scale); click a country = the slicer, its regions appear with their own bar
   charts; Back zooms out one step. A Europe view un-crowds the capitals.
 - **Year slicer:** any combination of tax years, each country in its own calendar. Rates for 2024 and 2025 are back-filled from dated
   sources only; unknown stays unknown.
-- **Banner** (light gold, at the deepest level): both treaties with status and date, the tax year beside when the data was last checked,
-  the lists, and how the country is structured. **Tax slicer chart:** the taxes by market with the Mauritius and Seychelles rate beside each;
-  focusing a market or a tax filters everything below it.
-- **Tiles, one at a time with Hentus:** Open doors, Where the money is, Services that apply, Region by region, Who to talk to, Research status
-  (and optionally the sample-client bill, the only modelled number).
+- **Where the tax hurts:** the taxes by market with the Mauritius and Seychelles rate beside each, one bar per chosen tax year; focusing a
+  market or a tax dims the other rows and narrows the Sources list. Nothing else on the page is a tax, so nothing else reacts to it (the pool is
+  people and companies, labelled "not filtered" while a focus is on).
+  Hover a bar for its range, threshold, note and source; each tax carries a soft one-line explanation (CGT, WHT, ...).
+- **Country brief** (light gold): both treaties with status and date, the tax year beside when the data was last checked, the lists, how the
+  country is structured, then the notes (warnings first) and which figures still need verifying.
+- **Prospect pool:** business owners, millionaires, UHNWI, trusts; one bar per chosen tax year on one shared scale, tiers never added up. A year
+  with no figure of its own shows the newest earlier one as a paler bar; a tier nobody publishes is "not published", never 0. A region shows its
+  country's figures, labelled.
+- **Removed (Hentus, 2026-10-02):** Head to head, Bracket spread, Saving gap, Same client three homes, Treaty bridge and the sample-client bill.
+  Other candidate panels (Open doors, Services that apply, Research status) are not planned; they come back only if he asks.
 - **Money:** millionaires (UBS, net worth ≥US$1m), UHNWI (Knight Frank, ≥US$30m), business owners (Eurostat / ILO), trusts. HNWI was dropped:
   no source publishes it per country (Capgemini gives regional totals and a few markets; Henley's lists are top 20 and not a dataset).
   No money traffic light and no invented thresholds.

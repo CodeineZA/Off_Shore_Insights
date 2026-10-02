@@ -96,7 +96,7 @@ export default function WorldMap({ d, focus, onFocus, years, treaty, money, metr
   const regionMax = Math.max(1, ...regionsHere.flatMap((r) => r.bars.map((b) => b.rate ?? 0)));
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector('.overlay') && (focus.country || focus.region)) onFocus(zoomOut(focus)); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector('[role="dialog"]') && (focus.country || focus.region)) onFocus(zoomOut(focus)); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [focus, onFocus]);

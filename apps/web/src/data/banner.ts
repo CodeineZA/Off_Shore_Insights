@@ -1,7 +1,7 @@
 // The facts the banner states first for the entity you drilled to: both treaties with their dates, the tax year
 // next to when the data was last updated, the red/green gates, and how the country is structured.
-import type { Dashboard, Treaty, TreatyStatus } from './types';
-import { fmtDate, shortLabel } from './insights';
+import type { Dashboard, Note, Treaty, TreatyStatus } from './types';
+import { countryOf, fmtDate, shortLabel } from './insights';
 import { gateCells, type GateStatus } from './model';
 import { taxYearFor, taxYearLine, type TaxYear } from './taxyear';
 import { treatyForYear, type TreatyAtYear } from './years';
@@ -27,6 +27,20 @@ export function treatyText(t: Treaty | undefined, at: TreatyAtYear | null): { st
     case 'none': return { status: at.status, short: SHORT.none, date: null, text: 'No treaty' + note };
     default: return { status: 'unknown', short: SHORT.unknown, date: null, text: 'Not researched yet' };
   }
+}
+
+/** Warnings first, then the rest in the order the research notes are kept. */
+const TOPIC_ORDER = ['warning', 'anti_avoidance', 'residency', 'crs', 'sales_angle'];
+const topicRank = (t: string) => { const i = TOPIC_ORDER.indexOf(t); return i < 0 ? TOPIC_ORDER.length : i; };
+export interface BriefNotes { notes: Note[]; /** Tax types whose current rate for this entity still needs checking. */ toCheck: string[] }
+/** The notes under the banner: the entity's own and its country's (a region shows both), plus what still needs verifying. */
+export function briefNotes(d: Dashboard, code: string): BriefNotes {
+  const country = countryOf(d, code);
+  const notes = d.notes.filter((n) => n.jurisdiction_code === code || n.jurisdiction_code === country)
+    .sort((a, b) => topicRank(a.topic) - topicRank(b.topic) || a.sort_order - b.sort_order);
+  const toCheck = d.rates.filter((r) => r.jurisdiction_code === code && r.needs_verification && !r.inherited)
+    .map((r) => shortLabel(d.tax_types.find((t) => t.code === r.tax_type_code)!));
+  return { notes, toCheck };
 }
 
 export function bannerFacts(d: Dashboard, code: string, years: number[]): BannerFacts | null {

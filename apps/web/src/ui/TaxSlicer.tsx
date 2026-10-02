@@ -1,18 +1,18 @@
-// The tax slicer: a bar chart (not a tile) of this entity's taxes by market, one bar per selected tax year, with the
+// "Where the tax hurts": a bar chart of this entity's taxes by market, one bar per selected tax year, with the
 // Mauritius and Seychelles rate beside each. Click a market or a tax to focus the whole page on it; click again to clear.
+// Hover a bar for its range, threshold, note and source; the line under each tax spells out what it is.
 import type { Dashboard } from '../data/types';
-import { CATEGORY_LABEL, focusLabel, inFocus, scaleMax, taxBars, toggleFocus, type TaxFocus } from '../data/taxbars';
+import { CATEGORY_LABEL, cellText, focusLabel, inFocus, scaleMax, taxBars, toggleFocus, type TaxFocus } from '../data/taxbars';
 import { HUB_PAINT } from '../data/mapdata';
 import { taxYearFor } from '../data/taxyear';
-import { pct } from '../data/insights';
+import { explainOf, pct } from '../data/insights';
+import { shade } from './shade';
 
-const YEAR_SHADES = ['#8a6844', '#b98d5a', '#d8b07a', '#f3dcb2'];
 const WARN = '#d9785f';
 const regionRange = (rs: { rate: number | null }[]) => {
   const v = rs.map((x) => x.rate).filter((x): x is number => x != null);
   return !v.length ? 'by region' : v.length === 1 || Math.min(...v) === Math.max(...v) ? `${pct(v[0])} by region` : `${pct(Math.min(...v))}–${pct(Math.max(...v))}`;
 };
-const shade = (i: number, n: number) => YEAR_SHADES[n <= 1 ? 3 : Math.round((i * (YEAR_SHADES.length - 1)) / (n - 1))];
 
 export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashboard; code: string; years: number[]; focus: TaxFocus; onFocus: (f: TaxFocus) => void }) {
   const groups = taxBars(d, code, years);
@@ -61,7 +61,7 @@ export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashb
               return (
                 <button key={r.type.code} className={'taxrow' + (rFocus ? ' on' : '') + (on ? '' : ' dim')} onClick={() => onFocus(toggleFocus(focus, { taxType: r.type.code }))} aria-pressed={rFocus}
                   title={r.type.description ?? r.type.label}>
-                  <span className="taxrow-label">{r.type.label}</span>
+                  <span className="taxrow-label">{r.type.label}<small className="tax-explain">{explainOf(r.type)}</small></span>
                   <span className="taxrow-track">
                     {r.regions
                       ? <i className="bar regional" title={r.regions.map((x) => `${x.name}: ${x.rate == null ? 'no figure' : pct(x.rate)}`).join(' · ')}>
@@ -69,9 +69,9 @@ export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashb
                         </i>
                       : null}
                     {r.years.map((c, i) => c.rate == null
-                      ? (r.regions ? null : <i key={c.year} className="bar unknown" title={`${c.label}: no figure`} />)
+                      ? (r.regions ? null : <i key={c.year} className="bar unknown" title={cellText(c)} />)
                       : <i key={c.year} className={'bar' + (c.inherited ? ' hollow' : '')} style={{ width: `${Math.max(0.8, (c.rate / max) * 100)}%`, background: c.inherited ? 'transparent' : warn ? WARN : shade(i, ys.length), borderColor: warn ? WARN : shade(i, ys.length) }}
-                        title={`${c.label}: ${pct(c.rate)}${c.inherited ? ' (from the country)' : ''}${c.changedDuringYear ? ', changed during the year' : ''}`} />)}
+                        title={cellText(c)} />)}
                     <b className="hubtick mu" style={{ left: `${r.hub.MU == null ? 0 : (r.hub.MU / max) * 100}%` }} hidden={r.hub.MU == null} title={`Mauritius: ${r.hub.MU == null ? 'no figure' : pct(r.hub.MU)}`} />
                     <b className="hubtick sc" style={{ left: `${r.hub.SC == null ? 0 : (r.hub.SC / max) * 100}%` }} hidden={r.hub.SC == null} title={`Seychelles: ${r.hub.SC == null ? 'no figure' : pct(r.hub.SC)}`} />
                   </span>

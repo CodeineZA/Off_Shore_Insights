@@ -2,6 +2,7 @@
 // Seychelles rate beside each. Also the focus a click sets, which filters everything else on the page.
 // Unknown is never 0: a missing figure is `rate: null`.
 import type { Dashboard, TaxCategory, TaxType } from './types';
+import { fmtDate, pct } from './insights';
 import { rateForYear } from './years';
 import { taxYearFor } from './taxyear';
 import { niceMax } from '../ui/geom';
@@ -12,7 +13,9 @@ export const CATEGORY_LABEL: Record<TaxCategory, string> = {
   estate: 'Estate & inheritance', wealth: 'Wealth', investment: 'Investment gains', income: 'Income', withholding: 'Withholding', anti_offshore: 'Against offshore',
 };
 
-export interface TaxYearCell { year: number; label: string; rate: number | null; inherited: boolean; changedDuringYear: boolean }
+/** What the stored rate row says beyond its headline figure: shown on hover. */
+export interface RateDetail { min: number | null; max: number | null; threshold: string | null; note: string | null; toCheck: boolean; sourceUrl: string | null; verifiedOn: string | null }
+export interface TaxYearCell { year: number; label: string; rate: number | null; inherited: boolean; changedDuringYear: boolean; detail: RateDetail | null }
 /** For a tax the country sets per region: each region's rate in the latest selected year (the country itself has no single rate). */
 export interface RegionalRate { code: string; name: string; rate: number | null }
 export interface TaxRow { type: TaxType; years: TaxYearCell[]; hub: { MU: number | null; SC: number | null }; regions?: RegionalRate[] }
@@ -25,7 +28,9 @@ export function taxBars(d: Dashboard, code: string, years: number[]): TaxGroup[]
   for (const type of d.tax_types) {
     const cells: TaxYearCell[] = ys.map((year) => {
       const r = rateForYear(d, code, type.code, year);
-      return { year, label: taxYearFor(d, code, year).label, rate: r?.row.headline_rate ?? null, inherited: r?.inherited ?? false, changedDuringYear: r?.changedDuringYear ?? false };
+      return { year, label: taxYearFor(d, code, year).label, rate: r?.row.headline_rate ?? null, inherited: r?.inherited ?? false, changedDuringYear: r?.changedDuringYear ?? false,
+        detail: r ? { min: r.row.rate_min ?? null, max: r.row.rate_max ?? null, threshold: r.row.threshold_note ?? null, note: r.row.note ?? null, toCheck: r.row.needs_verification,
+          sourceUrl: r.row.source_url ?? null, verifiedOn: r.row.verified_on } : null };
     });
     const hub = { MU: rateForYear(d, 'MU', type.code, latest)?.row.headline_rate ?? null, SC: rateForYear(d, 'SC', type.code, latest)?.row.headline_rate ?? null };
     const here = d.jurisdictions.find((j) => j.code === code);
@@ -36,6 +41,22 @@ export function taxBars(d: Dashboard, code: string, years: number[]): TaxGroup[]
   }
   return CATEGORY_ORDER.map((category) => ({ category, label: CATEGORY_LABEL[category],
     rows: rows.filter((r) => r.type.category === category).sort((a, b) => a.type.sort_order - b.type.sort_order) })).filter((g) => g.rows.length);
+}
+
+const hostOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+/** The hover text for one bar: the rate, then range, threshold, note, a "to verify" flag and where the figure came from. */
+export function cellText(c: TaxYearCell): string {
+  if (c.rate == null) return `${c.label}: no figure`;
+  const x = c.detail;
+  const lines = [`${c.label}: ${pct(c.rate)}${c.inherited ? ' (from the country)' : ''}${c.changedDuringYear ? ', changed during the year' : ''}`];
+  if (x) {
+    if (x.min != null && x.max != null && x.min !== x.max) lines.push(`Range ${pct(x.min)} to ${pct(x.max)}`);
+    if (x.threshold) lines.push(x.threshold);
+    if (x.note) lines.push(x.note);
+    if (x.toCheck) lines.push('To verify.');
+    lines.push(`${x.sourceUrl ? hostOf(x.sourceUrl) : 'no source yet'}${x.verifiedOn ? ` · verified ${fmtDate(x.verifiedOn)}` : ''}`);
+  }
+  return lines.join('\n');
 }
 
 /** The chart's right-hand end: the highest rate anywhere on it (every year, every region, both hubs), rounded up. */

@@ -1,0 +1,22 @@
+/* Pieces shared by the dashboard panels (tax chart, prospect pool, legends). Theme tokens live in styles.css. */
+
+.card-title { margin: 0; line-height: 1.2; }
+.card-purpose { margin: 0; font: 400 12px/1.45 Poppins; color: var(--muted); }
+.muted { color: var(--muted-2); }
+.legend span { white-space: nowrap; }
+
+/* ── Legends and axes: always above the chart ── */
+.card-legend { padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, .025); border: 1px solid var(--line); }
+.card-legend span { color: var(--text); }
+.card-legend em { font-style: normal; color: var(--muted); }
+.axis-row { min-height: 0 !important; padding-bottom: 4px; border-bottom: 1px solid var(--line); margin-bottom: 2px; }
+.axis-cap { font: 500 10px/1.2 Poppins; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-2); }
+.axis-cap.r { text-align: right; }
+.axis-scale { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.axis-scale b { font: 500 10px Poppins; color: var(--muted); }
+.axis-scale em { font: 400 10px Poppins; font-style: normal; color: var(--muted); text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.legend em { font: 400 11px Poppins; font-style: normal; color: var(--muted); white-space: normal; }
+.legend em b { font-weight: 500; color: var(--text); }
+
+/* A soft one-line explanation under a label (spells out CGT, WHT, UHNWI...) */
+.tax-explain { display: block; margin-top: 3px; font: 400 10.5px/1.4 Poppins; color: var(--muted-2); }

@@ -37,13 +37,22 @@ Work in `D:\Claude_Projects\Off_Shore_Insights`. Never edit the Pi checkout (and
 ## Frontend (`apps/web`)
 
 Vite + React + TS. One page, `pages/Country.tsx`: **world map → country → region** (Back zooms out one step; the focus is in the URL,
-`#/country/BE-VLG`). Top to bottom: year slicer, country list + layers + legend, the map (`ui/WorldMap.tsx`), then for the selected entity the
-banner (`ui/Banner.tsx`), the regions with their own bar charts (`ui/RegionStrip.tsx`), the tax slicer chart (`ui/TaxSlicer.tsx`: click a market or a
-tax and the page focuses on it), and the tiles. The tiles are the earlier C1–C7 views, kept until each is redesigned **one at a time with Hentus**
-(question → data → chart/axes/legend, then build).
+`#/country/BE-VLG`). **The page is exactly these five things, in this order (Hentus, 2026-10-02):** (1) the world map with its country list, layers and
+legend (`ui/WorldMap.tsx`, `ui/MapControls.tsx`); (2) the tax year (`ui/YearSlicer.tsx`, with the small **Sources** button beside the chips,
+`ui/SourcesButton.tsx`); (3) **Where the tax hurts** (`ui/TaxSlicer.tsx`: click a market or a tax to focus it; the other rows dim and the Sources list narrows to it. The pool is not a tax, so it says it is not filtered); (4) the **Country brief**
+(`ui/CountryBrief.tsx`: the light-gold item with both treaties, the tax year, the lists and the notes); (5) the **Prospect pool** (`ui/ProspectPool.tsx`:
+business owners, millionaires, UHNWI, trusts, one bar per chosen year). A country that sets taxes per region also lists its regions with their own bar
+charts (`ui/RegionStrip.tsx`) between 2 and 3. **There are no tiles** (the C1–C7 grid, Head to head, Bracket spread, Saving gap, Same client three homes,
+Treaty bridge and the sample-client bill were removed: they repeated the tax chart in other graphs; they are in git history before the commit that removed
+them). A new panel is agreed with Hentus first (question → data → chart/axes/legend, then build).
 
 - **Data logic is plain TypeScript** in `src/data/`, tested without a browser: `taxyear.ts` (each country's own tax year), `years.ts` (rate / wealth /
-  treaty for a year, year chips), `mapdata.ts` (treaty colours, money bars, zoom state), `taxbars.ts` (slicer rows and focus), `banner.ts`.
+  treaty for a year, year chips), `mapdata.ts` (treaty colours, money bars, zoom state), `taxbars.ts` (slicer rows, focus, hover text), `banner.ts` (brief facts and notes), `pool.ts` (prospect pool), `sources.ts` (what the Sources
+  button lists), `model.ts` (the red/green lists).
+- **Sources button.** Lists, for whatever is on screen (entity, chosen years, tax focus, map layers), every page a figure came from, merged by address and
+  grouped (rates, treaties, lists, pool, notes). Dated Wayback copies say so and link the original; reports we hold as files (`PDFs/`, gitignored) are named, not
+  linked; a figure with no recorded address is listed as "No source recorded". A source is tagged official / report / dataset / secondary only when its address
+  is recognised, never on a guess. Only `http(s)` addresses become links. Esc closes the panel and not the map's own Esc ("back one step").
 - **Years.** A selected year is the tax year that *begins* in it, in each country's own calendar (UK 2025 = 6 Apr 2025–5 Apr 2026). A rate is the one
   in force on the year's first day. A wealth figure belongs to the tax year containing its `ref_date`. The map carries an earlier year's figure forward
   (paler bar); the panels stay exact. Gates, advisors and notes are "current" and not year-filtered.

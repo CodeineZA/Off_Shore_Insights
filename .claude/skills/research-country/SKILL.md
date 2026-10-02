@@ -83,7 +83,7 @@ node research/audit-country.mjs <CODE> --sql                     # → db/resear
    must be exactly the blocked ones.
 3. `node --test research/checklist.test.mjs research/advisors.test.mjs` and `cd apps/web && npm test` must pass.
 4. `node scripts/verify-access.mjs`, commit the run and SQL, refresh the fixture (`node scripts/fixture.mjs`), then look at the page:
-   the country on the map (treaty colour, bars at its capital), its banner, and its regions.
+   the country on the map (treaty colour, bars at its capital), its country brief, its prospect pool and its regions.
 
 ## Rules that never bend
 
