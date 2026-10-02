@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Dashboard, Rate } from './types';
-import { gateCells, momentum, opportunities, sampleBill, savingGap, toEur } from './model';
+import { gateCells, sampleBill, savingGap, toEur } from './model';
 
 const J = (code: string, currency = 'EUR', extra = {}) => ({ code, name: code, parent_code: null, kind: 'country', currency, tax_year_start: null,
   next_budget_date: null, is_offshore_hub: false, notes: null, lon: 0, lat: 0, ...extra });
@@ -23,8 +23,8 @@ const d = {
   treaties: [{ country_a: 'MU', country_b: 'XX', status: 'in_force', in_force_on: '1982-09-17', mli_note: null, source_url: null },
     { country_a: 'MU', country_b: 'YY', status: 'none', in_force_on: null, mli_note: null, source_url: null }],
   gates: [{ jurisdiction_code: 'XX', hub: 'MU', gate: 'blacklist', status: 'red', label: 'Listed', note: null, source_url: null, needs_verification: false }],
-  wealth: [{ jurisdiction_code: 'XX', year: 2025, business_owners: 1000, hnwi_count: null, millionaires: null, uhnwi_count: null, source: 'E' },
-    { jurisdiction_code: 'YY', year: 2025, business_owners: 500, hnwi_count: null, millionaires: null, uhnwi_count: null, source: 'E' }],
+  wealth: [{ jurisdiction_code: 'XX', year: 2025, business_owners: 1000, millionaires: null, uhnwi_count: null, source: 'E' },
+    { jurisdiction_code: 'YY', year: 2025, business_owners: 500, millionaires: null, uhnwi_count: null, source: 'E' }],
   rate_history: [hist('XX', 'CGT_FINANCIAL', 25, '2025-01-01', '2026-01-01'), hist('XX', 'CGT_FINANCIAL', 30, '2026-01-01', null), hist('YY', 'CGT_FINANCIAL', 20, '2026-01-01', null)],
   tax_types: [{ code: 'CGT_FINANCIAL', label: 'CGT', sort_order: 10 }, { code: 'INHERITANCE_DIRECT', label: 'Inh', sort_order: 60 }],
 } as unknown as Dashboard;
@@ -61,7 +61,7 @@ describe('sampleBill', () => {
 describe('gates', () => {
   it('treaty from the treaty table, blacklist from gates, missing = unknown', () => {
     const g = gateCells(d, 'XX', 'MU');
-    expect(g.map((x) => x.status)).toEqual(['green', 'red', 'unknown', 'unknown']);
+    expect(g.map((x) => x.status)).toEqual(['green', 'red', 'unknown']);
     expect(gateCells(d, 'YY', 'MU')[0]).toMatchObject({ status: 'red', label: 'No treaty' });
   });
   it('the Mauritius treaty counts for Seychelles too; a region uses its country\'s treaty and lists', () => {
@@ -70,33 +70,7 @@ describe('gates', () => {
     expect(gateCells(dd, 'XX', 'SC')[0]).toMatchObject({ status: 'green', label: 'In force' });   // not SC's "none"
     expect(gateCells(dd, 'XX', 'SC')[0].note).toMatch(/Via Mauritius/);
     const r = gateCells(dd, 'XX-R', 'MU');
-    expect(r.map((x) => x.status)).toEqual(['green', 'red', 'unknown', 'unknown']);
-  });
-});
-
-describe('opportunities', () => {
-  it('scores market + pain + ease equally and sorts high to low', () => {
-    const o = opportunities(d, ['XX', 'YY'], 'MU');
-    expect(o[0].code).toBe('XX');
-    // XX: market 1, pain 1 (only bill), ease (green 1 + red 0)/2 = 0.5 → 83
-    expect(o[0].score).toBe(83);
-    expect(o[1]).toMatchObject({ code: 'YY', market: { v01: 0.5 }, ease: { v01: 0, known: true } });
-  });
-  it('market size uses millionaires once stored, even where business owners say otherwise', () => {
-    const dm = { ...d, wealth: [...d.wealth,
-      { jurisdiction_code: 'XX', year: 2025, business_owners: null, hnwi_count: null, millionaires: 100, uhnwi_count: null, source: 'U' },
-      { jurisdiction_code: 'YY', year: 2025, business_owners: null, hnwi_count: null, millionaires: 400, uhnwi_count: null, source: 'U' }] } as unknown as Dashboard;
-    const o = opportunities(dm, ['XX', 'YY'], 'MU');
-    expect(o.find((x) => x.code === 'YY')!.market).toMatchObject({ v01: 1, raw: 400 });   // business owners would give YY 0.5
-    expect(o.find((x) => x.code === 'XX')!.market).toMatchObject({ v01: 0.25, raw: 100 });
-  });
-});
-
-describe('momentum', () => {
-  it('up when the latest row is higher than the one before; flat with a single row', () => {
-    expect(momentum(d, 'XX', 'CGT_FINANCIAL')).toMatchObject({ dir: 'up', now: 30, prev: 25 });
-    expect(momentum(d, 'YY', 'CGT_FINANCIAL')).toMatchObject({ dir: 'flat', prev: null });
-    expect(momentum(d, 'GB', 'WEALTH_NET').dir).toBe('unknown');
+    expect(r.map((x) => x.status)).toEqual(['green', 'red', 'unknown']);
   });
 });
 

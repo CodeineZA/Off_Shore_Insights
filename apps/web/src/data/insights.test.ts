@@ -39,28 +39,3 @@ describe('shared helpers', () => {
     expect(pct(26.375)).toBe('26.4%');
   });
 });
-
-describe('G4 heatmap', () => {
-  const T = (code: string, category: string, applies_to: string[], sort_order: number) => ({ code, label: code, category, applies_to, is_recurring: false, description: null, sort_order });
-  const d = () => ({ ...fixture(),
-    tax_types: [T('INHERITANCE_DIRECT', 'estate', ['individual', 'trust'], 60), T('CGT_FINANCIAL', 'investment', ['individual', 'trust', 'company'], 10),
-      T('WEALTH_NET', 'wealth', ['individual', 'trust'], 80)],
-    rates: [{ jurisdiction_code: 'FR', tax_type_code: 'CGT_FINANCIAL', headline_rate: 31.4 }, { jurisdiction_code: 'FR', tax_type_code: 'WEALTH_NET', headline_rate: 0 }],
-  }) as unknown as Dashboard;
-  it('filters tax types by category and applies-to, in sort order', async () => {
-    const { filterTaxTypes } = await import('./insights');
-    expect(filterTaxTypes(d(), ['investment', 'estate', 'wealth'], 'all').map((t) => t.code)).toEqual(['CGT_FINANCIAL', 'INHERITANCE_DIRECT', 'WEALTH_NET']);
-    // grouped by category order even when sort_order interleaves categories
-    const mixed = { ...d(), tax_types: [...d().tax_types, { code: 'INCOME_TOP', label: 'x', category: 'income', applies_to: ['individual'], is_recurring: true, description: null, sort_order: 30 }] } as unknown as Dashboard;
-    expect(filterTaxTypes(mixed, ['investment', 'estate', 'wealth', 'income'], 'all').map((t) => t.code)).toEqual(['CGT_FINANCIAL', 'INHERITANCE_DIRECT', 'WEALTH_NET', 'INCOME_TOP']);
-    expect(filterTaxTypes(d(), ['investment', 'estate', 'wealth'], 'company').map((t) => t.code)).toEqual(['CGT_FINANCIAL']);
-  });
-  it('keeps unknown as null and a real 0% as a known 0', async () => {
-    const { heatmap, filterTaxTypes } = await import('./insights');
-    const h = heatmap(d(), ['FR', 'PT'], filterTaxTypes(d(), ['investment', 'wealth'], 'all'));
-    expect(h.rows[0].cells.map((c) => c.rate?.headline_rate ?? null)).toEqual([31.4, 0]);
-    expect(h.rows[1].cells.map((c) => c.rate)).toEqual([null, null]);
-    expect(h.max).toBe(31.4);
-    expect(h).toMatchObject({ known: 2, total: 4 });
-  });
-});

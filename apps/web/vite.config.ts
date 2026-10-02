@@ -56,5 +56,6 @@ export default defineConfig({
     port: 5190,
     proxy: { '/api': { target: 'https://insights.codeine.cloud', changeOrigin: true } },
   },
-  build: { sourcemap: false, chunkSizeWarningLimit: 600 },
+  // The world map (src/map/world.ts, ~300 kB gzipped) is its own lazily loaded chunk by design.
+  build: { sourcemap: false, chunkSizeWarningLimit: 1200 },
 });

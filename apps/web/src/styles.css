@@ -79,7 +79,7 @@ svg text { font-family: Poppins, system-ui, sans-serif; }
   .main { padding-top: 26px; }
 }
 
-/* ── Filters (Global page) ── */
+/* ── Filters ── */
 .filters { display: flex; flex-direction: column; gap: 12px; }
 .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .filter-k { font: 500 10px/1 Poppins; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); width: 76px; flex: none; }
@@ -88,41 +88,15 @@ svg text { font-family: Poppins, system-ui, sans-serif; }
   font: 500 12px Poppins; cursor: pointer; transition: all .2s; }
 .chip:hover { color: var(--text); border-color: rgba(216, 176, 122, .4); }
 .chip.on { color: var(--gold-3); border-color: rgba(216, 176, 122, .55); background: rgba(216, 176, 122, .1); }
-.chip.ghost { border-style: dashed; }
 
 /* ── Cards ── */
-.cards { display: flex; flex-direction: column; gap: 16px; }
 .card { position: relative; padding: 22px 22px 16px; border-radius: 18px; border: 1px solid var(--line);
   background: linear-gradient(180deg, var(--tile-top), var(--tile-bot)); box-shadow: 0 24px 48px -28px rgba(0, 0, 0, .7);
   display: flex; flex-direction: column; gap: 14px; min-width: 0; animation: fadeUp .5s var(--ease) both; }
 .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .card-title { font: 600 12px/1 Poppins; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
-.card-sub { font: 400 11px Poppins; color: var(--muted-2); }
 
-/* ── G4 heatmap ── */
-@keyframes cellIn { from { opacity: 0; transform: scale(.85) } to { opacity: 1; transform: none } }
-.heat-wrap { position: relative; overflow-x: auto; margin: 0 -6px; padding: 0 6px 4px; }
-.heat { border-collapse: separate; border-spacing: 4px; width: 100%; table-layout: fixed; }
-.heat th { font-weight: 400; }
-.heat-group { font: 500 10px/1 Poppins; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); text-align: left;
-  padding: 0 2px 4px; border-bottom: 1px solid var(--line); }
-.heat-col { font: 400 10px/1.25 Poppins; color: var(--muted); text-align: center; vertical-align: bottom; padding: 6px 2px 4px; }
-.heat-row { font: 400 12px Poppins; color: var(--text); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
-.heat-wrap { scrollbar-width: thin; scrollbar-color: rgba(216, 176, 122, .35) transparent; }
-.heat-wrap::-webkit-scrollbar { height: 8px; }
-.heat-wrap::-webkit-scrollbar-track { background: transparent; }
-.heat-wrap::-webkit-scrollbar-thumb { background: rgba(216, 176, 122, .3); border-radius: 8px; }
-.heat td { padding: 0; }
-.heat-cell { height: 34px; border-radius: 7px; display: grid; place-items: center; font: 500 12px Poppins; cursor: default;
-  animation: cellIn .45s var(--ease) both; transition: box-shadow .15s; }
-.heat td:hover .heat-cell { box-shadow: 0 0 0 1px rgba(243, 220, 178, .7); }
-.heat-cell.unknown { color: #6f675d !important; background: repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 6px, rgba(255,255,255,.015) 6px 12px); }
-.heat-cell.check { box-shadow: inset 0 0 0 1px rgba(240, 185, 138, .8); }
-.heat-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 400 11px Poppins; color: var(--muted); }
-.heat-legend .ramp { width: 90px; height: 6px; border-radius: 6px; background: linear-gradient(90deg, #2a2622, #f3dcb2); }
-.heat-legend .sw { width: 14px; height: 14px; border-radius: 4px; margin-left: 12px; }
-.heat-legend .sw.unknown { background: repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 3px, rgba(255,255,255,.02) 3px 6px); }
-.heat-legend .sw.check { box-shadow: inset 0 0 0 1px rgba(240, 185, 138, .8); }
+/* ── Tooltip ── */
 .tip { position: absolute; z-index: 5; width: 240px; padding: 12px 14px; border-radius: 12px; background: #1f1e1c; pointer-events: auto;
   border: 1px solid rgba(255, 236, 210, .12); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, .7); display: flex; flex-direction: column; gap: 6px; }
 .tip-k { font: 500 11px/1.3 Poppins; color: var(--muted); }

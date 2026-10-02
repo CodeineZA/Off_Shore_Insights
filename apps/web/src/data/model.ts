@@ -17,7 +17,7 @@ export function toEur(d: Dashboard, code: string, amount: number | null): number
   return fx ? amount * fx.eur_per_unit : null;
 }
 
-// ── G5 / C4 · Sample client bill ─────────────────────────────────────────────
+// ── C4 · Sample client bill ──────────────────────────────────────────────────
 export type Basis = 'top' | 'entry';
 export interface SampleClient { start: number; ret: number; years: number; heirs: number; basis: Basis }
 export const SAMPLE: SampleClient = { start: 2_000_000, ret: 0.06, years: 20, heirs: 2, basis: 'top' };
@@ -81,14 +81,14 @@ export function sampleBill(d: Dashboard, code: string, c: SampleClient = SAMPLE)
   return { code, name: nameOf(d, code), parts, total: cgtPaid + wealthPaid + inhPaid, complete: parts.every((p) => p.known), finalValue: v, heirsGet: v - inhPaid };
 }
 
-// ── Gates (G2, C7, G1 ease of reach) ─────────────────────────────────────────
-export type GateKey = 'treaty' | 'blacklist' | 'trust_recognition' | 'marketing';
+// ── Gates (C5, C7) ───────────────────────────────────────────────────────────
+// No "marketing allowed" gate: it was never stored, only ever unknown, and is a legal call that is not ours.
+export type GateKey = 'treaty' | 'blacklist' | 'trust_recognition';
 export type GateStatus = 'green' | 'amber' | 'red' | 'unknown';
 export const GATES: { key: GateKey; label: string; hubSpecific: boolean }[] = [
   { key: 'treaty', label: 'Tax treaty', hubSpecific: true },
   { key: 'blacklist', label: 'Blacklist', hubSpecific: true },
   { key: 'trust_recognition', label: 'Trust recognition', hubSpecific: false },
-  { key: 'marketing', label: 'Marketing allowed', hubSpecific: false },
 ];
 export interface GateCell { key: GateKey; status: GateStatus; label: string; note: string | null; source: string | null; check: boolean }
 const TREATY_GATE: Record<TreatyStatus, { status: GateStatus; label: string }> = {
@@ -111,63 +111,19 @@ export function gateCells(d: Dashboard, code: string, hub: string): GateCell[] {
     const find = (c: string) => d.gates.find((x) => x.jurisdiction_code === c && x.gate === g.key && (g.hubSpecific ? x.hub === hub : x.hub == null));
     const row: Gate | undefined = find(code) ?? find(country);
     return row ? { key: g.key, status: row.status, label: row.label, note: row.note, source: row.source_url, check: row.needs_verification }
-      : { key: g.key, status: 'unknown', label: 'Unknown', note: g.key === 'marketing' ? 'To be decided per country (Justus)' : 'Not researched yet', source: null, check: false };
+      : { key: g.key, status: 'unknown', label: 'Unknown', note: 'Not researched yet', source: null, check: false };
   });
 }
-const GATE_SCORE: Record<Exclude<GateStatus, 'unknown'>, number> = { green: 1, amber: 0.5, red: 0 };
 
-// ── Market size (G1, G3, G6, C6) ─────────────────────────────────────────────
-export type WealthMetric = 'business_owners' | 'hnwi_count' | 'millionaires' | 'uhnwi_count';
-export const WEALTH_LABEL: Record<WealthMetric, string> = { business_owners: 'Business owners', hnwi_count: 'HNWIs', millionaires: 'Millionaires', uhnwi_count: 'UHNWIs' };
+// ── Market size (C6) ─────────────────────────────────────────────────────────
+export type WealthMetric = 'business_owners' | 'millionaires' | 'uhnwi_count';
+export const WEALTH_LABEL: Record<WealthMetric, string> = { business_owners: 'Business owners', millionaires: 'Millionaires', uhnwi_count: 'UHNWIs' };
 export const latestWealth = (d: Dashboard, code: string, m: WealthMetric) => {
   const row = d.wealth.filter((w) => w.jurisdiction_code === code && w[m] != null).sort((a, b) => b.year - a.year)[0];
   return row ? { value: row[m] as number, year: row.year, source: row.source } : null;
 };
-/** Market size = USD millionaires (UBS: one source covering every country; Hentus, 2026-09-30).
- *  Business owners only while no millionaire figures are stored. */
-export const MARKET_METRICS: WealthMetric[] = ['millionaires', 'business_owners'];
-export const marketMetric = (d: Dashboard): WealthMetric => MARKET_METRICS.find((m) => d.wealth.some((w) => w[m] != null)) ?? MARKET_METRICS[0];
 
-// ── G1 · Where to go first ───────────────────────────────────────────────────
-export interface Segment { v01: number; known: boolean; raw: number | null; note: string }
-export interface Opportunity { code: string; name: string; market: Segment; pain: Segment; ease: Segment; score: number; bill: Bill; gates: GateCell[] }
-export function opportunities(d: Dashboard, cc: string[], hub: string): Opportunity[] {
-  const metric = marketMetric(d);
-  const rows = cc.map((code) => {
-    const w = latestWealth(d, code, metric);
-    const bill = sampleBill(d, code);
-    const gates = gateCells(d, code, hub);
-    const scored = gates.filter((g) => g.status !== 'unknown');
-    const ease = scored.length ? scored.reduce((s, g) => s + GATE_SCORE[g.status as keyof typeof GATE_SCORE], 0) / scored.length : null;
-    return { code, name: nameOf(d, code), w, bill, gates, ease, scoredGates: scored.length };
-  });
-  const maxW = Math.max(0, ...rows.map((r) => r.w?.value ?? 0));
-  const maxP = Math.max(0, ...rows.map((r) => r.bill.total));
-  return rows.map((r) => {
-    const market: Segment = { v01: r.w && maxW ? r.w.value / maxW : 0, known: !!r.w, raw: r.w?.value ?? null,
-      note: r.w ? `${Math.round(r.w.value).toLocaleString('en')} ${WEALTH_LABEL[metric].toLowerCase()} (${r.w.year})` : `No ${WEALTH_LABEL[metric].toLowerCase()} figure` };
-    const pain: Segment = { v01: maxP ? r.bill.total / maxP : 0, known: r.bill.complete, raw: r.bill.total,
-      note: `€${Math.round(r.bill.total / 1000).toLocaleString('en')}k sample-client bill${r.bill.complete ? '' : ' (incomplete: some taxes unknown)'}` };
-    const ease: Segment = { v01: r.ease ?? 0, known: r.ease != null, raw: r.ease,
-      note: r.ease == null ? 'No gate known' : `${r.scoredGates} of ${GATES.length} gates known` };
-    return { code: r.code, name: r.name, market, pain, ease, score: Math.round(((market.v01 + pain.v01 + ease.v01) / 3) * 100), bill: r.bill, gates: r.gates };
-  }).sort((a, b) => b.score - a.score);
-}
-
-// ── G7 · Rate momentum ───────────────────────────────────────────────────────
-export const MOMENTUM_TYPES = ['INCOME_TOP', 'CGT_FINANCIAL', 'INHERITANCE_DIRECT', 'WEALTH_NET'];
-export type Direction = 'up' | 'down' | 'flat' | 'unknown';
-export function momentum(d: Dashboard, code: string, taxType: string) {
-  const src = rateOf(d, code, taxType)?.inherited ? countryOf(d, code) : code;   // a region's national tax moves with the country
-  const h = d.rate_history.filter((x) => x.jurisdiction_code === src && x.tax_type_code === taxType && x.headline_rate != null)
-    .sort((a, b) => a.valid_from.localeCompare(b.valid_from));
-  if (!h.length) return { dir: 'unknown' as Direction, now: null, prev: null, since: null };
-  const now = h[h.length - 1], prev = h.length > 1 ? h[h.length - 2] : null;
-  const dir: Direction = !prev ? 'flat' : now.headline_rate! > prev.headline_rate! ? 'up' : now.headline_rate! < prev.headline_rate! ? 'down' : 'flat';
-  return { dir, now: now.headline_rate, prev: prev?.headline_rate ?? null, since: prev ? now.valid_from : h[0].valid_from };
-}
-
-// ── Mode 2 · one country vs the hubs ─────────────────────────────────────────
+// ── One country vs the hubs ──────────────────────────────────────────────────
 /** Tax types where the country or a hub has a known value. */
 export function compareTypes(d: Dashboard, codes: string[]) {
   return d.tax_types.filter((t) => codes.some((c) => rateOf(d, c, t.code))).sort((a, b) => a.sort_order - b.sort_order);

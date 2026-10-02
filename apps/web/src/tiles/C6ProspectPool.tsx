@@ -1,5 +1,5 @@
 // C6 · Prospect pool: how many potential clients the country has, by wealth tier.
-// Tiers overlap (every HNWI is also a millionaire), so they are shown side by side, not summed.
+// Tiers overlap (every UHNWI is also a millionaire), so they are shown side by side, not summed.
 import type { Dashboard } from '../data/types';
 import { WEALTH_LABEL, latestWealth, type WealthMetric } from '../data/model';
 import { fmtCount, nameOf } from '../data/insights';
@@ -8,7 +8,6 @@ import { AxisRow, Card, useGrown } from './common';
 const TIERS: { m: WealthMetric; what: string }[] = [
   { m: 'business_owners', what: 'run a business with employees' },
   { m: 'millionaires', what: 'net worth over US$1m' },
-  { m: 'hnwi_count', what: 'investable assets over US$1m' },
   { m: 'uhnwi_count', what: 'net worth over US$30m' },
 ];
 

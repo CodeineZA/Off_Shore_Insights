@@ -1,0 +1,122 @@
+/* The world map, year slicer, banner and tax slicer. Theme tokens live in styles.css. */
+
+/* ── Year slicer ── */
+.yearbar { align-items: flex-start; }
+.yearbar .chips { align-items: center; }
+.chip-sep { width: 1px; height: 18px; background: var(--line-2); margin: 0 4px; }
+.chip.nodata { border-style: dashed; color: var(--axis); }
+.chip.nodata.on { color: var(--muted); }
+.yearbar-caption { flex-basis: 100%; margin: 2px 0 0 90px; font: 400 11px/1.5 Poppins; color: var(--muted-2); }
+@media (max-width: 800px) { .yearbar-caption { margin-left: 0; } }
+.chip.metric { display: inline-flex; align-items: center; gap: 7px; }
+.chip.metric i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.map-controls { gap: 10px; }
+.map-legend { padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, .025); border: 1px solid var(--line); }
+.map-legend span { color: var(--text); }
+.map-legend i { width: 12px; height: 12px; }
+.map-legend em { font-style: normal; color: var(--muted); }
+
+/* ── Map ── */
+.worldmap { position: relative; border-radius: 18px; border: 1px solid var(--line); overflow: hidden;
+  background: radial-gradient(90% 90% at 50% 40%, #1d1b19 0%, #151413 100%); box-shadow: 0 24px 48px -28px rgba(0, 0, 0, .7); }
+.worldmap.loading { min-height: 240px; display: grid; place-items: center; color: var(--muted); font: 400 12px Poppins; }
+.worldmap svg { display: block; width: 100%; height: auto; aspect-ratio: 956 / 429; }
+.map-views { position: absolute; z-index: 3; top: 12px; right: 12px; background: rgba(18, 17, 16, .82); backdrop-filter: blur(4px); }
+.map-land { transition: fill-opacity .2s; }
+.map-land.can { cursor: pointer; }
+.map-land.can:hover, .map-land.can:focus-visible { fill-opacity: .72; outline: none; }
+.map-region.can { cursor: pointer; }
+.map-region.can:hover { fill: rgba(243, 220, 178, .22); }
+.map-pinlabel { font: 600 8px Poppins; fill: var(--text); paint-order: stroke; stroke: rgba(18, 17, 16, .85); stroke-width: 2px; }
+.map-hublabel { font: 600 8px Poppins; paint-order: stroke; stroke: rgba(18, 17, 16, .85); stroke-width: 2px; }
+.map-back { position: absolute; z-index: 3; top: 12px; left: 12px; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(216, 176, 122, .45);
+  background: rgba(18, 17, 16, .82); color: var(--gold-3); font: 500 12px Poppins; cursor: pointer; backdrop-filter: blur(4px); }
+.map-back:hover { background: rgba(216, 176, 122, .16); }
+.map-tip { position: fixed; z-index: 30; pointer-events: none; max-width: 260px; padding: 10px 12px; border-radius: 12px; background: #1f1e1c;
+  border: 1px solid rgba(255, 236, 210, .12); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, .7); display: flex; flex-direction: column; gap: 3px; font: 400 12px/1.4 Poppins; }
+.map-tip b { font-weight: 600; color: var(--text); }
+.map-tip small { color: var(--muted); font-size: 11px; }
+.map-hint { margin: 0; text-align: center; font: 400 13px/1.5 Poppins; color: var(--muted); }
+
+/* ── Banner: a light gold front-page item ── */
+.banner { position: relative; padding: 22px 26px 20px; border-radius: 18px; color: #2a2118;
+  background: linear-gradient(135deg, var(--gold-3) 0%, var(--gold-2) 100%); box-shadow: 0 24px 48px -26px rgba(0, 0, 0, .75), inset 0 1px 0 rgba(255, 255, 255, .45);
+  display: flex; flex-direction: column; gap: 10px; animation: fadeUp .5s var(--ease) both; }
+.banner-kicker { font: 600 10.5px/1.3 Poppins; letter-spacing: .12em; text-transform: uppercase; color: #6b4f2b; }
+.banner-head { margin: 0; font: 600 24px/1.2 Poppins; letter-spacing: -.01em; color: #1d1610; }
+.banner-dek { margin: 0; max-width: 760px; font: 400 14px/1.5 Poppins; color: #4a3a26; }
+.banner-treaties { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-top: 4px; }
+.banner-treaty { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: rgba(255, 255, 255, .42); border: 1px solid rgba(90, 64, 28, .18); }
+.banner-treaty > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.banner-treaty b { font: 600 13px Poppins; color: #1d1610; }
+.banner-treaty span { font: 400 13px/1.4 Poppins; color: #3a2d1c; }
+.banner-treaty small { font: 400 11px Poppins; color: #6b4f2b; }
+.banner-treaty small a { color: #6b4318; }
+.banner-treaty.unknown span, .banner-treaty.none span { color: #6b5a42; }
+.banner-dot { flex: none; width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255, 255, 255, .6); }
+.banner-gates { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.banner-gate { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 999px; font: 500 11.5px Poppins; color: #2a2118;
+  background: rgba(255, 255, 255, .5); border: 1px solid rgba(90, 64, 28, .22); }
+.banner-gate i { width: 9px; height: 9px; border-radius: 50%; background: #8a8175; }
+.banner-gate.green i { background: #3f8a4a; } .banner-gate.green { border-color: rgba(63, 138, 74, .55); }
+.banner-gate.amber i { background: #d09a1c; } .banner-gate.amber { border-color: rgba(176, 125, 14, .6); }
+.banner-gate.red i { background: #c4482f; } .banner-gate.red { border-color: rgba(196, 72, 47, .65); }
+.banner-gate.unknown { border-style: dashed; }
+.banner-gate.unknown i { background: repeating-linear-gradient(135deg, #8a8175 0 2px, transparent 2px 4px); }
+@media (max-width: 640px) { .banner { padding: 18px 16px; } .banner-head { font-size: 20px; } }
+
+/* ── Tax slicer ── */
+.taxslicer { padding: 22px 22px 16px; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--tile-top), var(--tile-bot));
+  box-shadow: 0 24px 48px -28px rgba(0, 0, 0, .7); display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.taxslicer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.focus-chip { height: 30px; }
+.taxrow { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) 118px; align-items: center; gap: 14px; width: 100%; min-height: 34px; padding: 4px 8px;
+  border: 0; border-radius: 10px; background: transparent; text-align: left; color: var(--text); cursor: pointer; transition: background .15s, opacity .2s; }
+button.taxrow:hover { background: rgba(255, 255, 255, .035); }
+.taxrow.on { background: rgba(216, 176, 122, .12); box-shadow: inset 2px 0 0 var(--gold); }
+.taxrow.dim, .taxgroup.dim .taxgroup-head { opacity: .38; }
+.taxrow.axis-row { cursor: default; min-height: 0; padding-bottom: 4px; }
+.taxrow-label { font: 400 12.5px/1.3 Poppins; }
+.taxrow-track { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 3px 0; min-width: 0; }
+.taxrow-track .bar { display: block; height: 7px; min-width: 3px; border-radius: 4px; border: 1px solid transparent; transition: width .6s var(--ease); }
+.taxrow-track .bar.hollow { border-style: solid; background: transparent; }
+.taxrow-track .bar.unknown { width: 32px; border: 1px dashed #6f675d; background: transparent; }
+.hubtick { position: absolute; top: -1px; bottom: -1px; width: 3px; margin-left: -1px; border-radius: 2px; }
+.hubtick.mu { background: #d8b07a; box-shadow: 0 0 0 1px rgba(18, 17, 16, .7); }
+.hubtick.sc { background: #4fb3a9; box-shadow: 0 0 0 1px rgba(18, 17, 16, .7); }
+.taxrow-val { display: flex; flex-direction: column; align-items: flex-end; font: 500 13px/1.2 Poppins; color: var(--text); }
+.taxrow-val small { display: flex; gap: 8px; font: 500 10px/1.3 Poppins; }
+.taxgroup { display: flex; flex-direction: column; gap: 2px; }
+.taxgroup-head { display: flex; align-items: baseline; gap: 10px; align-self: flex-start; margin: 8px 0 2px; padding: 4px 10px; border: 1px solid transparent; border-radius: 999px; background: transparent;
+  color: var(--gold); font: 600 10.5px/1 Poppins; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+.taxgroup-head small { font: 400 10px Poppins; letter-spacing: 0; text-transform: none; color: var(--muted-2); }
+.taxgroup-head:hover { border-color: rgba(216, 176, 122, .35); }
+.taxgroup-head.on { border-color: rgba(216, 176, 122, .6); background: rgba(216, 176, 122, .14); color: var(--gold-3); }
+@media (max-width: 640px) {
+  .taxrow { grid-template-columns: minmax(0, 1fr) 96px; }
+  .taxrow-track { grid-column: 1 / -1; grid-row: 2; }
+  .taxrow-label { grid-column: 1; }
+  .taxrow.axis-row .axis-scale { grid-column: 1 / -1; }
+}
+
+/* Regional taxes at country level: one dot per region on the shared scale */
+.taxrow-track .bar.regional { position: relative; display: block; width: 100%; height: 9px; min-width: 0; border: 0; background: rgba(255, 255, 255, .05); border-radius: 5px; }
+.bar.regional u { position: absolute; top: 50%; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #f3dcb2; box-shadow: 0 0 0 2px rgba(18, 17, 16, .85); text-decoration: none; }
+.bar.regional u.unknown { background: transparent; border: 1px dashed #9a9185; box-shadow: none; }
+
+/* ── Regions of the selected country: each with its own bar chart; also the way to pick one ── */
+.regionstrip { display: flex; flex-direction: column; gap: 10px; }
+.regionstrip-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.regionstrip-head p { margin: 0; font: 400 12px/1.5 Poppins; color: var(--muted); }
+.regions { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.region-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255, 255, 255, .02);
+  text-align: left; color: var(--text); cursor: pointer; transition: border-color .15s, background .15s; }
+.region-card:hover { border-color: rgba(216, 176, 122, .4); }
+.region-card.on { border-color: rgba(216, 176, 122, .7); background: rgba(216, 176, 122, .1); }
+.region-card b { font: 600 13px Poppins; }
+.region-bar { display: grid; grid-template-columns: minmax(0, 1fr) 46px; align-items: center; gap: 4px 8px; }
+.region-bar span { grid-column: 1 / -1; font: 400 10.5px/1.3 Poppins; color: var(--muted); }
+.region-bar i { display: block; height: 8px; border-radius: 4px; background: #f3dcb2; transition: width .6s var(--ease); min-width: 3px; }
+.region-bar i.alt { background: #e0775f; }
+.region-bar i.unknown { background: transparent; border: 1px dashed #6f675d; width: 28px; }
+.region-bar em { font: 500 12px Poppins; font-style: normal; text-align: right; }
