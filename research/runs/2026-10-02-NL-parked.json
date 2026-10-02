@@ -1,0 +1,8 @@
+{
+  "run": "2026-10-02",
+  "by": "claude: firms search parked by Hentus",
+  "gaps": [
+    { "j": "NL", "item": "advisors", "status": "blocked", "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors Netherlands when you want it." }
+  ]
+}

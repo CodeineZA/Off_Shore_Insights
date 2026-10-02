@@ -91,3 +91,10 @@ node research/audit-country.mjs <CODE> --sql                     # → db/resear
 - Every number has a source and a date. A secondary-only or conflicting source sets `"nv": true`.
 - Back-year figures only from a dated source.
 - Do not write what is legal or illegal, and do not soften or warn. Red and green are the lists' own verdicts.
+
+## Money back years: one edition per series
+
+UBS and Knight Frank restate their history in every edition, so an older edition is **not** a back year of the same series (UBS: France
+2,897k at end-2024 in the 2025 edition, 2,388k at end-2025 in the 2026 edition; Knight Frank: Netherlands UHNWI 8,390 for 2023 in the 2024 edition,
+5,077 for 2026 in the 2026 edition). Fill a money year only from the edition that gives it. Employer counts (Eurostat / ILO) are true annual series.
+Firms (`/find-advisors`) are parked by Hentus (2026-10-02): record the checklist item as blocked, do not search.

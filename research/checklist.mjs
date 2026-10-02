@@ -96,18 +96,8 @@ export function buildChecklist(d, today, { recipes = [] } = {}) {
       col('uhnwi_count', 'UHNWI (≥US$30m)', at('Knight Frank Wealth Report, Databank (markets under 500 UHNWIs are not listed)', rUrl('knightfrank-uhnwi')));
       col('business_owners', 'Business owners', at('Eurostat lfsa_egaps, or ILO for non-EU countries', rUrl('eurostat-employers')));
       col('trusts_count', 'Trusts', 'National trust register or Ministry of Justice statistics (few countries publish a count)');
-      // Back years of the two money series: which report edition would supply a missing year (UBS dates a count at the end of the
-      // year it covers and publishes it the next year; Knight Frank's databank estimates its own year).
-      const refOf = (x) => x.ref_date ?? (x.business_owners != null ? `${x.year}-06-30` : `${x.year}-12-31`);
-      for (const k of [2, 1]) {
-        const y = taxYearByStartYear(j.tax_year_start ?? parent?.tax_year_start, ty.startYear - k);
-        const inYear = w.filter((x) => refOf(x) >= y.start && refOf(x) <= y.end);
-        const miss = [];
-        if (!inYear.some((x) => x.millionaires != null)) miss.push(`millionaires: UBS Global Wealth Report ${y.startYear + 1} (count at end ${y.startYear})`);
-        if (!inYear.some((x) => x.uhnwi_count != null)) miss.push(`UHNWI: Knight Frank Wealth Report ${y.startYear}, Databank`);
-        if (!miss.length) add(`history_wealth:${y.startYear}`, 'have', `millionaires and UHNWI for ${y.label}`, null);
-        else add(`history_wealth:${y.startYear}`, 'missing', `No ${miss.map((m) => m.split(':')[0]).join(' or ')} figure for ${y.label}`, `Save into PDFs/ and tell Claude: ${miss.map((m) => m.slice(m.indexOf(':') + 2)).join('; ')}`);
-      }
+      // No back-year item for millionaires / UHNWI: each report restates its own history, so an older edition is a different series
+      // (see recipes ubs-gwr-millionaires and knightfrank-uhnwi). A year is filled only when the SAME edition gives it.
       const firms = (d.advisors ?? []).filter((a) => a.country_code === j.code).length;
       add('advisors', firms ? 'have' : 'missing', firms ? `${firms} firms` : 'No firms yet', firms ? null : `Run /find-advisors ${nameFor}`);
     }

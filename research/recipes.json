@@ -721,7 +721,7 @@
       "cells": [
         "wealth_market.millionaires"
       ],
-      "extract": "UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source \"UBS Global Wealth Report <edition>\". 2026 edition: main report p.21 \"The UBS Millionaire Index\" (thousands, end 2025) lists 34 markets; extract every one, not only ours (a market missing from the table is not published, never 0). The upper bands (5-10m, 10-50m, 50-100m) are growth rates only."
+      "extract": "UBS Global Wealth Report, latest edition (2026 edition published 30 June 2026): USD millionaires per country from the databook PDF (registration required). One row per country and year, source \"UBS Global Wealth Report <edition>\". 2026 edition: main report p.21 \"The UBS Millionaire Index\" (thousands, end 2025) lists 34 markets; extract every one, not only ours (a market missing from the table is not published, never 0). ONE EDITION PER SERIES: UBS restates its history every year (France: 2,897k for end-2024 in the 2025 edition, 2,388k for end-2025 in the 2026 edition; the 2025 table lists only 25 selected markets), so an older edition is not a back year of this series; never mix editions. The upper bands (5-10m, 10-50m, 50-100m) are growth rates only."
     },
     {
       "id": "knightfrank-uhnwi",
@@ -730,7 +730,7 @@
       "cells": [
         "wealth_market.uhnwi_count"
       ],
-      "extract": "Knight Frank Wealth Report: UHNWI (> US$30m) population per country. 2026 edition: Databank \"Global wealth populations by market\" (2021, 2026, 2031f). Read with pdftotext -table (the -layout text shifts rows) and check each row against its % change column. About 50 markets are listed (markets under 500 UHNWIs are not); extract every one. Belgium is not listed."
+      "extract": "Knight Frank Wealth Report: UHNWI (> US$30m) population per country. 2026 edition: Databank \"Global wealth populations by market\" (2021, 2026, 2031f). Read with pdftotext -table (the -layout text shifts rows) and check each row against its % change column. About 50 markets are listed (markets under 500 UHNWIs are not); extract every one. Belgium is not listed. ONE EDITION PER SERIES: the model is revised between editions (Netherlands, 2024 edition: 8,390 for 2023; 2026 edition: 4,493 for 2021 and 5,077 for 2026) and the 2025 edition tabulates a US$10m+ population instead, so older editions are not back years of this series; never mix editions."
     },
     {
       "id": "ilo-employers",

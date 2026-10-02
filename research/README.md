@@ -39,6 +39,8 @@ Applied data lives in `db/research/*.sql`: idempotent and public. Private notes 
 rows are closed rows written from a dated source (`from`/`to` in the run); the page maps each country's tax year to the row in force on its first day.
 A figure "as at" a date (`ref_date`) belongs to the tax year containing it.
 
+**Money back years.** UBS and Knight Frank restate their history every edition, so an older edition is NOT a back year of the same series (mixing them would fake a fall of ~40% in the Netherlands' UHNWI). A year is filled only when the same edition gives it; annual series (Eurostat / ILO employers) are the exception.
+
 **New countries:** `/research-country <name>`. **Firms:** `/find-advisors <country>`.
 
 **On demand only (2026-09-30).** No scheduled updates: Hentus calls `/update-offshore-insights`,

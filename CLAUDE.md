@@ -50,7 +50,7 @@ tax and the page focuses on it), and the tiles. The tiles are the earlier C1–C
 - **Map.** `npm run gen:world` → `src/map/world.ts` (Natural Earth, world-atlas 50m; ~1 MB, lazy chunk). `src/map/project.ts` places a capital with the same
   projection. Regions: `node scripts/gen-regions.mjs BE <geojson> --key NUTS_ID --map BE1=BE-BRU,...` → `src/map/regions/BE.ts`.
 - **Money.** Individuals ≥US$1m (UBS millionaires), ≥US$30m (Knight Frank UHNWI), business owners (Eurostat/ILO), trusts. **No HNWI**: no source
-  publishes it per country. No traffic light and no invented thresholds: raw figures, each with a year and a source; unknown is a dashed stub, never 0.
+  publishes it per country. No traffic light and no invented thresholds: raw figures, each with a year and a source; unknown is a dashed stub, never 0. **One report edition per series**: UBS and Knight Frank restate their history each year (the Netherlands' UHNWI is 8,390 for 2023 in the 2024 edition but 5,077 for 2026 in the 2026 edition), so never fill a back year from an older edition; only Eurostat/ILO employers are true annual series.
 - **Regions:** a country that sets taxes per region (`jurisdiction.regional_tax_types`, e.g. BE and ES inheritance) has its regions as children. A region
   inherits every other national rate, the treaty, the lists and the money figures (labelled), never a regional tax: missing means unknown.
 - Dev: `npm run env:local` once (writes the gitignored `.env.local`), then preview "offshore-insights-web" (port 5190) in `D:/Claude_Projects/.claude/launch.json`.

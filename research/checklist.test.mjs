@@ -108,19 +108,7 @@ test('checklistSql upserts each item, escapes quotes, and removes rows no longer
   assert.match(sql, /delete from research_item where jurisdiction_code = 'XX' and item <> all \(array\['treaty:MU'\]\)/);
 });
 
-test('back-year money series: the missing year names the report edition that would supply it', () => {
-  const d = empty([J('XX')]);
-  d.wealth = [{ jurisdiction_code: 'XX', year: 2025, millionaires: 1 }];   // UBS 2026 edition: as at end 2025
-  const items = buildChecklist(d, '2026-10-02');
-  const h25 = items.find((i) => i.item === 'history_wealth:2025'), h24 = items.find((i) => i.item === 'history_wealth:2024');
-  assert.equal(h25.status, 'missing');
-  assert.match(h25.detail, /No UHNWI figure for 2025/);
-  assert.match(h25.where_to_get, /Knight Frank Wealth Report 2025/);
-  assert.doesNotMatch(h25.where_to_get, /UBS/);               // the 2025 millionaire count is already held
-  assert.match(h24.where_to_get, /UBS Global Wealth Report 2025 \(count at end 2024\)/);
-  assert.match(h24.where_to_get, /Knight Frank Wealth Report 2024/);
-  d.wealth.push({ jurisdiction_code: 'XX', year: 2025, uhnwi_count: 2 }, { jurisdiction_code: 'XX', year: 2024, millionaires: 3, uhnwi_count: 4 });
-  const done = buildChecklist(d, '2026-10-02');
-  assert.equal(done.find((i) => i.item === 'history_wealth:2025').status, 'have');
-  assert.equal(done.find((i) => i.item === 'history_wealth:2024').status, 'have');
+test('money back years are not requested: an older report edition is a different, restated series', () => {
+  const items = buildChecklist(empty([J('XX')]), '2026-10-02');
+  assert.equal(items.some((i) => i.item.startsWith('history_wealth')), false);
 });
