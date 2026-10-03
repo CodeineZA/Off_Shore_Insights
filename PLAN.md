@@ -314,8 +314,9 @@ fees, set-up costs, inheritance. The trust column assumes the home country does 
 **Needs before it is live (each applied only with Hentus's go-ahead):** the schema change and the MSCI returns, USD exchange rate, the Mauritius/Seychelles back-year rows
 (`research/runs/2026-10-02-hubs-back.json`) · the shared secret file on the Pi · Gotenberg image pulled and started · R1 and its two credentials pushed to n8n · a deploy with `--restart` (nginx).
 
-**Back-fill status:** the Netherlands (2024-2026) and the two hubs (run prepared) are enough for the Netherlands report. BE CH DE ES FR GB IT PT ZA need 2024 and 2025 rows; the four
-rates the engine reads (capital gains on shares, net wealth, solidarity wealth, securities account) unlock a country's report, the other taxes fill the tax chart.
+**Back-fill status (2026-10-03):** the four rates the engine reads (capital gains on shares, net wealth, solidarity wealth, securities account) are on file
+for 2015 to the latest closed year for MU, SC, NL, BE, DE, FR, IT, PT, ES (21 regions; the 2015 foral rows are gaps), CH (26 cantons), LU and ZA; the other
+taxes have 2024 and 2025 rows for all of them. GB is not back-filled. Open items are recorded gaps with where to get them (`node research/audit-country.mjs <CODE>`).
 
 **Open:** MSCI's terms on redistributing its figures in a PDF sent to prospects (Hentus to decide); the real trust fee schedule; whether a net-return MSCI series can be fetched.
 
@@ -333,7 +334,7 @@ rates the engine reads (capital gains on shares, net wealth, solidarity wealth, 
 
 **Latest version wins (research/README.md):** the newest edition that explicitly states a year's value wins; an older edition never fills a gap; disagreements are stored `nv` with both sources named; every stored value a run would change is shown as `RESTATED old → new` (`research/restated.mjs`, run by `apply-run`) before anything is applied. Source ladder for tax rates: the tax authority's per-year page, a compiled series (OECD Tax Database), a dated snapshot, otherwise unknown.
 
-**Back-fill status:** `node research/audit-country.mjs <CODE>` shows `report:history`. 2026-10-03: Mauritius, Seychelles and the Netherlands have 44 of 44 cells (runs `research/runs/2026-10-03-{MU,SC,NL}-2015.json`, applied); BE CH DE ES FR GB IT PT ZA have none for 2015 to 2025 (their rows start in 2026). Order: MU, SC, NL, then the others, one run file and one diff per country, each applied only on Hentus's go-ahead.
+**Back-fill status:** `node research/audit-country.mjs <CODE>` shows `report:history`. 2026-10-03: MU, SC, NL, BE, DE, FR, IT, PT, ES, CH, LU and ZA are back-filled (runs `research/runs/2026-10-03-*.json`, applied on Hentus's go-ahead); GB has none for 2015 to 2025. Regions: ES 21 (wealth, capital gains for the foral territories, inheritance), CH 26 cantons (wealth, income, inheritance), IT 21 (regional income surcharge), PT 2 (Azores and Madeira income tax), BE 3 (inheritance). Region outlines on the map exist only for BE (`apps/web/src/map/regions/BE.ts`).
 
 **Engine: tax bands (flagged by the back-fill, Hentus 2026-10-03: keep the top band, the engine should learn bands).** Dutch Box 3 in 2017 to 2022 is a deemed return in three bands of the base above the allowance (2021 and 2022: the lower of the banded method and the method on actual holdings). The rows store `headline_rate` = the top band and `rate_min` = the lowest band; the band limits and effective rates are in each row's `note`. Applying the top band to all of a portfolio above the allowance overstates the Dutch tax by about 21 to 32 % at €1m (2019: €16,261 against €12,386). Spain's banded wealth taxes are stored the same way. The engine (`data/report.ts`, `step`) needs band support (a structured band table per row) to get these years right.
 
