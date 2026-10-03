@@ -1,0 +1,128 @@
+{
+  "run": "2026-10-03",
+  "by": "claude: Portugal Azores and Madeira income tax, 2024-2026",
+  "mode": "history",
+  "note": "The autonomous regions of the Azores and Madeira set their own IRS rates below the national ones, so Portugal gets two regions with their own income tax rows for 2024, 2025 and 2026. Everything else stays national.",
+  "defaults": {
+    "valid_from": {
+      "*": "2026-01-01"
+    },
+    "next_check_on": {
+      "*": "2027-01-15"
+    }
+  },
+  "jurisdictions": [
+    {
+      "code": "PT",
+      "regional_tax_types": [
+        "INCOME_TOP"
+      ],
+      "structure_checked_on": "2026-10-03",
+      "structure_note": "National: capital gains (28%), stamp duty on inheritances, AIMI, withholding. The autonomous regions of the Azores and Madeira cut the general IRS rates (art. 68 CIRS): the Azores by 30% in every bracket, Madeira by 30% in the lower brackets and less at the top until 2025, and by 30% in all brackets from 2026. Two regions, for income tax only. Whether the regions also cut the 28% special rate on capital gains is not established here: to verify."
+    },
+    {
+      "code": "PT-20",
+      "name": "Azores",
+      "parent": "PT",
+      "kind": "region",
+      "currency": "EUR",
+      "tax_year_start": "01-01",
+      "lon": -25.67,
+      "lat": 37.74
+    },
+    {
+      "code": "PT-30",
+      "name": "Madeira",
+      "parent": "PT",
+      "kind": "region",
+      "currency": "EUR",
+      "tax_year_start": "01-01",
+      "lon": -16.92,
+      "lat": 32.65
+    }
+  ],
+  "rates": [
+    {
+      "j": "PT-30",
+      "t": "INCOME_TOP",
+      "h": 47.52,
+      "min": 9.28,
+      "max": 52.52,
+      "thr": 81199,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "recipe": "pwc-pt-guia-fiscal",
+      "source_override": "https://web.archive.org/web/20250312081025/https://www.pwc.pt/pt/pwcinforfisco/guia-fiscal/2024/irs.html",
+      "verified_on": "2025-03-12",
+      "note": "Madeira (autonomous region), tax year 2024: IRS 9.28% to 47.52%, the top bracket 1% below the national 48%; solidarity surcharge 2.5% above 80,000 and 5% above 250,000 (as on the mainland): 52.52% at most (PwC Portugal, Guia Fiscal 2024, IRS rate tables for the mainland, Madeira and the Azores). Headline = the top bracket rate."
+    },
+    {
+      "j": "PT-30",
+      "t": "INCOME_TOP",
+      "h": 46.56,
+      "min": 8.75,
+      "max": 51.56,
+      "thr": 83696,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "recipe": "pwc-pt-guia-fiscal",
+      "source_override": "https://www.pwc.pt/pt/pwcinforfisco/guia-fiscal/2025/irs.html",
+      "verified_on": "2026-10-03",
+      "note": "Madeira (autonomous region), tax year 2025: IRS 8.75% to 46.56%, 30% below the national rates up to the 6th bracket, then 15%, 9% and 3% (the top bracket) below (Decreto Legislativo Regional n.º 2/2025/M, with effect from 1 Jan 2025); solidarity surcharge 2.5% above 80,000 and 5% above 250,000 (as on the mainland): 51.56% at most (PwC Portugal, Guia Fiscal 2025, IRS rate tables for the mainland, Madeira and the Azores). Headline = the top bracket rate."
+    },
+    {
+      "j": "PT-30",
+      "t": "INCOME_TOP",
+      "h": 33.6,
+      "min": 8.75,
+      "max": 38.6,
+      "thr": 86634,
+      "from": "2026-01-01",
+      "recipe": "pwc-pt-guia-fiscal",
+      "source_override": "https://www.pwc.pt/pt/pwcinforfisco/guia-fiscal/2026/irs.html",
+      "verified_on": "2026-10-03",
+      "note": "Madeira (autonomous region), tax year 2026: IRS 8.75% to 33.6%, 30% below the national rates in all nine brackets (Decreto Legislativo Regional n.º 8/2025/M of 30 Dec 2025, the Madeira budget for 2026: https://at.madeira.gov.pt/Ficheiros/Diplomas/DLR/ORAM2026.pdf); solidarity surcharge 2.5% above 80,000 and 5% above 250,000 (as on the mainland): 38.6% at most (PwC Portugal, Guia Fiscal 2026, IRS rate tables for the mainland, Madeira and the Azores). Headline = the top bracket rate."
+    },
+    {
+      "j": "PT-20",
+      "t": "INCOME_TOP",
+      "h": 33.6,
+      "min": 9.1,
+      "max": 37.1,
+      "thr": 81199,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "recipe": "pwc-pt-guia-fiscal",
+      "source_override": "https://web.archive.org/web/20250312081025/https://www.pwc.pt/pt/pwcinforfisco/guia-fiscal/2024/irs.html",
+      "verified_on": "2025-03-12",
+      "note": "Azores (autonomous region), tax year 2024: IRS 9.1% to 33.6%, 30% below the national rates in every bracket; solidarity surcharge 1.75% above 80,000 and 3.5% above 250,000 (the Azores cut it by 30% too): 37.1% at most (PwC Portugal, Guia Fiscal 2024, IRS rate tables for the mainland, Madeira and the Azores). Headline = the top bracket rate."
+    },
+    {
+      "j": "PT-20",
+      "t": "INCOME_TOP",
+      "h": 33.6,
+      "min": 8.75,
+      "max": 37.1,
+      "thr": 83696,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "recipe": "pwc-pt-guia-fiscal",
+      "source_override": "https://www.pwc.pt/pt/pwcinforfisco/guia-fiscal/2025/irs.html",
+      "verified_on": "2026-10-03",
+      "note": "Azores (autonomous region), tax year 2025: IRS 8.75% to 33.6%, 30% below the national rates in every bracket; solidarity surcharge 1.75% above 80,000 and 3.5% above 250,000 (the Azores cut it by 30% too): 37.1% at most (PwC Portugal, Guia Fiscal 2025, IRS rate tables for the mainland, Madeira and the Azores). Headline = the top bracket rate."
+    },
+    {
+      "j": "PT-20",
+      "t": "INCOME_TOP",
+      "h": 33.6,
+      "min": 8.75,
+      "max": 37.1,
+      "thr": 86634,
+      "from": "2026-01-01",
+      "recipe": "pwc-pt-guia-fiscal",
+      "source_override": "https://www.pwc.pt/pt/pwcinforfisco/guia-fiscal/2026/irs.html",
+      "verified_on": "2026-10-03",
+      "note": "Azores (autonomous region), tax year 2026: IRS 8.75% to 33.6%, 30% below the national rates in every bracket; solidarity surcharge 1.75% above 80,000 and 3.5% above 250,000 (the Azores cut it by 30% too): 37.1% at most (PwC Portugal, Guia Fiscal 2026, IRS rate tables for the mainland, Madeira and the Azores). Headline = the top bracket rate."
+    }
+  ]
+}

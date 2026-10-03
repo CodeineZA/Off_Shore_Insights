@@ -825,6 +825,16 @@
       "extract": "MEF Dipartimento delle Finanze: the regional IRPEF surcharge (addizionale regionale) of one region or autonomous province for one tax year: the rate per income band, the publication date and any special provisions. Codes 01 Abruzzo to 21 Veneto (03 Bolzano, 18 Trento). Headline for the region = national IRPEF top 43% + the top surcharge."
     },
     {
+      "id": "pwc-pt-guia-fiscal",
+      "method": "page-extract",
+      "url": "https://www.pwc.pt/pt/pwcinforfisco/guia-fiscal/<YEAR>/irs.html",
+      "cells": [
+        "PT-20:INCOME_TOP",
+        "PT-30:INCOME_TOP"
+      ],
+      "extract": "PwC Portugal Guia Fiscal (one edition a year): the IRS rate tables for the mainland, Madeira and the Azores and the solidarity surcharge per region. Older editions through dated Wayback copies. Cross-check Madeira against its budget decree (at.madeira.gov.pt, Decreto Legislativo Regional) and the Azores against DLR 2/99/A art. 4 (30% below the national rates)."
+    },
+    {
       "id": "lu-nc-list",
       "method": "page-extract",
       "url": "https://impotsdirects.public.lu/fr/az/l/ListeUEterritoiresNC.html",
