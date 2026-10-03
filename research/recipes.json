@@ -762,6 +762,24 @@
       "extract": "Luxembourg state portal: inheritance base rates by relationship (direct line 0% on the legal share, 2.5% / 5% beyond it; spouses; siblings 6%; others 15%) and the surcharge (\"majoration\") by the value of the share. Back years: dated Wayback copies."
     },
     {
+      "id": "be-fin-pit",
+      "method": "page-extract",
+      "url": "https://fin.belgium.be/nl/particulieren/belastingaangifte/belastingtarieven-inkomen/belastingtarieven",
+      "cells": [
+        "BE:INCOME_TOP"
+      ],
+      "extract": "FOD Financien: the federal income tax brackets (25% to 50%) for the last two income years shown side by side; the 50% band starts at the top limit of the 45% band. Older years: dated Wayback copies (each copy shows two income years). The municipal surcharge (0% to 9% of the tax) is on top."
+    },
+    {
+      "id": "pt-cimi-aimi",
+      "method": "page-extract",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cimi/Pages/cimi135f.aspx",
+      "cells": [
+        "PT:WEALTH_PROPERTY"
+      ],
+      "extract": "AIMI (adicional ao IMI), Portal das Financas copy of the IMI code: art. 135-F rates for individuals (0.7%; 1% on the part of the taxable value above EUR 1m up to 2m; 1.5% above 2m) and art. 135-C (.../cimi135c.aspx) the EUR 600,000 deduction for an individual. Back years: dated Wayback copies."
+    },
+    {
       "id": "lu-nc-list",
       "method": "page-extract",
       "url": "https://impotsdirects.public.lu/fr/az/l/ListeUEterritoiresNC.html",
