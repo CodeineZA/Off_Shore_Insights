@@ -453,6 +453,51 @@
       "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
     },
     {
+      "id": "pwc-LU-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/luxembourg/individual/taxes-on-personal-income",
+      "cells": [
+        "LU:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-LU-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/luxembourg/individual/income-determination",
+      "cells": [
+        "LU:CGT_FINANCIAL",
+        "LU:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-LU-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/luxembourg/individual/other-taxes",
+      "cells": [
+        "LU:INHERITANCE_DIRECT",
+        "LU:INHERITANCE_OTHER",
+        "LU:WEALTH_NET",
+        "LU:WEALTH_SOLIDARITY",
+        "LU:WEALTH_PROPERTY",
+        "LU:SECURITIES_ACCOUNT",
+        "LU:FOREIGN_ASSET_TAX",
+        "LU:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-LU-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/luxembourg/corporate/withholding-taxes",
+      "cells": [
+        "LU:WHT_DIVIDEND",
+        "LU:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
       "id": "pwc-MU-pit",
       "method": "page-extract",
       "url": "https://taxsummaries.pwc.com/mauritius/individual/taxes-on-personal-income",
@@ -665,6 +710,66 @@
         "NL:WEALTH_NET"
       ],
       "extract": "Box 3 for a past year from the Belastingdienst's own year pages: fisin<YEAR>/belastingberekening (2019 onward, section \"Box 3: inkomen uit sparen en beleggen\": heffingsvrij vermogen, the 2 percentages, the 3 schijven with their savings/investments mix, the tax rate), berekening-box-3-inkomen-<YEAR> (2021 onward, newer: the method on actual holdings), and for 2015-2018 the dated Wayback copies of the pages \"berekenen belasting over vermogen tot en met 2016\", \"berekening 2017\", \"berekening 2018\" and the heffingsvrij-vermogen pages. Effective rate = tax rate x deemed return (derived: say so)."
+    },
+    {
+      "id": "es-aeat-patrimonio",
+      "method": "page-extract",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Patrimonio/Patrimonio-<YEAR>/ManualPatrimonio<YEAR>_es_es.pdf",
+      "alt_urls": [
+        "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-<YEAR>/ManualRentaPatrimonio<YEAR>_es_es.pdf (2016-2017)",
+        "IRPF-2019/ManualRenta2019_es_es.pdf",
+        "Wayback: ManualRentaPatrimonio2018_V8_es_es.pdf, Addenda_CCAA_IP_2015.pdf",
+        "https://www.hacienda.gob.es/SGFAL/FinanciacionTerritorial/autonomica/ (Tributación Autonómica. Medidas <YEAR>)"
+      ],
+      "cells": [
+        "ES-*:WEALTH_NET"
+      ],
+      "extract": "Spanish wealth tax per autonomous community for the year, from the yearly manual of the tax agency: (1) \"mínimo exento\" list (default 700,000), (2) \"Escalas autonómicas\" (state scale when a region has none: top 2.5% to 2020, 3.5% from 2021), (3) \"Bonificaciones autonómicas\" (general rebates; from 2023 several regions replace a 100% rebate by \"wealth tax minus ITSGF\" while the ITSGF applies, which leaves only the ITSGF to pay: store 0). Store headline = top band x (1 - general rebate), min = lowest band likewise, threshold = mínimo exento."
+    },
+    {
+      "id": "es-reaf-panorama",
+      "method": "page-extract",
+      "url": "https://economistas.es/Contenido/REAF/Informes/Panorama<YEAR>.pdf",
+      "alt_urls": [
+        "Wayback copies of the 2016 to 2022 editions under economistas.es/Contenido/... and reaf.economistas.es"
+      ],
+      "cells": [
+        "ES-VI:*",
+        "ES-BI:*",
+        "ES-SS:*",
+        "ES-NC:*"
+      ],
+      "extract": "REAF (Consejo General de Economistas) \"Panorama de la Fiscalidad Autonómica y Foral <YEAR>\": one edition a year describing that year. For the foral territories (Álava, Bizkaia, Gipuzkoa, Navarra): wealth tax mínimo exento and scale (summary \"En los territorios del País Vasco existe un Impuesto sobre la Riqueza...\" and the Navarra chapter 17.2), savings scale (\"Tarifa del ahorro\"), and the Basque solidarity tax (chapter 16.5, from 2023). A compiled series: the own guides of the foral treasuries win where held."
+    },
+    {
+      "id": "estv-taxburden",
+      "method": "api",
+      "url": "https://swisstaxcalculator.estv.admin.ch/#/taxburden/income-wealth-tax",
+      "cells": [
+        "CH-*:WEALTH_NET"
+      ],
+      "automation": "POST https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/export/income-tax-values/JSON/DE with {massExportModelId:1 (single, no children), belastungsVergleich:1, taxGroup:88 (canton capitals), confession:5 (no church tax), incomes:[], fortunes:[...], klasse:2 (wealth), years:[...], output:1 (tax in CHF)} and headers Origin/Referer of the calculator. Returns the wealth tax (canton + commune) in each canton capital for each net wealth and year.",
+      "extract": "Per canton and tax year: top marginal rate = (tax on CHF 51m - tax on CHF 50m) / CHF 1m; lowest band = slope just above the taxed-from amount; taxed-from amount = the last net wealth (to CHF 1,000) with no tax beyond the flat personal tax. Also the tax on CHF 1m and 10m for the note."
+    },
+    {
+      "id": "lu-guichet-succession",
+      "method": "page-extract",
+      "url": "https://guichet.public.lu/fr/citoyens/sante/fin-vie/deces/droits-succession-heritage.html",
+      "cells": [
+        "LU:INHERITANCE_DIRECT",
+        "LU:INHERITANCE_OTHER"
+      ],
+      "extract": "Luxembourg state portal: inheritance base rates by relationship (direct line 0% on the legal share, 2.5% / 5% beyond it; spouses; siblings 6%; others 15%) and the surcharge (\"majoration\") by the value of the share. Back years: dated Wayback copies."
+    },
+    {
+      "id": "lu-nc-list",
+      "method": "page-extract",
+      "url": "https://impotsdirects.public.lu/fr/az/l/ListeUEterritoiresNC.html",
+      "cells": [
+        "gate:LU:blacklist:MU",
+        "gate:LU:blacklist:SC"
+      ],
+      "extract": "The copy kept by the Luxembourg tax administration of the EU list of non-cooperative jurisdictions applied under art. 168 L.I.R. (law of 10 Feb 2021), with every version and its dates. Are Mauritius / Seychelles named in the version in force, and in which earlier versions?"
     },
     {
       "id": "eu-annex-i",
