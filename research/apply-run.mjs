@@ -22,6 +22,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadDashboard } from './lib.mjs';
+import { formatRestated, restatedRates, restatedReturns } from './restated.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const file = process.argv[2];
@@ -169,6 +171,17 @@ for (const g of run.gaps ?? []) {
 }
 out.push('', 'reset search_path;', '');
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
+
+// "Latest version wins" (research/README.md): the newest edition replaces a stored value, but never silently. List what this run would CHANGE among
+// stored values as RESTATED old → new; it is printed here and written as comments at the top of the SQL. --offline skips the comparison (and says so).
+let restatedLines;
+if (process.argv.includes('--offline')) restatedLines = ['Restatement check skipped (--offline): compare with the stored values before applying.'];
+else {
+  try { const d = await loadDashboard(); restatedLines = formatRestated([...restatedReturns(run, d.market_returns), ...restatedRates(run, d.rate_history)]); }
+  catch (e) { restatedLines = [`RESTATEMENT CHECK SKIPPED: could not read the database (${e.message}). Compare with the stored values by hand before applying.`]; }
+}
+out.splice(2, 0, ...restatedLines.map((l) => `-- ${l}`));
+console.log(restatedLines.join('\n'));
 
 mkdirSync(join(here, '..', 'db', 'research'), { recursive: true });
 const target = join(here, '..', 'db', 'research', basename(file).replace(/\.json$/, '.sql'));

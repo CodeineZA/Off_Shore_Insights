@@ -51,7 +51,8 @@
 .vc-svg { width: 100%; height: auto; display: block; }
 .vc-grid { stroke: var(--rep-line); stroke-width: 1; }
 .vc-axis { font: 400 9px Poppins; fill: var(--muted); }
-.vc-line { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; background: none; }
+/* A line is only a stroke. (.vc-line.home sets a fill for the legend key and the dots; on a path with many points that would fill the area under it.) */
+.vc-line, .vc-line.home, .vc-line.trust { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; background: none; }
 .vc-dot { stroke: #fff; stroke-width: 1.5; background: none; }
 .vc-end { font: 600 11px Poppins; }
 .vc-end.home { fill: var(--rep-home); } .vc-end.trust { fill: var(--rep-trust); }
@@ -94,10 +95,10 @@
 .rep-flags .green i { background: #3f8a4a; } .rep-flags .amber i { background: #d09a1c; } .rep-flags .red i { background: #c4482f; }
 .rep-assume { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; font: 400 9px/1.5 Poppins; color: var(--text); }
 .rep-sources { columns: 2; column-gap: 14px; font: 400 8px/1.4 Poppins; }
-.rep-src-group { break-inside: avoid-column; margin-bottom: 6px; }
-.rep-src-group h3 { margin: 0 0 2px; font: 600 8px Poppins; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.rep-src-group { margin-bottom: 6px; }                       /* a long group flows from the first column into the second */
+.rep-src-group h3 { margin: 0 0 2px; font: 600 8px Poppins; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); break-after: avoid; }
 .rep-src-group ul { list-style: none; margin: 0; padding: 0; }
-.rep-src-group li { padding: 2px 0; border-bottom: 1px solid rgba(90, 64, 28, .1); }
+.rep-src-group li { padding: 2px 0; border-bottom: 1px solid rgba(90, 64, 28, .1); break-inside: avoid; }
 .rep-src-group b { font-weight: 600; } .rep-src-group em { font-style: normal; color: var(--muted-2); }
 .rep-url { display: block; color: var(--muted-2); overflow-wrap: anywhere; }
 .rep-foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--rep-line); display: flex; align-items: center; gap: 14px; font: 400 7.5px/1.5 Poppins; color: var(--muted-2); }
@@ -108,6 +109,41 @@
 .rep-foot .rep-since i { display: block; font-style: normal; font-weight: 400; color: var(--muted-2); }
 .rep-foot .rep-note { flex: 1; min-width: 0; }
 .rep-foot .rep-where { flex: none; white-space: nowrap; text-align: right; }
+
+/* Chart titles, and the effective-tax chart */
+.vc-title { font: 600 9px/1.3 Poppins; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.taxtrend .tt-first { fill: var(--rep-home); }
+.tt-summary { margin: 0 !important; }
+
+/* A year page */
+.rep-year { gap: 9px; }
+.rep-year .rep-title h1 { font-size: 30px; }
+.rep-statement { table-layout: fixed; }
+.rep-statement th:first-child { width: 42%; background: transparent; border-color: transparent; }
+.rep-statement td:first-child { text-align: left; font-weight: 400; }
+.rep-statement td small { color: var(--muted-2); font-size: 7.5px; }
+.rep-statement tr.total td { font-weight: 600; background: #f6efe2; border-top: 1.5px solid rgba(90, 64, 28, .45); }
+.rep-statement tr.total td:first-child { text-align: left; }
+.rep-cards.three { grid-template-columns: repeat(3, 1fr); }
+.rep-cards b.pos { color: #1f5f2b; } .rep-cards b.neg { color: #a93a24; }
+.rep-cards b small { font: 400 8px Poppins; color: var(--muted); }
+.leadstrip { gap: 3px; }
+.ls-bar { stroke: none; background: none; }
+.ls-bar.ahead { fill: rgba(63, 138, 74, .32); } .ls-bar.behind { fill: rgba(196, 72, 47, .3); }
+.ls-bar.ahead.now { fill: #3f8a4a; } .ls-bar.behind.now { fill: #c4482f; }
+.vc-axis.ls-now { fill: var(--rep-ink); font-weight: 600; }
+.ls-val { fill: var(--rep-ink); font-size: 10px; }
+.rep-rates { table-layout: fixed; }
+.rep-rates th:first-child { width: 30%; }
+.rep-rates td:first-child { text-align: left; font-weight: 400; }
+.rep-rates td { text-align: left; vertical-align: top; }
+.rep-rates td b { font-weight: 600; margin-right: 6px; }
+.rep-rates td small { display: block; font: 400 7.5px/1.35 Poppins; color: var(--muted-2); }
+.rep-rates .tv { font-style: normal; font: 600 7.5px Poppins; color: #9a6b0d; }
+.rep-ynotes { margin: 0; padding-left: 14px; display: flex; flex-direction: column; gap: 2px; font: 400 8px/1.4 Poppins; color: var(--muted); }
+.rep-ysrc { font: 400 7.5px/1.4 Poppins; color: var(--muted-2); }
+.rep-ysrc b { font: 600 7.5px Poppins; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.rep-ysrc ul { margin: 2px 0 0; padding-left: 12px; overflow-wrap: anywhere; }
 
 /* On the Reports page the document sits on a dark desk, scaled down on narrow screens; in print it is exactly A4. */
 .report-desk { overflow: auto; padding: 18px; border-radius: 16px; background: #2a2724; border: 1px solid var(--line); }
@@ -128,6 +164,8 @@
 .rep-fee input:focus-visible { outline: 2px solid rgba(216, 176, 122, .6); outline-offset: 1px; }
 .rep-fee small { flex-basis: 100%; font: 400 11px Poppins; color: var(--muted-2); }
 .rep-fixed { margin: 0; font: 400 12px/1.5 Poppins; color: var(--muted); }
+.rep-yearnote { flex-basis: 100%; margin-left: 150px; font: 400 11px/1.5 Poppins; color: var(--muted-2); }
+@media (max-width: 800px) { .rep-yearnote { margin-left: 0; } }
 .rep-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .rep-actions .pill:disabled { opacity: .55; cursor: default; }
 .rep-actions-note { font: 400 11.5px Poppins; color: var(--muted-2); }

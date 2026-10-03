@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildReport, fmtMoney, fmtUsd, perUnit, poss, PRINCIPAL, startYears, step, the, usdPer, type ReportOk } from './report';
-import { H, J, P, R, base, mk } from './report.testdata';
+import { buildReport, defaultStartYear, effectiveTax, fmtMoney, fmtUsd, perUnit, poss, PRINCIPAL, startYears, step, the, usdPer, type ReportOk } from './report';
+import { FY, H, HISTORY_YEARS, J, P, R, base, longHistory, mk } from './report.testdata';
 
 const ok = (r: ReturnType<typeof buildReport>): ReportOk => { if (!r.ok) throw new Error('expected ok, got: ' + r.text + JSON.stringify(r.missing)); return r; };
 
@@ -68,11 +68,17 @@ describe('unknown stays unknown', () => {
     if (!r.ok) expect(r.missing.map((m) => m.text)).toEqual(['Capital gains for MU, 2024']);
     expect(buildReport(mk({ rate_history: rows.map((x) => (x.jurisdiction_code === 'MU' && x.tax_type_code === 'CGT_FINANCIAL' ? { ...x, valid_from: '2024-07-01' } : x)) }), P()).ok).toBe(true);
   });
-  it('a threshold in a currency with no exchange rate stops the report', () => {
-    const r = buildReport(mk({ fx: base().fx.filter((x) => x.currency !== 'EUR') }), P());
+  it('a threshold in a currency with no exchange rate for that year stops the report', () => {
+    const r = buildReport(mk({ fx_history: [] }), P());
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.missing[0]).toMatchObject({ kind: 'fx', who: 'EUR' });
+    if (!r.ok) expect(r.missing[0]).toMatchObject({ kind: 'fx', who: 'EUR', year: 2024, text: 'exchange rate EUR→USD at the end of 2024' });
     expect(usdPer(mk({ fx: [] }), 'EUR')).toBeNull();
+  });
+  it("today's rate is never used in place of a year's: 2025 has no stored rate, so the report stops even though a current rate exists", () => {
+    const r = buildReport(mk({ fx_history: [FY('USD', 2024, 0.9)] }), P({ endYear: 2025 }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.missing.map((x) => x.text)).toEqual(['exchange rate EUR→USD at the end of 2025']);
+    expect(perUnit(mk(), 'EUR', 'USD')).toBeCloseTo(1 / 0.9, 10);            // a current rate IS stored
   });
   it('no index return for the start year', () => {
     const r = buildReport(mk({ market_returns: [R(2025, 20)] }), P());
@@ -145,8 +151,8 @@ describe('step, on its own', () => {
 });
 
 describe('the report in euros, US dollars or rand', () => {
-  const withFx = (extra: object[]) => ({ fx: [...base().fx, ...extra] });
   const zarFx = { currency: 'ZAR', eur_per_unit: 0.05, as_of: '2026-10-01', source_url: '' };      // 1 EUR = 20 ZAR
+  const withFx = (extra: object[]) => ({ fx: [...base().fx, ...extra], fx_history: [...base().fx_history, FY('ZAR', 2024, 0.05), FY('ZAR', 2025, 0.05)] });
   it('rand: the principal, the allowances (EUR 9,000 = R180,000) and every amount are in rand', () => {
     const d = mk({ ...withFx([zarFx]), market_returns: [R(2024, 10, 'gross', { currency: 'ZAR' })] });
     const r = ok(buildReport(d, P({ currency: 'ZAR' })));
@@ -180,7 +186,7 @@ describe('the report in euros, US dollars or rand', () => {
     const d = mk({ market_returns: [R(2024, 10, 'gross', { currency: 'ZAR' })] });                  // no ZAR rate in the dataset
     const r = buildReport(d, P({ currency: 'ZAR' }));
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.missing.map((x) => x.text)).toContain('exchange rate EUR→ZAR');
+    if (!r.ok) expect(r.missing.map((x) => x.text)).toContain('exchange rate EUR→ZAR at the end of 2024');
   });
   it('euro and rand reports say the return includes the dollar\'s move; the dollar report does not', () => {
     const eur = ok(buildReport(mk({ market_returns: [R(2024, 10, 'gross', { currency: 'EUR' })] }), P({ currency: 'EUR' })));
@@ -196,4 +202,89 @@ describe('the report in euros, US dollars or rand', () => {
     expect(perUnit(mk(), 'EUR', 'ZAR')).toBeNull();
     expect([fmtMoney(1234567.4, 'USD'), fmtMoney(1234567.5, 'EUR'), fmtMoney(1234567, 'ZAR'), fmtMoney(-5489.2, 'ZAR')]).toEqual(['US$1,234,567', '€1,234,568', 'R1,234,567', '−R5,489']);
   });
+});
+
+describe("each year's own exchange rate", () => {
+  // The euro moves against the dollar: 1 EUR = US$1.111 at the end of 2024 (1 USD = 0.9 EUR) but US$1.25 at the end of 2025 (1 USD = 0.8 EUR).
+  const moving = () => mk({ fx_history: [FY('USD', 2024, 0.9), FY('USD', 2025, 0.8)] });
+  const r = ok(buildReport(moving(), P({ endYear: 2025 })));
+  it('an allowance of EUR 9,000 is US$10,000 in 2024 and US$11,250 in 2025, not today\'s US$10,000 both times', () => {
+    const cgt = (y: number) => r.rates.find((x) => x.side === 'home' && x.taxType === 'CGT_FINANCIAL' && x.year === y)!;
+    expect(cgt(2024).thresholdConverted).toBeCloseTo(10_000, 6);
+    expect(cgt(2025).thresholdConverted).toBeCloseTo(11_250, 6);
+    const s = r.years[0].home.end;
+    expect(r.years[1].home.cgt).toBeCloseTo((s * 0.2 - 11_250) * 0.25, 6);
+  });
+  it('lists the rates used, with the year, the source and the date, for the Excel', () => {
+    expect(r.fxUsed.map((x) => [x.from, x.to, x.year])).toEqual([['EUR', 'USD', 2024], ['EUR', 'USD', 2025]]);
+    expect(r.fxUsed[0].rate).toBeCloseTo(1 / 0.9, 10);
+    expect(r.fxUsed[1].rate).toBeCloseTo(1.25, 10);
+    expect(r.fxUsed[1]).toMatchObject({ sourceUrl: 'https://ecb.example/USD/2025', verifiedOn: '2026-10-03' });
+  });
+  it('a report that needs no conversion lists none, and says nothing about exchange rates', () => {
+    const eur = ok(buildReport(mk({ market_returns: [R(2024, 10, 'gross', { currency: 'EUR' })], fx_history: [] }), P({ currency: 'EUR' })));
+    expect(eur.fxUsed).toEqual([]);
+    expect(eur.assumptions.join(' ')).not.toMatch(/Allowances set in another currency/);        // nothing was converted, so nothing is said about it
+    expect(r.assumptions.join(' ')).toMatch(/ECB's reference rate at the end of each year/);
+  });
+  it('perUnit with a year reads only that year; EUR is always 1', () => {
+    expect(perUnit(moving(), 'EUR', 'USD', 2025)).toBeCloseTo(1.25, 10);
+    expect(perUnit(moving(), 'USD', 'EUR', 2024)).toBeCloseTo(0.9, 10);
+    expect(perUnit(moving(), 'EUR', 'USD', 2023)).toBeNull();
+    expect(perUnit(moving(), 'EUR', 'EUR', 2023)).toBe(1);
+  });
+});
+
+describe('effective tax, and the parts of the bill', () => {
+  const r = ok(buildReport(mk(), P()));
+  it('is capital gains tax plus wealth taxes as a share of the starting value, with the trust fee left out', () => {
+    expect(r.effective).toEqual([{ year: 2024, home: expect.closeTo(3.4876, 4), trust: expect.closeTo(0.22, 6) }]);   // (27,000 + 7,876) and 2,200 on 1,000,000
+    expect(r.years[0].trust.fee).toBeGreaterThan(5_000);                                                               // a real fee, and not in the figure above
+    expect(effectiveTax({ start: 0, gain: 0, cgt: 5, wealth: 5, wealthTax: 5, wealthKind: 'net', secTax: 0, fee: 0, end: 0 })).toBe(0);
+  });
+  it('splits the wealth bill into the larger of net-wealth and solidarity tax, and the securities-account tax', () => {
+    expect(r.years[0].home).toMatchObject({ wealthKind: 'net', wealthTax: expect.closeTo(5_730, 6), secTax: expect.closeTo(2_146, 6) });
+    expect(r.years[0].home.wealth).toBeCloseTo(5_730 + 2_146, 6);
+    expect(r.years[0].trust).toMatchObject({ wealthKind: null, wealthTax: 0, secTax: expect.closeTo(2_200, 6) });
+    const t = { CGT_FINANCIAL: { rate: 0, thr: 0 }, WEALTH_NET: { rate: 0.01, thr: 0 }, WEALTH_SOLIDARITY: { rate: 0.02, thr: 0 }, SECURITIES_ACCOUNT: { rate: 0, thr: 0 } };
+    expect(step(1_000_000, 0, t, 0)).toMatchObject({ wealthKind: 'solidarity', wealthTax: 20_000 });
+  });
+});
+
+describe('a ten-year history in euros (2015 to 2025)', () => {
+  const yrs = HISTORY_YEARS;
+  const r = ok(buildReport(longHistory(), P({ startYear: 2015, endYear: 2025, currency: 'EUR' })));
+  it('runs eleven years, each starting where the last ended, with the rate in force that year', () => {
+    expect(r.years.map((y) => y.year)).toEqual(yrs);
+    r.years.slice(1).forEach((y, i) => { expect(y.home.start).toBeCloseTo(r.years[i].home.end, 6); expect(y.trust.start).toBeCloseTo(r.years[i].trust.end, 6); });
+    const cgt = r.rates.filter((x) => x.side === 'home' && x.taxType === 'CGT_FINANCIAL').map((x) => [x.year, x.rate]);
+    expect(cgt.filter(([y]) => y < 2020).every(([, rate]) => rate === 20)).toBe(true);
+    expect(cgt.filter(([y]) => y >= 2020).every(([, rate]) => rate === 26)).toBe(true);
+    expect(r.fxUsed).toEqual([]);
+  });
+  it('worked by hand: 2015 pays 19,800 of capital gains tax and 4,901 of wealth tax; the -5 % year of 2016 pays no capital gains tax', () => {
+    const y = r.years[0].home;
+    expect(y.cgt).toBeCloseTo((100_000 - 1_000) * 0.2, 6);                       // 19,800
+    expect(y.wealth).toBeCloseTo((1_000_000 + 100_000 - 19_800 - 100_000) * 0.005, 6);   // 4,901
+    expect(y.end).toBeCloseTo(1_075_299, 6);
+    const l = r.years[1].home;
+    expect(l.cgt).toBe(0);
+    expect(l.wealth).toBeCloseTo((1_075_299 * 0.95 - 100_000) * 0.005, 6);
+    expect(r.effective[1].home).toBeCloseTo(((1_075_299 * 0.95 - 100_000) * 0.005) / 1_075_299 * 100, 6);
+  });
+  it('the effective tax of the trust column stays at the hub rates (0 %) while the local one carries the tax', () => {
+    expect(r.effective).toHaveLength(11);
+    expect(r.effective[0].home).toBeCloseTo(((19_800 + 4_901) / 1_000_000) * 100, 6);
+    expect(r.effective.every((e) => e.trust === 0)).toBe(true);
+    expect(r.effective.every((e) => e.home > 0)).toBe(true);
+  });
+});
+
+describe('the window a report opens on', () => {
+  const chips = (from: number, to: number, firstOk: number) => Array.from({ length: to - from + 1 }, (_, i) => ({ year: from + i, ok: from + i >= firstOk }));
+  it('is the last ten years: with data back to 2015 and the last year 2025, it opens on 2015', () => expect(defaultStartYear(chips(2015, 2025, 2015))).toBe(2015));
+  it('moves by itself: once 2026 has closed it opens on 2016', () => expect(defaultStartYear(chips(2015, 2026, 2015))).toBe(2016));
+  it('never reaches back further than the ten years, even when older years can be built', () => expect(defaultStartYear(chips(2012, 2025, 2012))).toBe(2015));
+  it('opens on the earliest year that can be built when the data starts later', () => expect(defaultStartYear(chips(2015, 2025, 2024))).toBe(2024));
+  it('is null when nothing can be built', () => { expect(defaultStartYear(chips(2015, 2025, 2030))).toBeNull(); expect(defaultStartYear([])).toBeNull(); });
 });

@@ -4,7 +4,7 @@
 // never a number.
 import { useMemo, useState } from 'react';
 import type { Dashboard } from '../data/types';
-import { CURRENCIES, CURRENCY_NAME, DEFAULT_FEE_PCT, HUB_NAME, INDEX, PRINCIPAL, STRUCTURES, buildReport, fmtMoney, perUnit, startYears, type HubCode, type ReportCurrency, type ReportOk } from '../data/report';
+import { CURRENCIES, CURRENCY_NAME, DEFAULT_FEE_PCT, HUB_NAME, INDEX, PRINCIPAL, STRUCTURES, buildReport, defaultStartYear, fmtMoney, perUnit, startYears, type HubCode, type ReportCurrency, type ReportOk } from '../data/report';
 import { reportSheets } from '../data/reportsheets';
 import { ReportMailError, AuthExpired, sendReportEmail } from '../api';
 import ReportDocument from '../ui/report/ReportDocument';
@@ -14,18 +14,15 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export default function Reports({ d, onExpired }: { d: Dashboard; onExpired: () => void }) {
   const countries = useMemo(() => d.jurisdictions.filter((j) => j.kind === 'country' && !j.is_offshore_hub).sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999) || a.name.localeCompare(b.name)), [d]);
-  const base = (code: string, hub: HubCode, feePct: number, currency: ReportCurrency = 'USD', principal = PRINCIPAL) => ({ code, structure: 'trust' as const, hub, principal, feePct, index: INDEX, currency });
+  const base = (code: string, hub: HubCode, feePct: number, currency: ReportCurrency = 'EUR', principal = PRINCIPAL) => ({ code, structure: 'trust' as const, hub, principal, feePct, index: INDEX, currency });
 
-  // Open on the first country that has a complete report, at its earliest year; otherwise on the first country.
-  const initial = useMemo(() => {
-    for (const c of countries) { const y = startYears(d, base(c.code, 'MU', DEFAULT_FEE_PCT)).find((x) => x.ok); if (y) return { code: c.code, year: y.year }; }
-    const y0 = startYears(d, base(countries[0]?.code ?? '', 'MU', DEFAULT_FEE_PCT))[0]?.year;
-    return { code: countries[0]?.code ?? '', year: y0 ?? new Date().getFullYear() - 2 };
-  }, [d, countries]);
-  const [code, setCode] = useState(initial.code);
+  // Open on the first country that has a complete report.
+  const initialCode = useMemo(() => countries.find((c) => startYears(d, base(c.code, 'MU', DEFAULT_FEE_PCT)).some((x) => x.ok))?.code ?? countries[0]?.code ?? '', [d, countries]);
+  const [code, setCode] = useState(initialCode);
   const [hub, setHub] = useState<HubCode>('MU');
-  const [currency, setCurrency] = useState<ReportCurrency>('USD');
-  const [year, setYear] = useState(initial.year);
+  const [currency, setCurrency] = useState<ReportCurrency>('EUR');
+  // A start year the user clicked, kept only for the country it was clicked in.
+  const [picked, setPicked] = useState<{ code: string; year: number } | null>(null);
   const [fee, setFee] = useState(String(DEFAULT_FEE_PCT));
   const [amountText, setAmountText] = useState(String(PRINCIPAL));
   const [busy, setBusy] = useState<null | 'mail' | 'pdf' | 'xlsx'>(null);
@@ -40,14 +37,13 @@ export default function Reports({ d, onExpired }: { d: Dashboard; onExpired: () 
   const country = j?.kind === 'region' ? d.jurisdictions.find((x) => x.code === j.parent_code) : j;
   const regions = country ? d.jurisdictions.filter((x) => x.parent_code === country.code) : [];
   const chips = useMemo(() => startYears(d, base(code, hub, feePct, currency, amount)), [d, code, hub, feePct, currency, amount]);
+  // The report opens on the last ten years (it moves by itself as years close); a year the user clicked for this country wins.
+  const lastYear = chips.length ? Math.max(...chips.map((c) => c.year)) : null;
+  const year = picked && picked.code === code && chips.some((c) => c.year === picked.year) ? picked.year : defaultStartYear(chips) ?? chips[0]?.year ?? new Date().getFullYear() - 2;
   const result = useMemo(() => buildReport(d, { ...base(code, hub, feePct, currency, amount), startYear: year }), [d, code, hub, feePct, currency, amount, year]);
   const ok: ReportOk | null = result.ok ? result : null;
 
-  const pick = (c: string) => {
-    setCode(c); setMsg(null);
-    const first = startYears(d, base(c, hub, feePct, currency, amount)); const keep = first.find((x) => x.year === year && x.ok) ?? first.find((x) => x.ok) ?? first.find((x) => x.year === year) ?? first[0];
-    if (keep) setYear(keep.year);
-  };
+  const pick = (c: string) => { setCode(c); setMsg(null); };
   const fail = (e: unknown) => {
     if (e instanceof AuthExpired) { onExpired(); return; }
     setMsg({ ok: false, text: e instanceof ReportMailError ? e.message : 'Something went wrong building the files. Try again.' });
@@ -120,8 +116,9 @@ export default function Reports({ d, onExpired }: { d: Dashboard; onExpired: () 
         </div>
         <div className="filter-row"><span className="filter-k">Invested at the start of</span>
           <div className="chips" role="group" aria-label="Start year">
-            {chips.map((c) => <button key={c.year} className={'chip' + (year === c.year ? ' on' : '') + (c.ok ? '' : ' nodata')} aria-pressed={year === c.year} title={c.ok ? undefined : c.reason ?? undefined} onClick={() => { setYear(c.year); setMsg(null); }}>{c.year}</button>)}
+            {chips.map((c) => <button key={c.year} className={'chip' + (year === c.year ? ' on' : '') + (c.ok ? '' : ' nodata')} aria-pressed={year === c.year} title={c.ok ? `Invested at the start of ${c.year}` : c.reason ?? undefined} onClick={() => { setPicked({ code, year: c.year }); setMsg(null); }}>{c.year}</button>)}
           </div>
+          {lastYear != null && <small className="rep-yearnote">Runs to the end of {lastYear}, the last year closed. Opens on the last ten years; choose an earlier start for a longer history. A dashed year has data missing: click it to see what.</small>}
         </div>
         <div className="filter-row"><span className="filter-k">Amount invested</span>
           <label className="rep-fee"><input type="number" inputMode="numeric" min={10000} max={1000000000} step={50000} value={amountText} onChange={(e) => setAmountText(e.target.value)} aria-label="Amount invested, in the report currency" style={{ width: 140 }} /> {currency}

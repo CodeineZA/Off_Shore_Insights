@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildReport, type ReportOk } from './report';
-import { P, mk } from './report.testdata';
+import { P, R, mk } from './report.testdata';
 import { reportSheets } from './reportsheets';
 import { buildWorkbook, toBase64 } from './reportxlsx';
 import { sourcesForReport } from './sources';
@@ -12,9 +12,25 @@ const sheets = reportSheets(d, r, meta);
 const by = (n: string) => sheets.find((s) => s.name === n)!;
 
 describe('the raw-value sheets', () => {
-  it('seven sheets, each row as wide as its columns', () => {
-    expect(sheets.map((s) => s.name)).toEqual(['Summary', 'Yearly', 'Rates used', 'Index returns', 'Flags', 'Assumptions', 'Sources']);
+  it('eight sheets (the exchange-rate sheet because an allowance was converted), each row as wide as its columns', () => {
+    expect(sheets.map((s) => s.name)).toEqual(['Summary', 'Yearly', 'Rates used', 'FX used', 'Index returns', 'Flags', 'Assumptions', 'Sources']);
     for (const s of sheets) for (const row of s.rows) expect(row.length, s.name).toBe(s.columns.length);
+  });
+  it('a report that converted nothing has no exchange-rate sheet', () => {
+    const eur = buildReport(mk({ market_returns: [R(2024, 10, 'gross', { currency: 'EUR' })], fx_history: [] }), P({ currency: 'EUR' })) as ReportOk;
+    expect(reportSheets(mk(), eur, meta).map((s) => s.name)).not.toContain('FX used');
+  });
+  it('lists every exchange rate used, with the year, the rate and where it came from', () => {
+    expect(by('FX used').rows).toEqual([['EUR', 'USD', 2024, expect.closeTo(1 / 0.9, 10), 'https://ecb.example/USD/2024', '2026-10-03'], ['EUR', 'USD', 2025, expect.closeTo(1 / 0.9, 10), 'https://ecb.example/USD/2025', '2026-10-03']]);
+  });
+  it('the yearly sheet carries the effective tax and the parts of the wealth bill, to the same numbers as the report', () => {
+    const y = by('Yearly');
+    expect(y.columns.slice(14).map((c) => c.header)).toEqual(expect.arrayContaining(['Home: effective tax % of start value', 'Trust: effective tax % of start value']));
+    expect(y.rows[0][14]).toBe(Number(r.effective[0].home.toFixed(4)));
+    expect(y.rows[0][15]).toBe(Number(r.effective[0].trust.toFixed(4)));
+    expect(y.rows[0][16]).toBe(Math.round(r.years[0].home.wealthTax));
+    expect(y.rows[0][17]).toBe(Math.round(r.years[0].home.secTax));
+    expect(Number(y.rows[0][16]) + Number(y.rows[0][17])).toBe(Math.round(r.years[0].home.wealth));
   });
   it('the summary carries the same totals the screen shows', () => {
     const v = Object.fromEntries(by('Summary').rows.map(([k, x]) => [k, x]));

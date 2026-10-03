@@ -4,7 +4,7 @@
 //
 // Rules that never bend (research/README.md): every rate comes from a stored row with its source and date; a missing rate,
 // exchange rate or index return is UNKNOWN, never 0, and an incomplete report gives no comparison at all.
-import type { Dashboard, MarketReturn } from './types';
+import type { Dashboard, FxYear, MarketReturn } from './types';
 import { gateCells } from './model';
 import { pct } from './insights';
 import { rateForYear } from './years';
@@ -48,8 +48,13 @@ export interface RateUsed {
   rate: number; currency: string; thresholdLocal: number | null; /** the allowance in the report's currency */ thresholdConverted: number | null; thresholdNote: string | null; note: string | null;
   sourceUrl: string | null; verifiedOn: string; needsVerification: boolean;
 }
-export interface SideYear { start: number; gain: number; cgt: number; wealth: number; fee: number; end: number }
+/** One side for one year. `wealth` is the whole wealth bill; `wealthTax` is its net-wealth or solidarity part (the larger of the two, `wealthKind` says which) and `secTax` the securities-account part. */
+export interface SideYear { start: number; gain: number; cgt: number; wealth: number; wealthTax: number; wealthKind: 'net' | 'solidarity' | null; secTax: number; fee: number; end: number }
 export interface YearRow { year: number; returnPct: number; home: SideYear; trust: SideYear }
+/** Tax paid in a year as a share of that year's starting value, in percent: capital gains tax plus wealth taxes, the trust fee left out. */
+export interface EffectiveRow { year: number; home: number; trust: number }
+/** An exchange rate an allowance was converted at: units of `to` per one `from`, the ECB's rate at the end of `year`. */
+export interface FxUsed { from: string; to: string; year: number; rate: number; sourceUrl: string; verifiedOn: string }
 export interface SideTotals { end: number; tax: number; fee: number }
 export interface Flag { level: 'red' | 'amber' | 'green'; text: string; sourceUrl: string | null }
 export interface Missing { kind: 'rate' | 'fx' | 'return'; who: string; tax?: string; year?: number; text: string }
@@ -57,7 +62,7 @@ export interface Missing { kind: 'rate' | 'fx' | 'return'; who: string; tax?: st
 export interface ReportOk {
   ok: true; params: ReportParams; currency: ReportCurrency; homeName: string; hubName: string; countryName: string;
   startYear: number; endYear: number; basis: 'gross' | 'net';
-  years: YearRow[]; home: SideTotals; trust: SideTotals;
+  years: YearRow[]; home: SideTotals; trust: SideTotals; effective: EffectiveRow[]; fxUsed: FxUsed[];
   /** trust end − home end, in the report's currency and as a share of the home result. */
   difference: number; differencePct: number;
   rates: RateUsed[]; returns: MarketReturn[]; flags: Flag[]; toVerify: string[]; assumptions: string[]; summary: string;
@@ -75,11 +80,17 @@ const currencyOf = (d: Dashboard, code: string): string => {
   const j = d.jurisdictions.find((x) => x.code === code);
   return j?.currency ?? d.jurisdictions.find((x) => x.code === j?.parent_code)?.currency ?? 'EUR';
 };
-/** Units of `to` per 1 unit of `from`, from the stored euro rates; null when either rate is missing. */
-export function perUnit(d: Dashboard, from: string, to: string): number | null {
+/** Euros per one unit of `cur`. With a year: the ECB's rate at the end of THAT year, and nothing else (never today's rate); without one: today's stored rate. null when not stored. */
+function eurPerUnit(d: Dashboard, cur: string, year?: number): number | null {
+  if (year == null) return d.fx.find((x) => x.currency === cur)?.eur_per_unit ?? null;
+  if (cur === 'EUR') return 1;
+  return d.fx_history?.find((x) => x.currency === cur && x.year === year)?.eur_per_unit ?? null;
+}
+/** Units of `to` per 1 unit of `from`, from the stored euro rates (those of `year` when given); null when either rate is missing. */
+export function perUnit(d: Dashboard, from: string, to: string, year?: number): number | null {
   if (from === to) return 1;
-  const a = d.fx.find((x) => x.currency === from), b = d.fx.find((x) => x.currency === to);
-  return a && b && b.eur_per_unit > 0 ? a.eur_per_unit / b.eur_per_unit : null;
+  const a = eurPerUnit(d, from, year), b = eurPerUnit(d, to, year);
+  return a != null && b != null && b > 0 ? a / b : null;
 }
 export const usdPer = (d: Dashboard, currency: string) => perUnit(d, currency, 'USD');
 
@@ -96,10 +107,11 @@ export function step(start: number, ret: number, t: Rates, feePct: number): Side
   const net = Math.max(0, v1 - t.WEALTH_NET.thr) * t.WEALTH_NET.rate;
   const sol = Math.max(0, v1 - t.WEALTH_SOLIDARITY.thr) * t.WEALTH_SOLIDARITY.rate;
   const sec = v1 >= t.SECURITIES_ACCOUNT.thr ? v1 * t.SECURITIES_ACCOUNT.rate : 0;
-  const wealth = Math.max(net, sol) + sec;
+  const wealthTax = Math.max(net, sol);
+  const wealth = wealthTax + sec;
   const v2 = v1 - wealth;
   const fee = v2 * (feePct / 100);
-  return { start, gain, cgt, wealth, fee, end: v2 - fee };
+  return { start, gain, cgt, wealth, wealthTax, wealthKind: wealthTax <= 0 ? null : net >= sol ? 'net' : 'solidarity', secTax: sec, fee, end: v2 - fee };
 }
 
 export function buildReport(d: Dashboard, p: ReportParams): ReportResult {
@@ -138,6 +150,7 @@ export function buildReport(d: Dashboard, p: ReportParams): ReportResult {
 
   // Gather every rate both sides need; anything unknown stops the report.
   const rates: RateUsed[] = [];
+  const fxUsedMap = new Map<string, FxUsed>();
   const side: Record<Side, Map<number, Rates>> = { home: new Map(), trust: new Map() };
   const homeCurrency = currencyOf(d, p.code), hubCurrency = currencyOf(d, p.hub);
   const need = (who: string, tax: string, year: number, text: string) => missing.push({ kind: 'rate', who, tax, year, text });
@@ -152,9 +165,13 @@ export function buildReport(d: Dashboard, p: ReportParams): ReportResult {
         if (!hit) { need(who, t, y, `${label} for ${d.jurisdictions.find((x) => x.code === who)?.name ?? who}, ${y}`); continue; }
         const rateCur = relieved ? hubCurrency : homeCurrency;
         const thrLocal = hit.row.threshold_amount ?? null;
-        const per = perUnit(d, rateCur, cur);
-        if (thrLocal != null && per == null) { missing.push({ kind: 'fx', who: rateCur, year: y, text: `exchange rate ${rateCur}→${cur}` }); continue; }
+        const per = perUnit(d, rateCur, cur, y);                                   // the rate at the end of THIS year, never today's
+        if (thrLocal != null && per == null) { missing.push({ kind: 'fx', who: rateCur, year: y, text: `exchange rate ${rateCur}→${cur} at the end of ${y}` }); continue; }
         const thrConv = thrLocal == null ? null : thrLocal * (per as number);
+        if (thrLocal != null && rateCur !== cur) {
+          const src = [rateCur, cur].filter((c) => c !== 'EUR').map((c) => d.fx_history?.find((x) => x.currency === c && x.year === y)).filter((x): x is FxYear => !!x);
+          fxUsedMap.set(`${rateCur}>${cur}>${y}`, { from: rateCur, to: cur, year: y, rate: per as number, sourceUrl: src.map((x) => x.source_url).join(' ; '), verifiedOn: src.map((x) => x.verified_on).sort().pop() ?? '' });
+        }
         row[t as ModelTax] = { rate: (hit.row.headline_rate as number) / 100, thr: thrConv ?? 0 };
         rates.push({ side: s, year: y, taxType: t, label, jurisdiction: hit.row.jurisdiction_code, inherited: hit.inherited, relieved,
           rate: hit.row.headline_rate as number, currency: rateCur, thresholdLocal: thrLocal, thresholdConverted: thrConv, thresholdNote: hit.row.threshold_note ?? null,
@@ -206,14 +223,29 @@ export function buildReport(d: Dashboard, p: ReportParams): ReportResult {
     'Gains are realised every year (capital gains tax is paid yearly, above the yearly exemption). Wealth taxes are charged on the year-end value: the larger of net-wealth and solidarity tax, plus securities-account tax.',
     `Through the ${struct}: the taxes a ${struct} relieves (${MODEL_TAXES.filter((t) => relief.has(t)).map((t) => d.tax_types.find((x) => x.code === t)?.label ?? t).join(', ')}) are charged at ${hubName}'s rates; every other tax stays at ${poss(the(country.name))}. A yearly ${struct} fee of ${p.feePct}% of the value is deducted. Inheritance is not modelled.`,
     `The ${struct} column assumes ${the(country.name)} does not tax the ${struct}'s growth, which is what the structure is designed for; the flags show what we hold on lists, CRS reporting and taxes on assets held abroad.`,
-    `Each calendar year uses the tax rates of the tax year that begins in it (${hubName}'s tax year runs ${d.jurisdictions.find((x) => x.code === p.hub)?.tax_year_start === '07-01' ? '1 July to 30 June' : '1 January to 31 December'}). Allowances in local currency are converted at today's stored exchange rate.`,
+    `Each calendar year uses the tax rates of the tax year that begins in it (${hubName}'s tax year runs ${d.jurisdictions.find((x) => x.code === p.hub)?.tax_year_start === '07-01' ? '1 July to 30 June' : '1 January to 31 December'}).${fxUsedMap.size ? ` Allowances set in another currency are converted at the ECB's reference rate at the end of each year (listed in the Excel).` : ''}`,
   ];
   const summary = `If you had put ${m(p.principal)} into global shares at the start of ${p.startYear}, by the end of ${endYear} you would have ${m(hv)} keeping it in ${the(j.name)}, or ${m(tv)} through a ${hubName} ${struct}: ${difference >= 0 ? 'ahead' : 'behind'} by ${m(Math.abs(difference))}.`;
   return {
     ok: true, params: p, currency: cur, homeName: j.name, hubName, countryName: country.name, startYear: p.startYear, endYear, basis,
     years, home, trust, difference, differencePct: hv > 0 ? (difference / hv) * 100 : 0,
+    effective: years.map((r) => ({ year: r.year, home: effectiveTax(r.home), trust: effectiveTax(r.trust) })),
+    fxUsed: [...fxUsedMap.values()].sort((a, b) => a.year - b.year || a.from.localeCompare(b.from)),
     rates, returns: yearsList.map((y) => rets.get(y)!), flags, toVerify, assumptions, summary,
   };
+}
+
+/** Capital gains tax plus wealth taxes as a percent of the value the year started with (the fee is not a tax and is left out). */
+export const effectiveTax = (s: SideYear): number => (s.start > 0 ? ((s.cgt + s.wealth) / s.start) * 100 : 0);
+
+/**
+ * The start year a report opens on: the earliest year that can be built inside the last `span` years, where the end is the latest year with
+ * a stored return (those are closed years only). The window moves by itself each year; nothing is edited by hand. null when no year can be built.
+ */
+export function defaultStartYear(chips: { year: number; ok: boolean }[], span = 10): number | null {
+  if (!chips.length) return null;
+  const end = Math.max(...chips.map((c) => c.year));
+  return chips.filter((c) => c.ok && c.year >= end - span).map((c) => c.year).sort((a, b) => a - b)[0] ?? null;
 }
 
 /** The start years offered as chips: every year with a stored return, each with the reason it cannot be built yet, if so. */

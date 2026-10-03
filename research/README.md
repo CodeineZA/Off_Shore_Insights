@@ -25,9 +25,20 @@ Rules for every write (the skill and n8n workflows follow these):
 Applied data lives in `db/research/*.sql`: idempotent and public. Private notes stay in
 `db/seed-private.sql`.
 
+## Latest version wins
+
+Reports restate their own history, so a value for a past year can change. The rules (2026-10-03, Hentus):
+1. For a (country, tax, tax year), or an index return for a closed year, the **newest edition that explicitly states that year's value** wins. A page that only shows today's rate is not evidence for an earlier year.
+2. An older edition never fills a gap in a newer one (one edition per series; the same rule as UBS and Knight Frank).
+3. Two sources disagree on a year: store the newer source's value with `needs_verification` (`"nv": true`) and name both in the note.
+4. A stored value a run would **change** is shown as `RESTATED old → new` (with both sources) by `apply-run.mjs` (`restated.mjs`, tested), and Hentus sees it before anything is applied. `--offline` skips the comparison and says so.
+5. Source ladder for tax rates: (1) the tax authority's per-year page or table; (2) a compiled series that states the year (OECD Tax Database), newest edition; (3) a dated snapshot of a secondary page nearest the end of that tax year; (4) otherwise unknown, with a "where to get it" gap.
+
+`node research/audit-country.mjs <CODE>` shows `report:history`: how many of the 44 cells (4 report taxes × the 11 years of the window) are on file.
+
 ## Index returns (the report)
 
-`returns[]` in a run file stores calendar-year returns of a market index in `market_return` (recipe `msci-world-usd-annual`: MSCI World, US$, from the factsheet's ANNUAL PERFORMANCE table, read with `pdftotext -raw`). Only CLOSED years are accepted (`apply-run` refuses the current year), `basis` is `gross` or `net` and is printed on every report, and a euro or rand series is a different series: never mix currencies. MSCI publishes US dollars only, so the EUR and ZAR rows are **derived** (`node research/derive-index-currency.mjs` fetches the ECB year-end reference rates, recipe `ecb-fx-year-end`, and writes the run; the formula is in `research/index-currency.mjs`, tested). Each derived row's source text says DERIVED with the rates and dates used, and it includes the dollar's move against that currency. MSCI restricts redistribution of its data: confirm permission before the figures appear in a PDF that leaves the firm.
+`returns[]` in a run file stores calendar-year returns of a market index in `market_return` (recipe `msci-world-usd-annual`: MSCI World, US$, from the factsheet's ANNUAL PERFORMANCE table, read with `pdftotext -raw`). Only CLOSED years are accepted (`apply-run` refuses the current year), `basis` is `gross` or `net` and is printed on every report, and a euro or rand series is a different series: never mix currencies. MSCI publishes US dollars only, so the EUR and ZAR rows are **derived** (`node research/derive-index-currency.mjs` fetches the ECB year-end reference rates, recipe `ecb-fx-year-end`, and writes the run; the formula is in `research/index-currency.mjs`, tested). Each derived row's source text says DERIVED with the rates and dates used, and it includes the dollar's move against that currency. `derive-index-currency.mjs --with <run>` also reads US-dollar rows from a run that is not applied yet (the run wins). The same ECB source gives the **year-end exchange rate of every closed year** (`node research/fetch-fx-years.mjs` → `fx_rate_year`: USD, GBP, CHF, ZAR from 2015): a report converts an allowance at the rate of ITS year, never today's; a year with no stored rate stops the report. MSCI restricts redistribution of its data: confirm permission before the figures appear in a PDF that leaves the firm.
 
 ## Tools
 

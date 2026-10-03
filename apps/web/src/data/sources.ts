@@ -60,6 +60,13 @@ export function classify(url: string | null) {
   const k = KNOWN.find((x) => (host != null && x.test.test(host)) || x.test.test(real.replace(/^https?:\/\//, '')));
   return { name: k?.name || host || real, host, kind: (k?.kind ?? 'unknown') as SourceKind };
 }
+/** How one address is shown on a page: the publisher, the page without its scheme, and the date of the saved copy when it is a Wayback snapshot. */
+export function describeAddress(url: string | null | undefined): { name: string; shown: string | null; archivedOn: string | null } {
+  const u = safeUrl(url);
+  if (!u) return { name: 'No source recorded', shown: null, archivedOn: null };
+  const arch = u.match(ARCHIVE);
+  return { name: classify(u).name, shown: pretty(arch ? arch[4] : u), archivedOn: arch ? `${arch[1]}-${arch[2]}-${arch[3]}` : null };
+}
 /** Reports we hold as files (gitignored, so shown as text): matched on the source name the row carries. */
 const FILES: [RegExp, string][] = [
   [/UBS Global Wealth Report 2026/i, 'PDFs/global-wealth-report-en-2026.pdf'],

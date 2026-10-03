@@ -36,10 +36,25 @@ export function reportSheets(d: Dashboard, r: ReportOk, meta: ReportMeta): Sheet
       { header: `Home: wealth taxes (${U})`, width: 24, fmt: MONEY }, { header: `Home: end of year (${U})`, width: 22, fmt: MONEY },
       { header: `Trust: start of year (${U})`, width: 24, fmt: MONEY }, { header: `Trust: gain (${U})`, width: 18, fmt: MONEY }, { header: `Trust: capital gains tax (${U})`, width: 28, fmt: MONEY },
       { header: `Trust: wealth taxes (${U})`, width: 24, fmt: MONEY }, { header: `Trust: fee (${U})`, width: 17, fmt: MONEY }, { header: `Trust: end of year (${U})`, width: 22, fmt: MONEY },
-      { header: `Difference at year end (${U})`, width: 26, fmt: MONEY }],
-    rows: r.years.map((y) => [y.year, y.returnPct, y.home.start, y.home.gain, y.home.cgt, y.home.wealth, y.home.end,
-      y.trust.start, y.trust.gain, y.trust.cgt, y.trust.wealth, y.trust.fee, y.trust.end, y.trust.end - y.home.end].map((v, i) => (i < 2 || typeof v !== 'number' ? v : Math.round(v)))),
+      { header: `Difference at year end (${U})`, width: 26, fmt: MONEY },
+      { header: 'Home: effective tax % of start value', width: 32, fmt: PCT }, { header: 'Trust: effective tax % of start value', width: 34, fmt: PCT },
+      { header: `Home: net-wealth or solidarity tax (${U})`, width: 36, fmt: MONEY }, { header: `Home: securities-account tax (${U})`, width: 32, fmt: MONEY },
+      { header: `Trust: net-wealth or solidarity tax (${U})`, width: 36, fmt: MONEY }, { header: `Trust: securities-account tax (${U})`, width: 32, fmt: MONEY }],
+    rows: r.years.map((y, i): Cell[] => {
+      const money = [y.home.start, y.home.gain, y.home.cgt, y.home.wealth, y.home.end, y.trust.start, y.trust.gain, y.trust.cgt, y.trust.wealth, y.trust.fee, y.trust.end, y.trust.end - y.home.end].map(Math.round);
+      const [hs, hg, hc, hw, he, ts, tg, tc, tw, tf, te, diff] = money;
+      return [y.year, y.returnPct, hs, hg, hc, hw, he, ts, tg, tc, tw, tf, te, diff,
+        Number(r.effective[i].home.toFixed(4)), Number(r.effective[i].trust.toFixed(4)),
+        Math.round(y.home.wealthTax), Math.round(y.home.secTax), Math.round(y.trust.wealthTax), Math.round(y.trust.secTax)];
+    }),
   };
+  // Only when an allowance was set in another currency than the report's.
+  const fx: Sheet | null = r.fxUsed.length ? {
+    name: 'FX used',
+    columns: [{ header: 'From', width: 8 }, { header: 'To', width: 8 }, { header: 'Year (rate at the end of)', width: 24 }, { header: 'Rate (units of To per 1 From)', width: 30, fmt: '0.000000' },
+      { header: 'Source', width: 80 }, { header: 'Checked on', width: 12 }],
+    rows: r.fxUsed.map((x) => [x.from, x.to, x.year, x.rate, x.sourceUrl, x.verifiedOn]),
+  } : null;
   const rates: Sheet = {
     name: 'Rates used',
     columns: [{ header: 'Side', width: 8 }, { header: 'Year', width: 7 }, { header: 'Tax', width: 28 }, { header: 'Charged in', width: 18 },
@@ -69,5 +84,5 @@ export function reportSheets(d: Dashboard, r: ReportOk, meta: ReportMeta): Sheet
       { header: 'Checked on', width: 12 }, { header: 'To verify', width: 10 }, { header: 'Supports', width: 90 }],
     rows: sourcesForReport(d, r).flatMap((g) => g.entries.map((e): Cell[] => [g.title, e.name, e.kind === 'unknown' ? '' : e.kind, e.url, e.archived?.on ?? null, e.verifiedOn, e.check ? 'Yes' : 'No', e.supports.join(' | ')])),
   };
-  return [summary, yearly, rates, returns, flags, assumptions, sources];
+  return [summary, yearly, rates, ...(fx ? [fx] : []), returns, flags, assumptions, sources];
 }

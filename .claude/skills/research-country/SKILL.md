@@ -1,6 +1,6 @@
 ---
 name: research-country
-description: Research a country for Off_Shore_Insights from nothing, or complete one we already hold. Resolves its codes and capital, checks whether its taxes are the same everywhere or set per region (and creates the regions as children), then fills treaty with Mauritius and Seychelles, the red/green lists, money figures (millionaires, UHNWI, business owners, trusts), the tax rates for the last three tax years, and the map shapes; audits the result against the one checklist; and turns whatever cannot be fetched into a "where to get it" instruction for Hentus. Use when Hentus names a country to add (e.g. "research the Netherlands", "add Austria"), or asks what is missing for one.
+description: Research a country for Off_Shore_Insights from nothing, or complete one we already hold. Resolves its codes and capital, checks whether its taxes are the same everywhere or set per region (and creates the regions as children), then fills treaty with Mauritius and Seychelles, the red/green lists, money figures (millionaires, UHNWI, business owners, trusts), the tax rates for the last three tax years (and, for the four taxes the ten-year report reads, every tax year back to 2015), and the map shapes; audits the result against the one checklist; and turns whatever cannot be fetched into a "where to get it" instruction for Hentus. Use when Hentus names a country to add (e.g. "research the Netherlands", "add Austria"), or asks what is missing for one.
 ---
 
 # /research-country <country>
@@ -41,7 +41,8 @@ Work through `node research/audit-country.mjs <CODE>` item by item. Every figure
 | `gate:blacklist:MU/SC` | the list the country applies (EU Annex I, national lists) | green not listed, amber on a watch list, red listed |
 | `gate:trust_recognition` | HCCH Trusts Convention | |
 | `tax:*` (13 types), country and each region's own | PwC Worldwide Tax Summaries, the regional authority | rate, bands, threshold, tax year. Primary source wins over PwC |
-| `history:<year>` | dated snapshots / the year's official source | the last **three** tax years. See "Back years" |
+| `history:<year>` | dated snapshots / the year's official source | the last **three** tax years, all 13 taxes. See "Back years" |
+| `report:history` | the source ladder in "Back years" | the four taxes the ten-year report reads (`CGT_FINANCIAL`, `WEALTH_NET`, `WEALTH_SOLIDARITY`, `SECURITIES_ACCOUNT`) for every tax year from the window start (2015 today; the window is the last closed year and the ten before it, so it moves by itself). The audit shows "n of 44 cells" |
 | `wealth:millionaires` | UBS Global Wealth Report, Millionaire Index table (`PDFs/`) | net worth ≥US$1m. Not in the table = not published, never 0 |
 | `wealth:uhnwi_count` | Knight Frank Wealth Report, Databank (`PDFs/`) | ≥US$30m. Countries under 500 UHNWIs are not listed |
 | `wealth:business_owners` | `node research/fetch-eurostat.mjs`, then `fetch-ilo.mjs` | Eurostat, else ILO |
@@ -49,9 +50,14 @@ Work through `node research/audit-country.mjs <CODE>` item by item. Every figure
 
 There is **no HNWI** metric: no source publishes it per country.
 
-**Back years (2024, 2025…).** For each tax cell, re-read the recipe's page from a dated snapshot (Wayback Machine, nearest the end
-of that tax year) or the year's primary source. Write closed rows with `from`/`to` set to that tax year's dates and `verified_on` =
-the snapshot's date; the `source_url` is the snapshot URL. If there is no snapshot or the page names no year, leave it unknown.
+**Back years.** Two depths: the three most recent tax years for all 13 taxes (`history:<year>`), and **2015 onward for the four taxes the
+report reads** (`report:history`). For each cell use the highest rung of this ladder that states that tax year **explicitly**:
+(1) the tax authority's own per-year page or table; (2) a compiled series that states the year (e.g. the OECD Tax Database), newest edition;
+(3) a dated snapshot (Wayback Machine) of a secondary page (PwC, KPMG) nearest the end of that tax year; (4) otherwise leave it unknown and write a gap.
+**The newest edition that explicitly states a year wins.** A page that shows only today's rate is not evidence for an earlier year; an older
+edition never fills a gap in a newer one; if two sources disagree on a year, store the newer one with `"nv": true` and name both in `note`.
+A tax that did not exist in a year is a dated **0 whose source says so**, not an unknown. Write closed rows with `from`/`to` set to that tax
+year's dates and `verified_on` = the date you read the source (the snapshot's date for a snapshot); the `source_url` is the address you read.
 A figure for a year is the rate in force on that tax year's **first day**; if it changed mid-year, say so in `note`.
 
 Write everything into one run file `research/runs/<date>-<CODE>.json` (shapes: `research/apply-run.mjs` header comment):
@@ -77,7 +83,8 @@ list in plain words** at the end. When he delivers a file, read it, add the valu
 node research/apply-run.mjs research/runs/<date>-<CODE>.json     # → db/research/<date>-<CODE>.sql
 node research/audit-country.mjs <CODE> --sql                     # → db/research/audit-<date>-<CODE>.sql
 ```
-1. Show Hentus a short diff: the country and regions created, each value with its source, each date, and the blocked list.
+1. Show Hentus a short diff: the country and regions created, each value with its source, each date, and the blocked list. `apply-run` prints
+   the **RESTATED old → new** list (stored closed-year values this run would change, with both sources); include it, or say that none changed.
    Applying writes to the live database: wait for his go-ahead.
 2. `bash db/apply.sh db/research/<date>-<CODE>.sql db/research/audit-<date>-<CODE>.sql`, then run the audit again: the open items
    must be exactly the blocked ones.

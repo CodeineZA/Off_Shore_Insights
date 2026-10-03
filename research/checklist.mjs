@@ -22,6 +22,21 @@ export function taxYear(startMD, on) {
 
 const covers = (r, on) => r.valid_from <= on && (r.valid_to == null || on < r.valid_to);
 
+/** The four taxes the "what a million would have become" report reads (apps/web/src/data/report.ts MODEL_TAXES), and how many years back its window reaches. */
+export const REPORT_TAXES = ['CGT_FINANCIAL', 'WEALTH_NET', 'WEALTH_SOLIDARITY', 'SECURITIES_ACCOUNT'];
+export const REPORT_SPAN = 10;
+/** [2015, 2016, 2017, 2019] → "2015 to 2017, 2019" */
+export function ranges(years) {
+  const out = [];
+  for (let i = 0; i < years.length;) {
+    let k = i;
+    while (k + 1 < years.length && years[k + 1] === years[k] + 1) k++;
+    out.push(k > i ? `${years[i]} to ${years[k]}` : String(years[i]));
+    i = k + 1;
+  }
+  return out.join(', ');
+}
+
 export function buildChecklist(d, today, { recipes = [] } = {}) {
   const out = [];
   const rUrl = (id) => recipes.find((r) => r.id === id)?.url;
@@ -69,6 +84,22 @@ export function buildChecklist(d, today, { recipes = [] } = {}) {
         if (have === known.length) add(`history:${y.startYear}`, 'have', `${have} of ${known.length} taxes have a ${y.label} figure`, null);
         else add(`history:${y.startYear}`, 'missing', `${have} of ${known.length} taxes have a ${y.label} figure`, `Back-year run for ${nameFor}: dated snapshot or official source for ${y.label}`);
       }
+    }
+
+    // The ten-year report reads four taxes for every year of its window (the last closed year and the ten before it). A cell is one tax in one tax year,
+    // filled when a stored row covers that tax year's first day. Taxes a country sets per region are looked for in its regions, not at the national level.
+    const reportTaxes = REPORT_TAXES.filter((c) => d.tax_types.some((t) => t.code === c) && (isRegion ? regional.has(c) : !(j.regional_tax_types ?? []).includes(c)));
+    if (reportTaxes.length) {
+      const last = Number(today.slice(0, 4)) - 1;
+      const years = Array.from({ length: REPORT_SPAN + 1 }, (_, i) => last - REPORT_SPAN + i);
+      const startMD = j.tax_year_start ?? parent?.tax_year_start;
+      const filled = (y, c) => hist.some((r) => r.jurisdiction_code === j.code && r.tax_type_code === c && covers(r, taxYearByStartYear(startMD, y).start));
+      const total = years.length * reportTaxes.length, have = years.reduce((n, y) => n + reportTaxes.filter((c) => filled(y, c)).length, 0);
+      const gaps = years.filter((y) => reportTaxes.some((c) => !filled(y, c)));
+      const label = (c) => d.tax_types.find((t) => t.code === c)?.label?.toLowerCase() ?? c;
+      if (have === total) add('report:history', 'have', `${years[0]} to ${last}: all ${total} cells on file`, null);
+      else add('report:history', 'missing', `${years[0]} to ${last}: ${have} of ${total} cells on file; missing for ${ranges(gaps)}`,
+        `Back-year run for ${nameFor}: ${reportTaxes.map(label).join(', ')} for ${ranges(gaps)}. Newest edition that states the year: the tax authority's own page, then a compiled series, then a dated snapshot (research/README.md, "Latest version wins")`);
     }
 
     // ── treaty, gates, money, firms, map shapes (countries only) ──

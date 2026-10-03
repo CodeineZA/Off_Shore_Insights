@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Dashboard } from './types';
-import { classify, contextLabel, countSources, safeUrl, sourcesFor, type SourceContext } from './sources';
+import { classify, contextLabel, countSources, describeAddress, safeUrl, sourcesFor, type SourceContext } from './sources';
 
 const J = (code: string, extra = {}) => ({ code, name: code, parent_code: null, kind: 'country', currency: 'EUR', tax_year_start: '01-01', next_budget_date: null,
   is_offshore_hub: false, notes: null, lon: 1, lat: 2, regional_tax_types: [], ...extra });
@@ -129,5 +129,20 @@ describe('sources for a region and for the world', () => {
     expect(countSources(groups)).toBe(new Set(groups.flatMap((g) => g.entries.map((e) => e.key))).size);
     expect(contextLabel(d, ctx({ years: [2026, 2025] }))).toBe('NL · tax years 2025, 2026');
     expect(contextLabel(d, ctx({ code: null }))).toBe('World map: treaty colours and money bars');
+  });
+});
+
+describe('describeAddress (how a year page names a source)', () => {
+  it('names the publisher and shows the page without its scheme', () => {
+    expect(describeAddress('https://www.belastingdienst.nl/wps/wcm/connect/fisin2024/belastingberekening'))
+      .toEqual({ name: 'Belastingdienst (Dutch tax administration)', shown: 'belastingdienst.nl/wps/wcm/connect/fisin2024/belastingberekening', archivedOn: null });
+  });
+  it('shows a saved copy as the original page plus the date of the copy', () => {
+    expect(describeAddress('https://web.archive.org/web/20240917123456/https://taxsummaries.pwc.com/netherlands/individual/other-taxes'))
+      .toEqual({ name: 'PwC Worldwide Tax Summaries', shown: 'taxsummaries.pwc.com/netherlands/individual/other-taxes', archivedOn: '2024-09-17' });
+  });
+  it('says so when there is no usable address, and never builds a link from a non-web address', () => {
+    expect(describeAddress(null)).toEqual({ name: 'No source recorded', shown: null, archivedOn: null });
+    expect(describeAddress('javascript:alert(1)')).toEqual({ name: 'No source recorded', shown: null, archivedOn: null });
   });
 });

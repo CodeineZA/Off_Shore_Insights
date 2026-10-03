@@ -1,0 +1,28 @@
+{
+  "run": "2026-10-03",
+  "by": "claude: PDFs/msci-world-index-usd-factsheet-2026-08-31.pdf, table ANNUAL PERFORMANCE (%), read by script (PyMuPDF) and checked against a second reading",
+  "mode": "history",
+  "note": "MSCI World Index (USD) gross annual returns for the closed years 2015 to 2023, for the ten-year report. Same factsheet (31 Aug 2026) as the 2024 and 2025 rows already stored; its table lists 2012 to 2025 and 2024 = 19.19, 2025 = 21.60 agree with what is stored (nothing restated). 2012 to 2014 are in the table too but are left out: the report window starts in 2015.",
+  "returns": [
+    {
+      "recipe": "msci-world-usd-annual",
+      "index_code": "MSCI_WORLD",
+      "index_name": "MSCI World Index",
+      "basis": "gross",
+      "currency": "USD",
+      "source": "MSCI World Index (USD) factsheet, 31 Aug 2026, gross returns",
+      "verified_on": "2026-10-03",
+      "values": {
+        "2015": -0.32,
+        "2016": 8.15,
+        "2017": 23.07,
+        "2018": -8.2,
+        "2019": 28.4,
+        "2020": 16.5,
+        "2021": 22.35,
+        "2022": -17.73,
+        "2023": 24.42
+      }
+    }
+  ]
+}

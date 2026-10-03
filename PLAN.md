@@ -318,3 +318,21 @@ fees, set-up costs, inheritance. The trust column assumes the home country does 
 rates the engine reads (capital gains on shares, net wealth, solidarity wealth, securities account) unlock a country's report, the other taxes fill the tax chart.
 
 **Open:** MSCI's terms on redistributing its figures in a PDF sent to prospects (Hentus to decide); the real trust fee schedule; whether a net-return MSCI series can be fetched.
+
+## 11. The ten-year report (2026-10-03)
+
+**Ask (Hentus):** a long history, starting 2015: "if €1,000,000 had been invested in 2015, what is it worth now kept in the local country, against through a Trust in Mauritius / Seychelles", and how local tax has increased over the same years. He also asked that the **latest published version of a value** win, since reports restate their own history.
+
+**Decisions (Hentus):** ground date 2015 · default currency EUR, amount €1,000,000 (still switchable) · two graphs: the value of the money (kept local against through the trust) and the **effective tax of each year** (capital gains tax plus wealth taxes as a share of the value the year started with; the trust fee is a cost, not a tax, and is left out) · then **a page per year** · the four report taxes first · the tax back-fill is done in a separate session on the strongest model; the engine, graphs, database and tooling are done in the build session.
+
+**The window (dynamic):** every year from 2015 stays in the database; the report opens on the last ten years (end = the latest closed year with a stored return, start = end − 10; today 2015 to 2025, next year 2016 to 2026). Nothing is incremented by hand.
+
+**Document:** page 1 the result + both graphs · page 2 where the difference comes from, the Country page's tax chart (first and last year), flags, assumptions · one page per year (opening value, growth, each tax, fee, closing value, the year's step against local, the running lead, the rates in force with their sources) · sources paged by line budget · footer with the Van Wyk Auditors logo on every page · "page X of N" computed. About 16 pages for 11 years.
+
+**Data model changes:** `fx_rate_year` (the ECB's rate at the end of each year; allowances are converted at the rate of THEIR year, never today's; a missing year stops the report) · `dashboard()` key `fx_history` · MSCI World USD 2015 to 2023 from the factsheet already held, EUR/ZAR derived with the same year-end rates.
+
+**Latest version wins (research/README.md):** the newest edition that explicitly states a year's value wins; an older edition never fills a gap; disagreements are stored `nv` with both sources named; every stored value a run would change is shown as `RESTATED old → new` (`research/restated.mjs`, run by `apply-run`) before anything is applied. Source ladder for tax rates: the tax authority's per-year page, a compiled series (OECD Tax Database), a dated snapshot, otherwise unknown.
+
+**Back-fill status:** `node research/audit-country.mjs <CODE>` shows `report:history`. On 2026-10-03 the Netherlands, Mauritius and Seychelles have 8 of 44 cells (2024 and 2025); BE CH DE ES FR GB IT PT ZA have none for 2015 to 2025 (their rows start in 2026). Order: MU, SC, NL, then the others, one run file and one diff per country, each applied only on Hentus's go-ahead.
+
+**Open:** MSCI's terms on showing 11 years of its figures in client PDFs (Hentus decides) · Seychelles capital gains "official statement still to find" · Swiss cantons and Spanish regions need a rule for which one the report represents · the Internet Archive was offline on 2026-10-03, so 2015 snapshot availability is unverified (the Netherlands used the tax authority's per-year pages).

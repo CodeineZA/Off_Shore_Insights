@@ -10,6 +10,9 @@ export const T = (code: string, category: string, label = code) => ({ code, labe
 export const R = (year: number, total_return_pct: number, basis = 'gross', extra = {}) => ({ index_code: 'MSCI_WORLD', index_name: 'MSCI World Index', year, total_return_pct, basis, currency: 'USD',
   source: 'MSCI factsheet', source_url: 'https://msci.example', verified_on: '2026-10-02', ...extra });
 
+/** A year-end exchange rate row (euros per one unit of the currency). */
+export const FY = (currency: string, year: number, eur_per_unit: number) => ({ currency, year, eur_per_unit, source: 'ECB euro reference rate', source_url: `https://ecb.example/${currency}/${year}`, verified_on: '2026-10-03' });
+
 // 1 USD = 0.9 EUR, so 1 EUR = 1/0.9 USD: a EUR 9,000 exemption is US$10,000 and a EUR 450,000 allowance is US$500,000.
 export const base = () => ({
   jurisdictions: [J('XX'), J('MU', { is_offshore_hub: true, tax_year_start: '07-01', currency: 'MUR' }), J('SC', { is_offshore_hub: true })],
@@ -18,6 +21,7 @@ export const base = () => ({
   service_tax: ['CGT_FINANCIAL', 'WEALTH_NET', 'WEALTH_SOLIDARITY', 'INHERITANCE_DIRECT'].map((t) => ({ service_code: 'trust', tax_type_code: t, note: null })),
   fx: [{ currency: 'EUR', eur_per_unit: 1, as_of: '2026-10-01', source_url: '' }, { currency: 'USD', eur_per_unit: 0.9, as_of: '2026-10-01', source_url: '' },
     { currency: 'MUR', eur_per_unit: 0.02, as_of: '2026-10-01', source_url: '' }],
+  fx_history: [FY('USD', 2024, 0.9), FY('USD', 2025, 0.9)],
   rate_history: [
     H('XX', 'CGT_FINANCIAL', 30, '2020-01-01', { threshold_amount: 9000, valid_to: '2025-01-01' }), H('XX', 'CGT_FINANCIAL', 25, '2025-01-01', { threshold_amount: 9000 }),
     H('XX', 'WEALTH_NET', 1, '2020-01-01', { threshold_amount: 450000 }), H('XX', 'WEALTH_SOLIDARITY', 0, '2020-01-01'), H('XX', 'SECURITIES_ACCOUNT', 0.2, '2020-01-01'),
@@ -31,4 +35,18 @@ export const base = () => ({
   notes: [{ id: 1, jurisdiction_code: 'MU', topic: 'crs', text: 'Structures are reported to the home country.', source_url: null, verified_on: null, sort_order: 1 }],
 });
 export const mk = (over: Record<string, unknown> = {}) => ({ ...base(), ...over }) as unknown as Dashboard;
+
+/** Eleven years, 2015 to 2025, all in euros (so no conversion is needed): capital gains tax 20 % then 26 % from 2020, net-wealth tax 0.5 % then 1 % from 2022, hubs at 0 %. */
+export const HISTORY_YEARS = Array.from({ length: 11 }, (_, i) => 2015 + i);
+export const HISTORY_RETURNS = [10, -5, 20, -10, 25, 15, 5, -12, 18, 22, 8];
+export const longHistory = () => mk({
+  market_returns: HISTORY_YEARS.map((y, i) => R(y, HISTORY_RETURNS[i], 'gross', { currency: 'EUR' })),
+  fx_history: [],
+  rate_history: [
+    H('XX', 'CGT_FINANCIAL', 20, '2015-01-01', { threshold_amount: 1000, valid_to: '2020-01-01' }), H('XX', 'CGT_FINANCIAL', 26, '2020-01-01', { threshold_amount: 1000 }),
+    H('XX', 'WEALTH_NET', 0.5, '2015-01-01', { threshold_amount: 100_000, valid_to: '2022-01-01' }), H('XX', 'WEALTH_NET', 1, '2022-01-01', { threshold_amount: 100_000 }),
+    H('XX', 'WEALTH_SOLIDARITY', 0, '2015-01-01'), H('XX', 'SECURITIES_ACCOUNT', 0, '2015-01-01'),
+    ...['CGT_FINANCIAL', 'WEALTH_NET', 'WEALTH_SOLIDARITY', 'SECURITIES_ACCOUNT'].map((t) => H('MU', t, 0, '2015-01-01')),
+  ],
+});
 export const P = (extra: Partial<ReportParams> = {}): ReportParams => ({ code: 'XX', structure: 'trust', hub: 'MU', startYear: 2024, endYear: 2024, principal: PRINCIPAL, feePct: DEFAULT_FEE_PCT, index: 'MSCI_WORLD', ...extra });

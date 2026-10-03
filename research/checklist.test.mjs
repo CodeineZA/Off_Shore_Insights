@@ -112,3 +112,68 @@ test('money back years are not requested: an older report edition is a different
   const items = buildChecklist(empty([J('XX')]), '2026-10-02');
   assert.equal(items.some((i) => i.item.startsWith('history_wealth')), false);
 });
+
+// ── the ten-year report: four taxes for every year of its window ──
+import { REPORT_TAXES, REPORT_SPAN, ranges } from './checklist.mjs';
+const withReportTaxes = (jurisdictions) => ({ ...empty(jurisdictions), tax_types: [...REPORT_TAXES.map((c) => T(c, c.replace(/_/g, ' '))), T('INH')] });
+// a row covering the tax year that begins in `y` (calendar year), for every tax, from `y` to `to` (exclusive)
+const rows = (j, from, to, taxes = REPORT_TAXES, md = '01-01') => taxes.flatMap((t) => Array.from({ length: to - from }, (_, i) => R(j, t, { valid_from: `${from + i}-${md}`, valid_to: `${from + i + 1}-${md}` })));
+const item = (items, code) => items.find((i) => i.item === 'report:history' && i.jurisdiction_code === code);
+
+test('report history: the window is the last closed year and the ten before it, and the item says which years are missing', () => {
+  const d = withReportTaxes([J('XX')]);
+  d.rate_history = rows('XX', 2024, 2026);                                       // only 2024 and 2025 on file
+  const it = item(buildChecklist(d, '2026-10-03'), 'XX');
+  assert.equal(it.status, 'missing');
+  assert.equal(it.detail, '2015 to 2025: 8 of 44 cells on file; missing for 2015 to 2023');
+  assert.match(it.where_to_get, /Back-year run for XX: .* for 2015 to 2023\. Newest edition that states the year/);
+  assert.equal(REPORT_SPAN, 10);
+});
+
+test('report history: complete when every cell is on file, and the window moves by itself when a year closes', () => {
+  const d = withReportTaxes([J('XX')]);
+  d.rate_history = rows('XX', 2015, 2026);
+  assert.deepEqual([item(buildChecklist(d, '2026-10-03'), 'XX').status, item(buildChecklist(d, '2026-10-03'), 'XX').detail], ['have', '2015 to 2025: all 44 cells on file']);
+  const next = item(buildChecklist(d, '2027-02-01'), 'XX');                       // 2026 has closed: the window is 2016 to 2026, and 2026 has no row yet
+  assert.equal(next.status, 'missing');
+  assert.equal(next.detail, '2016 to 2026: 40 of 44 cells on file; missing for 2026');
+});
+
+test('report history: one tax missing in one year is a gap, and ranges are written compactly', () => {
+  const d = withReportTaxes([J('XX')]);
+  d.rate_history = [...rows('XX', 2015, 2026, REPORT_TAXES.filter((t) => t !== 'WEALTH_NET')), ...rows('XX', 2015, 2026, ['WEALTH_NET']).filter((r) => r.valid_from !== '2018-01-01' && r.valid_from !== '2022-01-01' && r.valid_from !== '2023-01-01')];
+  const it = item(buildChecklist(d, '2026-10-03'), 'XX');
+  assert.equal(it.detail, '2015 to 2025: 41 of 44 cells on file; missing for 2018, 2022 to 2023');
+  assert.equal(ranges([2015, 2016, 2017, 2019, 2021, 2022]), '2015 to 2017, 2019, 2021 to 2022');
+  assert.equal(ranges([]), '');
+});
+
+test('report history: a tax year that does not start on 1 January is judged on its own first day (a 6 April or 1 July year)', () => {
+  const d = withReportTaxes([J('GB', { tax_year_start: '04-06' }), J('MU', { is_offshore_hub: true, tax_year_start: '07-01' })]);
+  d.rate_history = [...rows('GB', 2015, 2026, REPORT_TAXES, '04-06'), ...rows('MU', 2015, 2026, REPORT_TAXES, '07-01')];
+  const items = buildChecklist(d, '2026-10-03');
+  assert.equal(item(items, 'GB').status, 'have');
+  assert.equal(item(items, 'MU').status, 'have');                                 // hubs are part of the report too
+  d.rate_history = rows('GB', 2015, 2026, REPORT_TAXES, '01-01');                 // rows running 1 January to 1 January also cover 6 April of each year
+  assert.equal(item(buildChecklist(d, '2026-10-03'), 'GB').status, 'have');
+  d.rate_history = rows('GB', 2015, 2026, REPORT_TAXES, '07-01');                 // rows running 1 July to 1 July do not cover 6 April 2015, the first day of the first tax year
+  assert.equal(item(buildChecklist(d, '2026-10-03'), 'GB').status, 'missing');
+});
+
+test('report history: a tax a country sets per region is looked for in its regions, not at the national level', () => {
+  const d = withReportTaxes([J('ES', { regional_tax_types: ['WEALTH_NET'] }), J('ES-MD', { kind: 'region', parent_code: 'ES' })]);
+  d.rate_history = [...rows('ES', 2015, 2026, REPORT_TAXES.filter((t) => t !== 'WEALTH_NET'))];
+  const items = buildChecklist(d, '2026-10-03');
+  assert.equal(item(items, 'ES').status, 'have');                                 // 3 taxes x 11 years, all on file
+  assert.equal(item(items, 'ES').detail, '2015 to 2025: all 33 cells on file');
+  assert.equal(item(items, 'ES-MD').status, 'missing');                           // the region owns WEALTH_NET
+  assert.equal(item(items, 'ES-MD').detail, '2015 to 2025: 0 of 11 cells on file; missing for 2015 to 2025');
+});
+
+test('report history: no item where the report taxes do not exist, and a blocked item stays blocked', () => {
+  assert.equal(buildChecklist(empty([J('XX')]), '2026-10-03').some((i) => i.item === 'report:history'), false);
+  const d = withReportTaxes([J('XX')]);
+  d.research_items = [{ jurisdiction_code: 'XX', item: 'report:history', status: 'blocked', detail: 'No source states 2015 to 2017', where_to_get: 'Ask the tax office' }];
+  const it = item(buildChecklist(d, '2026-10-03'), 'XX');
+  assert.deepEqual([it.status, it.detail, it.where_to_get], ['blocked', 'No source states 2015 to 2017', 'Ask the tax office']);
+});

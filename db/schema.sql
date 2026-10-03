@@ -249,6 +249,17 @@ create table if not exists offshore_insights.fx_rate (
   as_of        date not null,
   source_url   text not null
 );
+-- The ECB euro reference rate at the END of each calendar year, per currency: what a report converts the allowances of THAT year at
+-- (fx_rate above holds only today's rate, which is wrong for a ten-year history). A year with no row is unknown, never today's rate.
+create table if not exists offshore_insights.fx_rate_year (
+  currency     char(3) not null,
+  year         int     not null check (year between 1999 and 2100),
+  eur_per_unit numeric(18,8) not null check (eur_per_unit > 0),
+  source       text not null,
+  source_url   text not null,
+  verified_on  date not null,
+  primary key (currency, year)
+);
 
 -- ════════════════════════════ Operations ═════════════════════════════════════
 -- Every n8n workflow writes one row per run.
@@ -554,6 +565,7 @@ returns jsonb language sql stable security invoker set search_path = '' as $$
     'service_tax',   coalesce((select jsonb_agg(to_jsonb(v) order by v.service_code, v.tax_type_code) from offshore_insights.service_tax v), '[]'),
     'research_items', coalesce((select jsonb_agg(to_jsonb(v) order by v.jurisdiction_code, v.item) from offshore_insights.research_item v), '[]'),
     'market_returns', coalesce((select jsonb_agg(to_jsonb(v) - 'id' order by v.index_code, v.year, v.basis, v.currency) from offshore_insights.market_return v), '[]'),
+    'fx_history',    coalesce((select jsonb_agg(to_jsonb(x) order by x.currency, x.year) from offshore_insights.fx_rate_year x), '[]'),
     'advisor_categories', coalesce((select jsonb_agg(to_jsonb(v) order by v.sort_order, v.label) from offshore_insights.advisor_category v), '[]'),
     -- Slim rows only: the page lists names by category and region. Contact details stay in the table.
     'advisors',      coalesce((select jsonb_agg(jsonb_build_object('id', a.id, 'name', a.name, 'category_code', a.category_code,
@@ -737,7 +749,7 @@ do $$
 declare t text;
 begin
   foreach t in array array['jurisdiction','tax_type','tax_rate','treaty','wealth_market',
-                           'jurisdiction_note','review_flag','sync_run','site_page','jurisdiction_gate','fx_rate',
+                           'jurisdiction_note','review_flag','sync_run','site_page','jurisdiction_gate','fx_rate','fx_rate_year',
                            'service','service_tax','research_item','market_return','advisor_category','advisor_source','advisor',
                            'search_daily','search_query_monthly','analytics_daily'] loop
     execute format('alter table offshore_insights.%I enable row level security', t);

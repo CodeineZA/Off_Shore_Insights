@@ -4,9 +4,9 @@
 // start of the year, holding the index, and converting back at the end (research/index-currency.mjs). The exchange rates are the
 // ECB euro foreign exchange reference rates on the last day published on or before 31 December. Every derived row says so in its
 // source text, with the rates and dates used.
-//   node research/derive-index-currency.mjs            → research/runs/<date>-msci-currency.json
+//   node research/derive-index-currency.mjs [--with research/runs/<date>-msci-history.json]   → research/runs/<date>-msci-currency.json
 //   node research/apply-run.mjs research/runs/<date>-msci-currency.json → db/research/<date>-msci-currency.sql
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadDashboard } from './lib.mjs';
@@ -18,8 +18,15 @@ const ECB = 'https://data-api.ecb.europa.eu/service/data/EXR/D.USD+ZAR.EUR.SP00.
 const TARGETS = ['EUR', 'ZAR'];
 
 const d = await loadDashboard();
-const usd = (d.market_returns ?? []).filter((r) => r.index_code === 'MSCI_WORLD' && r.currency === 'USD' && r.basis === 'gross').sort((a, b) => a.year - b.year);
-if (!usd.length) throw new Error('no MSCI_WORLD gross USD rows in the database: apply research/runs/2026-10-02-msci.json first');
+// Run files that are not applied yet can supply US-dollar rows too: --with research/runs/<date>-msci-history.json (repeatable). A run file is the newer edition, so it wins.
+const withFiles = process.argv.flatMap((a, i, all) => (a === '--with' ? [all[i + 1]] : []));
+const fromRuns = withFiles.flatMap((f) => (JSON.parse(readFileSync(f, 'utf8')).returns ?? [])
+  .filter((r) => r.index_code === 'MSCI_WORLD' && r.currency === 'USD' && r.basis === 'gross')
+  .flatMap((r) => Object.entries(r.values).map(([year, pct]) => ({ year: +year, total_return_pct: pct, source: r.source }))));
+const byYear = new Map((d.market_returns ?? []).filter((r) => r.index_code === 'MSCI_WORLD' && r.currency === 'USD' && r.basis === 'gross').map((r) => [r.year, r]));
+for (const r of fromRuns) byYear.set(r.year, r);
+const usd = [...byYear.values()].sort((a, b) => a.year - b.year);
+if (!usd.length) throw new Error('no MSCI_WORLD gross USD rows in the database or in a --with run file: apply research/runs/2026-10-02-msci.json first');
 const first = usd[0].year - 1, last = usd[usd.length - 1].year;
 
 const res = await fetch(`${ECB}?startPeriod=${first}-12-10&endPeriod=${last}-12-31&format=csvdata`, { headers: { Accept: 'text/csv' } });

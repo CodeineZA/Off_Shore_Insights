@@ -68,6 +68,8 @@ export interface Gate {
   verified_on: string; next_check_on: string; needs_verification: boolean;
 }
 export interface Fx { currency: string; eur_per_unit: number; as_of: string; source_url: string }
+/** The ECB's reference rate on the last business day of a calendar year (euros per one unit): what an allowance of that year is converted at. */
+export interface FxYear { currency: string; year: number; eur_per_unit: number; source: string; source_url: string; verified_on: string }
 /** A closed calendar year's total return of a market index (what the report compounds on). */
 export interface MarketReturn {
   index_code: string; index_name: string; year: number; total_return_pct: number; basis: 'gross' | 'net'; currency: string;
@@ -96,6 +98,7 @@ export interface Dashboard {
   services?: Service[]; service_tax?: ServiceTax[]; research_items?: ResearchItem[];
   advisor_categories?: AdvisorCategory[]; advisors?: Advisor[];
   market_returns?: MarketReturn[];
+  fx_history?: FxYear[];
   /** Dev only: run files laid over a local fixture that are not in the database yet (scripts/fixture-overlay.mjs). */
   preview_overlay?: string[];
 }
