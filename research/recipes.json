@@ -734,6 +734,9 @@
         "Wayback copies of the 2016 to 2022 editions under economistas.es/Contenido/... and reaf.economistas.es"
       ],
       "cells": [
+        "ES-*:WEALTH_NET",
+        "ES-*:INHERITANCE_DIRECT",
+        "ES-*:INHERITANCE_OTHER",
         "ES-VI:*",
         "ES-BI:*",
         "ES-SS:*",
@@ -799,6 +802,18 @@
         "treaty:SC:ZA"
       ],
       "extract": "SARS list of treaties with African countries: Government Gazette number, publication date and date of entry into force for each treaty and protocol. Signing dates are in the treaty texts linked from the list (the \"DONE at\" line)."
+    },
+    {
+      "id": "es-boe-law",
+      "method": "page-extract",
+      "url": "https://www.boe.es/buscar/pdf/1987/BOE-A-1987-28141-consolidado.pdf",
+      "cells": [
+        "ES:INHERITANCE_DIRECT",
+        "ES:INHERITANCE_OTHER",
+        "ES-CE:*",
+        "ES-ML:*"
+      ],
+      "extract": "BOE consolidated texts (the PDF shows the date of the last change): inheritance tax law 29/1987 (art. 20 reductions by group, art. 21 scale, art. 22 multipliers by group and pre-existing wealth, art. 23 bis Ceuta and Melilla rebate) and wealth tax law 19/1991 (BOE-A-1991-14392: art. 28 exemption of EUR 700,000, art. 30 scale, art. 33 Ceuta and Melilla rebate). The state rules apply in Ceuta and Melilla and wherever a region sets none."
     },
     {
       "id": "lu-nc-list",

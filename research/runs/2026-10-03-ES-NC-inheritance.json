@@ -1,0 +1,51 @@
+{
+  "run": "2026-10-03",
+  "by": "claude: Navarre inheritance for unrelated heirs 2024-2025",
+  "mode": "history",
+  "note": "Navarre unrelated-heir inheritance tax for 2024 and 2025 from dated copies of the Hacienda Foral page; 2026 stays a gap (no copy dated in 2026, and the 2026 Panorama gives no figures).",
+  "defaults": {
+    "valid_from": {
+      "*": "2026-01-01"
+    },
+    "next_check_on": {
+      "*": "2027-01-15"
+    }
+  },
+  "rates": [
+    {
+      "j": "ES-NC",
+      "t": "INHERITANCE_OTHER",
+      "h": 48,
+      "min": 11,
+      "max": 48,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "recipe": "es-reaf-panorama",
+      "source_override": "https://web.archive.org/web/20241009203714/http://www.navarra.es/home_es/Gobierno+de+Navarra/Organigrama/Los+departamentos/Economia+y+Hacienda/Organigrama/Estructura+Organica/Hacienda/Informacion+Fiscal/Preguntas+mas+frecuentes/Impuesto+sobre+sucesiones/Tarifa.htm",
+      "verified_on": "2024-10-09",
+      "note": "Navarre, unrelated heirs (colaterales de grado más distante y extraños): 11% on a base up to 6,010.12 rising to 48% above 3,005,060.52. NOT progressive: the rate for the bracket the base falls in applies to the WHOLE base (Hacienda Foral de Navarra, Tarifa del impuesto, copy dated in 2024). Headline = the top rate."
+    },
+    {
+      "j": "ES-NC",
+      "t": "INHERITANCE_OTHER",
+      "h": 48,
+      "min": 11,
+      "max": 48,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "recipe": "es-reaf-panorama",
+      "source_override": "https://web.archive.org/web/20250813235014/https://www.navarra.es/home_es/Gobierno+de+Navarra/Organigrama/Los+departamentos/Economia+y+Hacienda/Organigrama/Estructura+Organica/Hacienda/Informacion+Fiscal/Preguntas+mas+frecuentes/Impuesto+sobre+sucesiones/Tarifa.htm",
+      "verified_on": "2025-08-13",
+      "note": "Navarre, unrelated heirs (colaterales de grado más distante y extraños): 11% on a base up to 6,010.12 rising to 48% above 3,005,060.52. NOT progressive: the rate for the bracket the base falls in applies to the WHOLE base (Hacienda Foral de Navarra, Tarifa del impuesto, copy dated in 2025). Headline = the top rate."
+    }
+  ],
+  "gaps": [
+    {
+      "j": "ES-NC",
+      "item": "tax:INHERITANCE_OTHER",
+      "status": "blocked",
+      "detail": "Navarre 2026: no copy of the Hacienda Foral tariff page dated in 2026 (the old address now redirects to the regulations index), and REAF Panorama 2026 gives no figures for unrelated heirs. 2024 and 2025 are stored (11% to 48%, applied to the whole base).",
+      "where_to_get": "Hacienda Foral de Navarra: the current Ley Foral del Impuesto sobre Sucesiones y Donaciones (texto refundido, Decreto Foral Legislativo 250/2002, art. 34) or the 2026 tariff page. Save it in PDFs/ and tell Claude."
+    }
+  ]
+}
