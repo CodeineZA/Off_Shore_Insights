@@ -780,6 +780,27 @@
       "extract": "AIMI (adicional ao IMI), Portal das Financas copy of the IMI code: art. 135-F rates for individuals (0.7%; 1% on the part of the taxable value above EUR 1m up to 2m; 1.5% above 2m) and art. 135-C (.../cimi135c.aspx) the EUR 600,000 deduction for an individual. Back years: dated Wayback copies."
     },
     {
+      "id": "sars-rates",
+      "method": "page-extract",
+      "url": "https://www.sars.gov.za/tax-rates/income-tax/capital-gains-tax-cgt/",
+      "cells": [
+        "ZA:CGT_FINANCIAL",
+        "ZA:CGT_PROPERTY",
+        "ZA:INCOME_TOP"
+      ],
+      "extract": "SARS tax rates: the CGT table (maximum effective rate for individuals per year of assessment, labelled by the year ending in February: \"2016\" = 1 Mar 2015 to 29 Feb 2016) and the exclusions; the individual tax tables (.../rates-of-tax-for-individuals/). Every year since 2014/15: https://www.sars.gov.za/tax-rates/archive-tax-rates/. Older copies only carry the rate table, not the annual exclusion."
+    },
+    {
+      "id": "sars-dta",
+      "method": "page-extract",
+      "url": "https://www.sars.gov.za/legal-counsel/international-treaties-agreements/double-taxation-agreements-protocols/dtas-and-protocols-africa/",
+      "cells": [
+        "treaty:MU:ZA",
+        "treaty:SC:ZA"
+      ],
+      "extract": "SARS list of treaties with African countries: Government Gazette number, publication date and date of entry into force for each treaty and protocol. Signing dates are in the treaty texts linked from the list (the \"DONE at\" line)."
+    },
+    {
       "id": "lu-nc-list",
       "method": "page-extract",
       "url": "https://impotsdirects.public.lu/fr/az/l/ListeUEterritoiresNC.html",

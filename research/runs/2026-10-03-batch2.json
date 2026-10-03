@@ -1,0 +1,169 @@
+{
+  "run": "2026-10-03",
+  "by": "claude: national ES/CH wealth rows 2024-2025, structure checks DE FR IT PT, BE-SC treaty dates, gaps",
+  "mode": "history",
+  "note": "Small batch closing audit items: the national net wealth rows of Spain and Switzerland for 2024 and 2025 (the regional rows are what the report uses), the structure check for Germany, France, Italy and Portugal, the Belgium-Seychelles treaty dates, and gap records for the Belgian blacklist check, Belgian UHNWI count and the parked advisors search.",
+  "defaults": {
+    "valid_from": {
+      "*": "2026-01-01"
+    },
+    "next_check_on": {
+      "*": "2027-01-15"
+    }
+  },
+  "jurisdictions": [
+    {
+      "code": "DE",
+      "structure_checked_on": "2026-10-03",
+      "structure_note": "All tracked taxes are federal and the same in every Land: income and capital gains tax (EStG), inheritance tax (ErbStG), withholding. The real estate tax is municipal and the real estate transfer tax (3.5% to 6.5%) is set by the Länder; neither is a tracked tax (PwC Germany Other taxes, last reviewed 30 Jun 2025). No regions needed."
+    },
+    {
+      "code": "FR",
+      "structure_checked_on": "2026-10-03",
+      "structure_note": "All tracked taxes are national: income tax and surcharges, flat tax on capital gains, IFI, inheritance tax, withholding. Local property and housing taxes are not tracked (PwC France Other taxes, last reviewed 5 Jun 2025). No regions needed."
+    },
+    {
+      "code": "IT",
+      "structure_checked_on": "2026-10-03",
+      "structure_note": "National: capital gains (26%), IVAFE and IVIE, inheritance tax, withholding. Income tax only has a regional surcharge (1.23% to 3.33%, set by each region) and a municipal one (0% to 0.9%), stored as the range on the national income row (PwC Italy, last reviewed 19 Aug 2025). Regions not created: they would differ only on that surcharge; ask Hentus whether he wants the 20 regions."
+    },
+    {
+      "code": "PT",
+      "structure_checked_on": "2026-10-03",
+      "structure_note": "The tracked taxes are national (income tax, 28% on capital gains, stamp duty on inheritances, AIMI, withholding). The autonomous regions of the Azores and Madeira set their own VAT rates and incentive regimes (Deloitte, Portugal Highlights 2026); whether they also set a lower income tax scale is not stated by PwC or Deloitte. To verify before deciding on regions."
+    }
+  ],
+  "rates": [
+    {
+      "j": "ES",
+      "t": "WEALTH_NET",
+      "h": 3.5,
+      "min": 0.2,
+      "max": 3.5,
+      "thr": 700000,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "recipe": "pwc-ES-other",
+      "source_override": "https://web.archive.org/web/20241212184751/https://taxsummaries.pwc.com/spain/individual/other-taxes",
+      "verified_on": "2024-12-12",
+      "note": "Regional tax; the state default scale (used where a region sets none) runs from 0.2% to 3.5% above €10,695,996.06, after the state exemption of €700,000 (PwC, last reviewed 30 Jun 2024). Each region's own row is the one the report uses. NOT ONE RATE: headline = the top band."
+    },
+    {
+      "j": "CH",
+      "t": "WEALTH_NET",
+      "h": 0.3,
+      "min": 0,
+      "max": 0.3,
+      "from": "2024-01-01",
+      "to": "2025-01-01",
+      "recipe": "pwc-CH-other",
+      "source_override": "https://web.archive.org/web/20241213001336/https://taxsummaries.pwc.com/switzerland/individual/other-taxes",
+      "verified_on": "2024-12-13",
+      "note": "Cantonal tax. Example, canton of Zurich basic scale for a single person: 0% to CHF 80,000, then 0.05% rising to 0.30% above CHF 3,262,000, before the municipal multiplier (PwC, last reviewed 27 Jun 2024). Each canton's own row is the one the report uses. NOT ONE RATE: headline = the Zurich top rate."
+    },
+    {
+      "j": "ES",
+      "t": "WEALTH_NET",
+      "h": 3.5,
+      "min": 0.2,
+      "max": 3.5,
+      "thr": 700000,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "recipe": "pwc-ES-other",
+      "source_override": "https://web.archive.org/web/20251230155455/https://taxsummaries.pwc.com/spain/individual/other-taxes",
+      "verified_on": "2025-12-30",
+      "note": "Regional tax; the state default scale (used where a region sets none) runs from 0.2% to 3.5% above €10,695,996.06, after the state exemption of €700,000 (PwC, last reviewed 30 Jun 2025). Each region's own row is the one the report uses. NOT ONE RATE: headline = the top band."
+    },
+    {
+      "j": "CH",
+      "t": "WEALTH_NET",
+      "h": 0.3,
+      "min": 0,
+      "max": 0.3,
+      "from": "2025-01-01",
+      "to": "2026-01-01",
+      "recipe": "pwc-CH-other",
+      "source_override": "https://web.archive.org/web/20251216031003/https://taxsummaries.pwc.com/switzerland/individual/other-taxes",
+      "verified_on": "2025-12-16",
+      "note": "Cantonal tax. Example, canton of Zurich basic scale for a single person: 0% to CHF 80,000, then 0.05% rising to 0.30% above CHF 3,262,000, before the municipal multiplier (PwC, last reviewed 8 Oct 2025). Each canton's own row is the one the report uses. NOT ONE RATE: headline = the Zurich top rate."
+    }
+  ],
+  "treaties": [
+    {
+      "a": "SC",
+      "b": "BE",
+      "status": "in_force",
+      "signed_on": "2006-04-27",
+      "in_force_on": "2015-09-10",
+      "recipe": "src-SC-dta",
+      "source_override": "https://www.oecd.org/content/dam/oecd/en/topics/policy-sub-issues/beps-mli/beps-mli-position-belgium-instrument-deposit.pdf",
+      "note": "Signed in Brussels on 27 Apr 2006, in force 10 Sep 2015; protocol signed 14 Jul 2009, in force 22 Jun 2016 (Belgium's list of covered tax agreements in its MLI position deposited with the OECD, entry 77). Treaty text: https://src.gov.sc/wp-content/uploads/2022/12/DTABelgium.pdf. Rates on payments FROM Belgium (PwC Belgium WHT table, last reviewed 10 Sep 2026): dividends 0/5/15%, interest 5/10%, royalties 5%. Rates on payments from Seychelles not yet read, so the WHT fields stay empty."
+    }
+  ],
+  "gaps": [
+    {
+      "j": "BE",
+      "item": "gate:blacklist:MU",
+      "status": "blocked",
+      "detail": "Belgium's tax-haven lists (art. 307 CIR 92 reporting: the art. 179 AR/CIR 92 low-tax list, the EU list and the Global Forum ratings) are published by SPF Finances behind a CAPTCHA that blocks automated reading, also in archived copies; the e-Justice copy of the royal decree stopped being updated in 2003.",
+      "where_to_get": "Open https://fin.belgium.be (Entreprises > International > Paradis fiscaux), download the current list of states for the payments declaration (Excel or PDF), save it in PDFs/ and tell Claude whether Mauritius (and Seychelles) is listed."
+    },
+    {
+      "j": "BE",
+      "item": "wealth:uhnwi_count",
+      "status": "blocked",
+      "detail": "Belgium is not in the Knight Frank Wealth Report 2026 Databank (only the larger markets are listed).",
+      "where_to_get": "Another published count of individuals with US$30m+ (e.g. UBS Global Wealth Report country tables, Altrata). Save the page in PDFs/ and tell Claude."
+    },
+    {
+      "j": "BE",
+      "item": "advisors",
+      "status": "blocked",
+      "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors Belgium when you want it."
+    },
+    {
+      "j": "DE",
+      "item": "advisors",
+      "status": "blocked",
+      "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors Germany when you want it."
+    },
+    {
+      "j": "FR",
+      "item": "advisors",
+      "status": "blocked",
+      "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors France when you want it."
+    },
+    {
+      "j": "IT",
+      "item": "advisors",
+      "status": "blocked",
+      "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors Italy when you want it."
+    },
+    {
+      "j": "PT",
+      "item": "advisors",
+      "status": "blocked",
+      "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors Portugal when you want it."
+    },
+    {
+      "j": "ES",
+      "item": "advisors",
+      "status": "blocked",
+      "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors Spain when you want it."
+    },
+    {
+      "j": "CH",
+      "item": "advisors",
+      "status": "blocked",
+      "detail": "Parked: Hentus paused the firms search on 2026-10-02.",
+      "where_to_get": "Nothing to fetch. Restart with /find-advisors Switzerland when you want it."
+    }
+  ]
+}
