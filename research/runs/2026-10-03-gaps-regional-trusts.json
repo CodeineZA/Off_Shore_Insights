@@ -1,0 +1,275 @@
+{
+  "run": "2026-10-03",
+  "by": "claude: gaps for regional money figures and trust counts",
+  "mode": "history",
+  "note": "Gap records: money figures for the Basque provinces and the Swiss cantons (no source splits them), and the trust count for eight countries (no register publishes one).",
+  "defaults": {
+    "valid_from": {
+      "*": "2026-01-01"
+    },
+    "next_check_on": {
+      "*": "2027-01-15"
+    }
+  },
+  "gaps": [
+    {
+      "j": "ES-VI",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Álava: Eurostat publishes business owners (employers) only for the Basque Country as a whole (NUTS 2 ES21), not per province; UBS and Knight Frank publish no regional figures.",
+      "where_to_get": "Eustat (the Basque statistics office): employed persons by professional status per territory (Álava, Bizkaia, Gipuzkoa), the PRA labour survey. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "ES-BI",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Bizkaia: Eurostat publishes business owners (employers) only for the Basque Country as a whole (NUTS 2 ES21), not per province; UBS and Knight Frank publish no regional figures.",
+      "where_to_get": "Eustat (the Basque statistics office): employed persons by professional status per territory (Álava, Bizkaia, Gipuzkoa), the PRA labour survey. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "ES-SS",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Gipuzkoa: Eurostat publishes business owners (employers) only for the Basque Country as a whole (NUTS 2 ES21), not per province; UBS and Knight Frank publish no regional figures.",
+      "where_to_get": "Eustat (the Basque statistics office): employed persons by professional status per territory (Álava, Bizkaia, Gipuzkoa), the PRA labour survey. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-ZH",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Zürich: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-BE",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Bern: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-LU",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Lucerne: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-UR",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Uri: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-SZ",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Schwyz: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-OW",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Obwalden: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-NW",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Nidwalden: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-GL",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Glarus: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-ZG",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Zug: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-FR",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Fribourg: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-SO",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Solothurn: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-BS",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Basel-Stadt: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-BL",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Basel-Landschaft: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-SH",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Schaffhausen: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-AR",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Appenzell Ausserrhoden: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-AI",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Appenzell Innerrhoden: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-SG",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "St. Gallen: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-GR",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Graubünden: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-AG",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Aargau: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-TG",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Thurgau: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-TI",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Ticino: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-VD",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Vaud: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-VS",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Valais: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-NE",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Neuchâtel: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-GE",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Geneva: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH-JU",
+      "item": "wealth:regional",
+      "status": "blocked",
+      "detail": "Jura: Eurostat's regional labour data for Switzerland stop at the seven NUTS 2 groups of cantons, so there is no employer count per canton; UBS and Knight Frank publish no cantonal figures.",
+      "where_to_get": "Swiss Federal Statistical Office (BFS): self-employed with employees by canton (SAKE / Strukturerhebung), or the cantonal statistics office. Save the table in PDFs/ and tell Claude."
+    },
+    {
+      "j": "BE",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "Belgium: The UBO register (FPS Finance) has a section for trusts but publishes no count.",
+      "where_to_get": "FPS Finance (UBO register) or the Belgian FIU (CTIF-CFI) annual report: the number of trusts registered."
+    },
+    {
+      "j": "DE",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "Germany: The Transparency Register (Bundesanzeiger) counts entries per legal form; the latest official count found (Bundestag Drucksache 20/3221, 17 Aug 2022) has a row for trusts, but its table does not read reliably as text, so no figure is stored.",
+      "where_to_get": "Bundestag Drucksache 20/3221 (https://dserver.bundestag.de/btd/20/032/2003221.pdf), answer 2: the number for \"TR-Trust\"; or a newer government answer. Tell Claude the number and its date."
+    },
+    {
+      "j": "FR",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "France: The trust register (registre des trusts, DGFiP) publishes no count; the only figure seen (about 16,000 trusts known to the tax administration) is from 2016 and secondary.",
+      "where_to_get": "DGFiP annual report or a parliamentary answer giving the number of trusts in the registre des trusts. Save it in PDFs/ and tell Claude."
+    },
+    {
+      "j": "IT",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "Italy: The beneficial-owner register (Registro dei titolari effettivi, trust section) publishes no count.",
+      "where_to_get": "Unioncamere / the business register (Registro delle imprese): the number of trusts registered in the titolari effettivi section. Save it in PDFs/ and tell Claude."
+    },
+    {
+      "j": "PT",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "Portugal: The beneficial-owner register (RCBE, IRN) publishes no count of trusts (fundos fiduciários).",
+      "where_to_get": "IRN: RCBE statistics by type of entity, including trusts. Save it in PDFs/ and tell Claude."
+    },
+    {
+      "j": "ES",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "Spain: The register of beneficial owners (Registro de Titularidades Reales, Ministry of Justice) publishes no count of trusts.",
+      "where_to_get": "Ministry of Justice: the number of trusts (fideicomisos) in the Registro de Titularidades Reales. Save it in PDFs/ and tell Claude."
+    },
+    {
+      "j": "CH",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "Switzerland: Swiss law has no trust of its own and there is no trust register, so no count exists.",
+      "where_to_get": "Nothing to fetch unless a study estimates the number of trusts administered in Switzerland (e.g. the Swiss Association of Trust Companies, SATC). Save it in PDFs/ and tell Claude."
+    },
+    {
+      "j": "ZA",
+      "item": "wealth:trusts_count",
+      "status": "blocked",
+      "detail": "South Africa: No count of trusts found: SARS publishes how many trusts filed income tax returns (84,134 for the 2024 tax year), which is a different measure, and the Master of the High Court publishes no register total.",
+      "where_to_get": "Master of the High Court annual report (trusts registered) or SARS Tax Statistics (trusts registered for income tax). Save it in PDFs/ and tell Claude."
+    }
+  ]
+}

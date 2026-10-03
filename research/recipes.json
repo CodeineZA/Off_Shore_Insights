@@ -835,6 +835,16 @@
       "extract": "PwC Portugal Guia Fiscal (one edition a year): the IRS rate tables for the mainland, Madeira and the Azores and the solidarity surcharge per region. Older editions through dated Wayback copies. Cross-check Madeira against its budget decree (at.madeira.gov.pt, Decreto Legislativo Regional) and the Azores against DLR 2/99/A art. 4 (30% below the national rates)."
     },
     {
+      "id": "eurostat-employers-regional",
+      "method": "api",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfst_r_lfe2estat?format=JSON&lang=EN&wstatus=SELF_S&sex=T&age=Y15-74&unit=THS_PER",
+      "cells": [
+        "wealth_market.business_owners (regions)"
+      ],
+      "automation": "node research/fetch-eurostat-regions.mjs",
+      "extract": "Employers (self-employed with employees) per NUTS region, the same measure as the national figure, for the regions whose borders match a NUTS region (BE NUTS 1, ES/IT/PT NUTS 2). Eurostat flags small samples as low reliability (u): kept in the source text."
+    },
+    {
       "id": "lu-nc-list",
       "method": "page-extract",
       "url": "https://impotsdirects.public.lu/fr/az/l/ListeUEterritoiresNC.html",
