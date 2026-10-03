@@ -533,6 +533,21 @@
       "extract": "Every rate listed: WHT to non-residents (dividends, interest, bank-interest exceptions), Immovable Property Tax. Taxes NOT listed (CGT, inheritance, gift, wealth) stay needs_verification until an official statement confirms they do not exist."
     },
     {
+      "id": "sib-SC-taxes",
+      "method": "page-extract",
+      "url": "https://investinseychelles.com/investors-guide/investor-resources/seychelles-tax-guide",
+      "alt_urls": [
+        "http://www.sib.gov.sc/index.php/investment-guide/investors-guide/taxes"
+      ],
+      "cells": [
+        "SC:CGT_FINANCIAL",
+        "SC:WEALTH_NET",
+        "SC:WEALTH_SOLIDARITY",
+        "SC:SECURITIES_ACCOUNT"
+      ],
+      "extract": "Seychelles Investment Board tax guide (sib.gov.sc until 2018, investinseychelles.com since 2021): the taxes it lists as administered by the SRC. A tax not listed stays needs_verification, as for src-SC-system. Back years: dated Wayback copies only."
+    },
+    {
       "id": "chambers-SC-realestate",
       "method": "page-extract",
       "url": "https://practiceguides.chambers.com/practice-guides/real-estate-2026/seychelles",
@@ -615,6 +630,41 @@
         "treaty:SC-*:status"
       ],
       "extract": "Which target countries have a DTA with Seychelles. Listed = agreement exists (confirm in-force date from the treaty text); not listed = none."
+    },
+    {
+      "id": "deloitte-highlights",
+      "method": "page-extract",
+      "url": "https://www2.deloitte.com/content/dam/Deloitte/global/Documents/Tax/dttl-tax-<country>highlights-<YEAR>.pdf",
+      "cells": [
+        "*:CGT_FINANCIAL",
+        "*:WEALTH_NET",
+        "*:WEALTH_SOLIDARITY"
+      ],
+      "extract": "Deloitte International Tax \"<Country> Highlights <YEAR>\" (one dated edition a year, as at January): the lines \"Capital gains\", \"Net wealth/net worth tax\", \"Inheritance/estate tax\". Older editions only through dated Wayback copies (pdftotext -layout). An edition is evidence for the tax year it falls in, never for an earlier or later one."
+    },
+    {
+      "id": "ey-personal-tax-guide",
+      "method": "page-extract",
+      "url": "https://www.ey.com/en_gl/tax-guides",
+      "cells": [
+        "*:CGT_FINANCIAL",
+        "*:WEALTH_NET",
+        "*:WEALTH_SOLIDARITY",
+        "*:SECURITIES_ACCOUNT"
+      ],
+      "extract": "EY Worldwide Personal Tax (and Immigration) Guide, one edition a year, \"content current on 1 July <YEAR>\" (editions 2015-16 to 2019-20 are in the Wayback Machine under www.ey.com/Publication/vwLUAssets/...). The country chapter: \"Capital gains\" under A. Income tax, and \"B. Other taxes\" (net worth tax, estate and gift taxes). An edition is evidence for the tax year that contains 1 July of its first year. Read with pdftotext -layout."
+    },
+    {
+      "id": "nl-bd-box3-history",
+      "method": "page-extract",
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/fisin/fisin2019/belastingberekening",
+      "alt_urls": [
+        "https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2021"
+      ],
+      "cells": [
+        "NL:WEALTH_NET"
+      ],
+      "extract": "Box 3 for a past year from the Belastingdienst's own year pages: fisin<YEAR>/belastingberekening (2019 onward, section \"Box 3: inkomen uit sparen en beleggen\": heffingsvrij vermogen, the 2 percentages, the 3 schijven with their savings/investments mix, the tax rate), berekening-box-3-inkomen-<YEAR> (2021 onward, newer: the method on actual holdings), and for 2015-2018 the dated Wayback copies of the pages \"berekenen belasting over vermogen tot en met 2016\", \"berekening 2017\", \"berekening 2018\" and the heffingsvrij-vermogen pages. Effective rate = tax rate x deemed return (derived: say so)."
     },
     {
       "id": "eu-annex-i",
