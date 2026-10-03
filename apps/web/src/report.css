@@ -100,8 +100,14 @@
 .rep-src-group li { padding: 2px 0; border-bottom: 1px solid rgba(90, 64, 28, .1); }
 .rep-src-group b { font-weight: 600; } .rep-src-group em { font-style: normal; color: var(--muted-2); }
 .rep-url { display: block; color: var(--muted-2); overflow-wrap: anywhere; }
-.rep-foot span:last-child { white-space: nowrap; }
-.rep-foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--rep-line); display: flex; justify-content: space-between; gap: 14px; font: 400 7.5px/1.5 Poppins; color: var(--muted-2); }
+.rep-foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--rep-line); display: flex; align-items: center; gap: 14px; font: 400 7.5px/1.5 Poppins; color: var(--muted-2); }
+.rep-foot .rep-mark { display: flex; align-items: center; gap: 7px; flex: none; }
+.rep-foot .rep-logo { width: 38px; height: 26px; flex: none; display: block; }
+.rep-foot .rep-since { display: block; font: 500 8px/1.35 Poppins; color: #1d1610; white-space: nowrap; }
+.rep-foot .rep-since b { display: block; font-weight: 600; letter-spacing: .01em; }
+.rep-foot .rep-since i { display: block; font-style: normal; font-weight: 400; color: var(--muted-2); }
+.rep-foot .rep-note { flex: 1; min-width: 0; }
+.rep-foot .rep-where { flex: none; white-space: nowrap; text-align: right; }
 
 /* On the Reports page the document sits on a dark desk, scaled down on narrow screens; in print it is exactly A4. */
 .report-desk { overflow: auto; padding: 18px; border-radius: 16px; background: #2a2724; border: 1px solid var(--line); }

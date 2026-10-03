@@ -7,15 +7,24 @@ import { CURRENCY_NAME, MODEL_TAXES, STRUCTURES, fmtMoney, the, type ReportOk } 
 import { sourcesForReport } from '../../data/sources';
 import TaxSlicer from '../TaxSlicer';
 import ValueChart from './ValueChart';
+import { LOGO_DATA_URI, LOGO_HEIGHT, LOGO_WIDTH } from './logo';
 
 const money = (v: number) => Math.round(v).toLocaleString('en');
 const noop = () => {};
 
+/** The logo is defined once (an SVG <image>, no <img> and no URL) and drawn in every footer with <use>, so it is in the file once. */
+function LogoDef() {
+  return <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false"><defs><image id="vw-logo" href={LOGO_DATA_URI} width={LOGO_WIDTH} height={LOGO_HEIGHT} /></defs></svg>;
+}
 function Foot({ r, page }: { r: ReportOk; page: string }) {
   return (
     <footer className="rep-foot">
-      <span>Indicative only, not tax advice. An illustration built from stored tax rates and published index returns; past performance does not predict future returns.</span>
-      <span>{r.homeName} · {r.hubName} {STRUCTURES[r.params.structure].label.toLowerCase()} · {page} of 3</span>
+      <div className="rep-mark">
+        <svg className="rep-logo" viewBox={`0 0 ${LOGO_WIDTH} ${LOGO_HEIGHT}`} role="img" aria-label="Van Wyk Auditors logo"><use href="#vw-logo" /></svg>
+        <span className="rep-since"><b>Van Wyk Auditors</b> <i>since 1991</i></span>
+      </div>
+      <span className="rep-note">Indicative only, not tax advice. An illustration built from stored tax rates and published index returns; past performance does not predict future returns.</span>
+      <span className="rep-where">{r.homeName} · {r.hubName} {STRUCTURES[r.params.structure].label.toLowerCase()} · {page} of 3</span>
     </footer>
   );
 }
@@ -32,6 +41,7 @@ export default function ReportDocument({ d, r, generatedOn }: { d: Dashboard; r:
   const signed = (v: number) => `${v >= 0 ? '+' : '−'}${m(Math.abs(v))}`;
   return (
     <article className="report-doc" aria-label={`Report: ${r.summary}`}>
+      <LogoDef />
       <section className="report-page">
         <Head generatedOn={generatedOn} />
         <div className="rep-title">
