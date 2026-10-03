@@ -73,7 +73,16 @@ const recipes = [
   { id: 'marketing-rules', method: 'manual', url: '',
     cells: ['gate:*:marketing'], extract: 'Whether cross-border marketing of offshore structures to residents is allowed. No objective public source: Justus decides per country.' },
   { id: 'fx-eur', method: 'api', url: 'https://open.er-api.com/v6/latest/EUR', cells: ['fx_rate'],
-    automation: 'node research/fetch-fx.mjs (run by /update-offshore-insights)', extract: 'EUR per unit for EUR, GBP, ZAR, CHF, MUR, SCR.' },
+    automation: 'node research/fetch-fx.mjs (run by /update-offshore-insights)', extract: 'EUR per unit for EUR, USD, GBP, ZAR, CHF, MUR, SCR. USD is there because the report principal and the index are in US dollars.' },
+  { id: 'ecb-fx-year-end', method: 'api', url: 'https://data-api.ecb.europa.eu/service/data/EXR/D.USD+ZAR.EUR.SP00.A', cells: ['market_return:MSCI_WORLD:EUR', 'market_return:MSCI_WORLD:ZAR'],
+    automation: 'node research/derive-index-currency.mjs (then apply-run on the run file it writes)',
+    extract: 'ECB euro foreign exchange reference rates (units of currency per 1 EUR), USD and ZAR, on the last day published on or before 31 December of each year. Used to DERIVE the euro and rand returns of the MSCI World Index from its US-dollar return: '
+      + 'return_C = (1 + return_USD) x (C per USD at the end / C per USD at the start) - 1. The derived rows are labelled DERIVED in their source text, with the rates and dates used; MSCI does not publish them. The page is a CSV API: ?startPeriod=...&endPeriod=...&format=csvdata, Accept: text/csv.' },
+  { id: 'msci-world-usd-annual', method: 'page-extract', url: 'https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb', cells: ['market_return:MSCI_WORLD'],
+    extract: 'MSCI World Index (USD) factsheet, table "ANNUAL PERFORMANCE (%)" (columns: MSCI World, MSCI Emerging Markets, MSCI ACWI). Read with pdftotext -raw: the PDF is served as a binary download, so fetch it with curl and keep the file in PDFs/. '
+      + 'Take the MSCI World column for every CLOSED calendar year (2024 = 19.19, 2025 = 21.60 in the factsheet dated 31 Aug 2026; the current year is year-to-date and is never stored). BASIS: this factsheet is GROSS returns in USD (before withholding tax on dividends); '
+      + 'store basis "gross" and say so on every report. If a NET-return USD factsheet becomes fetchable, store it as a separate basis "net" and prefer it. CURRENCY: USD only, so the report is in US dollars before currency moves; '
+      + 'a EUR or GBP series gives very different numbers (a search snippet quoted 26.60 and 6.77 for EUR net: unconfirmed, not used). RIGHTS: MSCI restricts redistribution of its data; confirm permission before the figures appear in a PDF that leaves the firm.' },
   { id: 'eurostat-employers', method: 'api',
     url: 'https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfsa_egaps?format=JSON&lang=EN&wstatus=SELF_S&sex=T&age=Y15-74&unit=THS_PER',
     cells: ['wealth_market.business_owners'], automation: 'node research/fetch-eurostat.mjs (run by /update-offshore-insights); n8n E1 exists but is paused',

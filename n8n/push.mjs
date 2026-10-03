@@ -23,6 +23,7 @@ const FILES = [
   ['W3-monthly', 'N8N_WF_MONTHLY', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
   ['W4-budget', 'N8N_WF_BUDGET', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
   ['E1-eurostat', 'N8N_WF_EUROSTAT', false], // paused 2026-09-30: updates run on demand via /update-offshore-insights
+  ['R1-report-mail', 'N8N_WF_REPORT_MAIL', true], // webhook called by the login gateway: renders a report to PDF and emails it
 ];
 
 async function api(method, path, body) {
@@ -37,13 +38,33 @@ function setEnv(key, value) {
 }
 
 const only = process.argv.slice(2);
+
+// R1 needs two credentials, created once (their ids live in .env, so a re-push never makes duplicates):
+//  - a header-auth credential that the webhook checks. Its secret is REPORT_WEBHOOK_SECRET in .env (generated here if missing);
+//    the login gateway sends the same value, so it must also be on the Pi (scripts/deploy.sh reads it from a file there).
+//  - the Pi's SMTP: Mailpit on the host's port 1025, reached from n8n as host.docker.internal. No login, no TLS (it accepts any).
+const placeholders = {};
+if (readdirSync(here).includes('R1-report-mail.json') && (!only.length || only.some((p) => 'R1-report-mail'.startsWith(p)))) {
+  if (!env.REPORT_WEBHOOK_SECRET) {
+    const { randomBytes } = await import('node:crypto');
+    env.REPORT_WEBHOOK_SECRET = randomBytes(32).toString('hex');
+    setEnv('REPORT_WEBHOOK_SECRET', env.REPORT_WEBHOOK_SECRET); writeFileSync(envPath, envText);
+    console.log('generated REPORT_WEBHOOK_SECRET in .env: put the same value on the Pi where scripts/deploy.sh reads it');
+  }
+  const ensure = async (key, body) => { if (env[key]) return env[key]; const c = await api('POST', '/credentials', body); env[key] = c.id; setEnv(key, c.id); writeFileSync(envPath, envText); return c.id; };
+  placeholders.__CRED_REPORT_HEADER__ = await ensure('N8N_CRED_REPORT_HEADER', { name: 'Off_Shore_Insights report webhook', type: 'httpHeaderAuth', data: { name: 'X-Report-Secret', value: env.REPORT_WEBHOOK_SECRET } });
+  placeholders.__CRED_SMTP__ = await ensure('N8N_CRED_SMTP', { name: 'Pi SMTP (Mailpit, info@codeine.cloud)', type: 'smtp',
+    data: { user: '', password: '', host: 'host.docker.internal', port: 1025, secure: false, disableStartTls: true, hostName: 'insights.codeine.cloud' } });
+}
 const present = new Set(readdirSync(here).filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, '')));
 let errorId = env.N8N_WF_ERROR_ALERT || null;
 
 for (const [file, envKey, activate] of FILES) {
   if (!present.has(file)) continue;
   if (only.length && !only.some((p) => file.startsWith(p)) && file !== 'ERR-error-alert') continue;
-  const wf = JSON.parse(readFileSync(join(here, `${file}.json`), 'utf8'));
+  let text = readFileSync(join(here, `${file}.json`), 'utf8');
+  for (const [k, v] of Object.entries(placeholders)) text = text.split(k).join(v);
+  const wf = JSON.parse(text);
   if (wf.settings?.errorWorkflow === '__ERROR_WORKFLOW_ID__') wf.settings.errorWorkflow = errorId;
   if (file === 'W0-gitsync' && errorId) wf.settings = { ...wf.settings, errorWorkflow: errorId };
   const payload = { name: wf.name, nodes: wf.nodes, connections: wf.connections, settings: wf.settings };

@@ -25,6 +25,10 @@ Rules for every write (the skill and n8n workflows follow these):
 Applied data lives in `db/research/*.sql`: idempotent and public. Private notes stay in
 `db/seed-private.sql`.
 
+## Index returns (the report)
+
+`returns[]` in a run file stores calendar-year returns of a market index in `market_return` (recipe `msci-world-usd-annual`: MSCI World, US$, from the factsheet's ANNUAL PERFORMANCE table, read with `pdftotext -raw`). Only CLOSED years are accepted (`apply-run` refuses the current year), `basis` is `gross` or `net` and is printed on every report, and a euro or rand series is a different series: never mix currencies. MSCI publishes US dollars only, so the EUR and ZAR rows are **derived** (`node research/derive-index-currency.mjs` fetches the ECB year-end reference rates, recipe `ecb-fx-year-end`, and writes the run; the formula is in `research/index-currency.mjs`, tested). Each derived row's source text says DERIVED with the rates and dates used, and it includes the dollar's move against that currency. MSCI restricts redistribution of its data: confirm permission before the figures appear in a PDF that leaves the firm.
+
 ## Tools
 
 | Tool | What it does |

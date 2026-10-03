@@ -218,6 +218,40 @@ workflows['E1-eurostat'] = {
   connections: link('Schedule', 'Start', 'Countries', 'Fetch Eurostat', 'Upsert wealth_market', 'Record sync_run'),
 };
 
+// ── R1: the emailed report ───────────────────────────────────────────────────
+// The browser builds the report (HTML + Excel) and sends it to the login gateway, which checks the token, picks the signed-in
+// user's own address and calls this webhook with a shared secret. Here: Gotenberg renders the HTML to a PDF, then the PDF and
+// the Excel go out through the Pi's SMTP (Mailpit -> DKIM-signing Postfix, sender info@codeine.cloud).
+// Credentials are created by push.mjs; the placeholders below are replaced with their ids.
+const CRED_HOOK = { httpHeaderAuth: { id: '__CRED_REPORT_HEADER__', name: 'Off_Shore_Insights report webhook' } };
+const CRED_SMTP = { smtp: { id: '__CRED_SMTP__', name: 'Pi SMTP (Mailpit, info@codeine.cloud)' } };
+seq = 0;
+workflows['R1-report-mail'] = {
+  name: 'Off_Shore_Insights - R1 Report mail',
+  settings: settings(),
+  nodes: [
+    note('## R1 Report mail\nWebhook (header secret, called only by the login gateway) → check the payload → Gotenberg renders the HTML to a PDF (container offshore-insights-render on the n8n network; no network access, no JavaScript) → name the files → send from info@codeine.cloud through the Pi SMTP (host.docker.internal:1025) with the PDF and the Excel attached → answer {ok:true}. Any failure raises the Error alert. The recipient comes from the gateway, which takes it from the signed-in user, never from the request.', [0, -260], 760),
+    node('Webhook', 'n8n-nodes-base.webhook', 2, [0, 0], { httpMethod: 'POST', path: 'offshore-report-mail', authentication: 'headerAuth', responseMode: 'responseNode', options: {} },
+      { credentials: CRED_HOOK, webhookId: 'c91f5a64-3d0e-4b52-8c1a-7e2f40b9d6a3' }),
+    code('Prepare', 'r1-prepare.js', [240, 0], 'runOnceForEachItem'),
+    node('Render PDF', 'n8n-nodes-base.httpRequest', 4.2, [480, 0], {
+      method: 'POST', url: 'http://offshore-insights-render:3000/forms/chromium/convert/html', sendBody: true, contentType: 'multipart-form-data',
+      bodyParameters: { parameters: [
+        { parameterType: 'formBinaryData', name: 'files', inputDataFieldName: 'index_html' },
+        { name: 'paperWidth', value: '8.27' }, { name: 'paperHeight', value: '11.7' },
+        { name: 'marginTop', value: '0' }, { name: 'marginBottom', value: '0' }, { name: 'marginLeft', value: '0' }, { name: 'marginRight', value: '0' },
+        { name: 'printBackground', value: 'true' }, { name: 'preferCssPageSize', value: 'true' }, { name: 'emulatedMediaType', value: 'print' },
+      ] },
+      options: { timeout: 60000, response: { response: { responseFormat: 'file', outputPropertyName: 'pdf' } } } }),
+    code('Name the files', 'r1-name.js', [720, 0], 'runOnceForEachItem'),
+    node('Send email', 'n8n-nodes-base.emailSend', 2.1, [960, 0], {
+      fromEmail: 'Off_Shore_Insights <info@codeine.cloud>', toEmail: '={{ $json.to }}', subject: '={{ $json.subject }}', emailFormat: 'html', html: '={{ $json.html }}',
+      options: { attachments: 'pdf,xlsx', appendAttribution: false, allowUnauthorizedCerts: true } }, { credentials: CRED_SMTP }),
+    node('Answer', 'n8n-nodes-base.respondToWebhook', 1.1, [1200, 0], { respondWith: 'json', responseBody: '={{ JSON.stringify({ ok: true }) }}', options: {} }),
+  ],
+  connections: link('Webhook', 'Prepare', 'Render PDF', 'Name the files', 'Send email', 'Answer'),
+};
+
 for (const [file, wf] of Object.entries(workflows)) {
   writeFileSync(join(here, `${file}.json`), JSON.stringify(wf, null, 2) + '\n');
   console.log(`wrote n8n/${file}.json  (${wf.nodes.length} nodes)`);

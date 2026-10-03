@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -17,6 +17,23 @@ const fixture = (): Plugin => ({
       { user_id: '00000000-0000-4000-8000-000000000002', username: 'demo', display_name: 'Demo user', email: null, cell: '+27 82 000 0000',
         disabled: false, is_admin: false, created_here: true, created_at: now, auth_email: 'demo@users.example', last_sign_in_at: null, password: 'fixture-pass-1', password_set_at: now },
     ];
+    // The email-a-report call: nothing is sent. The HTML and the Excel it would have sent are written to apps/web/.report-preview/
+    // (gitignored) so the real pipeline output can be opened and checked.
+    server.middlewares.use('/__fixture-report', (req, res) => {
+      let raw = '';
+      req.on('data', (c) => { raw += c; });
+      req.on('end', () => {
+        try {
+          const f = JSON.parse(raw || '{}');
+          const dir = new URL('./.report-preview/', import.meta.url);
+          mkdirSync(dir, { recursive: true });
+          writeFileSync(new URL('report.html', dir), String(f.html ?? ''));
+          writeFileSync(new URL('report.xlsx', dir), Buffer.from(String(f.xlsxBase64 ?? ''), 'base64'));
+          writeFileSync(new URL('meta.json', dir), JSON.stringify({ subject: f.subject, summary: f.summary, filenameBase: f.filenameBase }, null, 1));
+          res.statusCode = 200; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ ok: true, sentTo: 'h***@example.com', preview: true }));
+        } catch (e) { res.statusCode = 400; res.end(JSON.stringify({ message: String(e) })); }
+      });
+    });
     server.middlewares.use('/__fixture-admin/users', (req, res) => {
       let raw = '';
       req.on('data', (c) => { raw += c; });

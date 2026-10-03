@@ -104,3 +104,29 @@ export const admin = {
   update: (id: string, f: UserFields) => adminCall<{ ok: true }>(`/${id}`, { method: 'PATCH', body: JSON.stringify(f) }),
   remove: (id: string) => adminCall<{ ok: true }>(`/${id}`, { method: 'DELETE' }),
 };
+
+// ── Email a report (the gateway checks the token, picks the signed-in user's own address, and hands it to n8n) ──
+export interface ReportEmail { html: string; xlsxBase64: string; filenameBase: string; subject: string; summary: string }
+export class ReportMailError extends Error { constructor(public status: number, message: string) { super(message); } }
+
+export async function sendReportEmail(p: ReportEmail): Promise<{ sentTo: string }> {
+  const url = FIXTURE ? '/__fixture-report' : '/api/report/email';
+  let s = loadSession();
+  if (!FIXTURE) {
+    if (!s) throw new AuthExpired();
+    if (s.expires_at * 1000 - Date.now() < 60_000) s = await refresh(s);
+  }
+  const go = (tok: string) => fetch(url, { method: 'POST', body: JSON.stringify(p),
+    headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) } });
+  let res: Response;
+  try { res = await go(s?.access_token ?? ''); } catch { throw new ReportMailError(0, 'Could not reach the server. Try again.'); }
+  if (res.status === 401 && s && !FIXTURE) { s = await refresh(s); res = await go(s.access_token); }
+  if (res.status === 401) throw new AuthExpired();
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ReportMailError(res.status, body.message
+    || (res.status === 409 ? 'There is no email address on your account. Add one under User management, then try again.'
+      : res.status === 413 ? 'The report is too large to send.'
+      : res.status === 429 ? 'Too many reports sent: wait a few minutes and try again.'
+      : 'The report could not be sent. Try again.'));
+  return { sentTo: String(body.sentTo ?? '') };
+}

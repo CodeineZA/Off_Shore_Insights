@@ -38,7 +38,13 @@ umask 077
   echo "SUPABASE_ANON_KEY=$(grep -E '^ANON_KEY=' "$SB" | cut -d= -f2-)"
   echo "SUPABASE_SERVICE_ROLE_KEY=$(grep -E '^SERVICE_ROLE_KEY=' "$SB" | cut -d= -f2-)"
   echo "SUPABASE_JWT_SECRET=$(grep -E '^JWT_SECRET=' "$SB" | cut -d= -f2-)"   # verifies admin tokens
+  # Shared with n8n's report webhook (n8n/push.mjs makes it). Kept in a file on the Pi, outside the repo; absent = emailing reports is off.
+  RS=/home/codeine/.offshore-insights-report-secret
+  if [ -s "$RS" ]; then echo "REPORT_WEBHOOK_SECRET=$(tr -d '\r\n' < "$RS")"; fi
 } > server/web/.env
+
+# 2b. The report renderer (Gotenberg; only n8n reaches it). A no-op when it is already running.
+if [ -f server/render/docker-compose.yml ]; then (cd server/render && docker compose up -d) || echo "WARN: report renderer did not start (emailed reports will fail)" >&2; fi
 
 # 3. (Re)create containers when asked or when missing. The gateway's code is mounted,
 #    so restart it every deploy to pick up changes (a ~1 s blip for login only).

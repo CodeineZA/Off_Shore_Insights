@@ -1,0 +1,16 @@
+{
+  "run": "2026-10-02",
+  "note": "Index returns for the 'what a million would have become' report. Read from PDFs/msci-world-index-usd-factsheet-2026-08-31.pdf (pdftotext -raw), table ANNUAL PERFORMANCE (%), column MSCI World: 2025 = 21.60, 2024 = 19.19. GROSS returns in USD.",
+  "returns": [
+    {
+      "recipe": "msci-world-usd-annual",
+      "index_code": "MSCI_WORLD",
+      "index_name": "MSCI World Index",
+      "basis": "gross",
+      "currency": "USD",
+      "source": "MSCI World Index (USD) factsheet, 31 Aug 2026, gross returns",
+      "verified_on": "2026-10-02",
+      "values": { "2024": 19.19, "2025": 21.60 }
+    }
+  ]
+}

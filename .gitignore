@@ -17,3 +17,5 @@ apps/web/.fixture.json
 
 # Downloaded reports (copyrighted, may need registration): never commit
 PDFs/
+# Dev mock of "email a report": the HTML and Excel it would have sent
+apps/web/.report-preview/

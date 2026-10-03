@@ -68,6 +68,11 @@ export interface Gate {
   verified_on: string; next_check_on: string; needs_verification: boolean;
 }
 export interface Fx { currency: string; eur_per_unit: number; as_of: string; source_url: string }
+/** A closed calendar year's total return of a market index (what the report compounds on). */
+export interface MarketReturn {
+  index_code: string; index_name: string; year: number; total_return_pct: number; basis: 'gross' | 'net'; currency: string;
+  source: string; source_url: string; verified_on: string;
+}
 export interface Run { workflow: string; status: 'running' | 'ok' | 'error'; started_at: string; finished_at: string | null; rows: number | null }
 export interface Service { code: string; label: string; description: string | null; sort_order: number }
 export interface ServiceTax { service_code: string; tax_type_code: string; note: string | null }
@@ -90,4 +95,7 @@ export interface Dashboard {
   gates: Gate[]; fx: Fx[];
   services?: Service[]; service_tax?: ServiceTax[]; research_items?: ResearchItem[];
   advisor_categories?: AdvisorCategory[]; advisors?: Advisor[];
+  market_returns?: MarketReturn[];
+  /** Dev only: run files laid over a local fixture that are not in the database yet (scripts/fixture-overlay.mjs). */
+  preview_overlay?: string[];
 }

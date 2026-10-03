@@ -390,6 +390,23 @@ create table if not exists offshore_insights.research_item (
   primary key (jurisdiction_code, item)
 );
 
+-- Calendar-year returns of a market index: what the "what a million would have become" report compounds on.
+-- One row per index, year, basis (gross or net of dividend withholding) and currency; every row carries its source and date.
+-- A year that has not closed has no row (never a year-to-date figure).
+create table if not exists offshore_insights.market_return (
+  id               bigint generated always as identity primary key,
+  index_code       text not null,                   -- 'MSCI_WORLD'
+  index_name       text not null,                   -- 'MSCI World Index'
+  year             int  not null check (year between 1990 and 2100),
+  total_return_pct numeric(8,4) not null,           -- percent for the calendar year, e.g. 19.19
+  basis            text not null check (basis in ('gross', 'net')),
+  currency         char(3) not null,                -- the currency the index is quoted in
+  source           text not null,
+  source_url       text not null,
+  verified_on      date not null,
+  unique (index_code, year, basis, currency)
+);
+
 -- Firms (law, tax, real estate, citizenship, wealth...). The category list is open: add rows, not code.
 create table if not exists offshore_insights.advisor_category (
   code       text primary key,
@@ -536,6 +553,7 @@ returns jsonb language sql stable security invoker set search_path = '' as $$
     'services',      coalesce((select jsonb_agg(to_jsonb(v) order by v.sort_order, v.code) from offshore_insights.service v), '[]'),
     'service_tax',   coalesce((select jsonb_agg(to_jsonb(v) order by v.service_code, v.tax_type_code) from offshore_insights.service_tax v), '[]'),
     'research_items', coalesce((select jsonb_agg(to_jsonb(v) order by v.jurisdiction_code, v.item) from offshore_insights.research_item v), '[]'),
+    'market_returns', coalesce((select jsonb_agg(to_jsonb(v) - 'id' order by v.index_code, v.year, v.basis, v.currency) from offshore_insights.market_return v), '[]'),
     'advisor_categories', coalesce((select jsonb_agg(to_jsonb(v) order by v.sort_order, v.label) from offshore_insights.advisor_category v), '[]'),
     -- Slim rows only: the page lists names by category and region. Contact details stay in the table.
     'advisors',      coalesce((select jsonb_agg(jsonb_build_object('id', a.id, 'name', a.name, 'category_code', a.category_code,
@@ -720,7 +738,7 @@ declare t text;
 begin
   foreach t in array array['jurisdiction','tax_type','tax_rate','treaty','wealth_market',
                            'jurisdiction_note','review_flag','sync_run','site_page','jurisdiction_gate','fx_rate',
-                           'service','service_tax','research_item','advisor_category','advisor_source','advisor',
+                           'service','service_tax','research_item','market_return','advisor_category','advisor_source','advisor',
                            'search_daily','search_query_monthly','analytics_daily'] loop
     execute format('alter table offshore_insights.%I enable row level security', t);
     execute format('drop policy if exists members_read on offshore_insights.%I', t);

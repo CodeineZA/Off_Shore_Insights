@@ -41,11 +41,12 @@ async function directSignIn(email, password) {
 }
 const TABLES = ['jurisdiction', 'tax_type', 'tax_rate', 'treaty', 'wealth_market', 'jurisdiction_note',
   'review_flag', 'sync_run', 'site_page', 'search_daily', 'search_query_monthly', 'analytics_daily', 'app_user',
-  'jurisdiction_gate', 'fx_rate', 'service', 'service_tax', 'research_item', 'advisor_category', 'advisor_source', 'advisor'];
+  'jurisdiction_gate', 'fx_rate', 'service', 'service_tax', 'research_item', 'market_return', 'advisor_category', 'advisor_source', 'advisor'];
 // Tables that can be empty: a non-member seeing 0 rows proves nothing there, so a sentinel row is inserted
 // (service_role) and the member must see it while the non-member must not. [table, row, FK-free?]
 const SENTINELS = [
   ['research_item', { jurisdiction_code: 'FR', item: 'verify-access:sentinel', status: 'have' }],
+  ['market_return', { index_code: 'VERIFY_ACCESS', index_name: 'verify-access sentinel', year: 1999, total_return_pct: 1, basis: 'gross', currency: 'USD', source: 'sentinel', source_url: 'https://verify-access.invalid/sentinel', verified_on: '2026-01-01' }],
   ['advisor_source', { name: 'verify-access sentinel', scope: 'global', list_url: 'https://verify-access.invalid/sentinel', collection: 'manual' }],
   ['advisor', { name: 'verify-access sentinel', category_code: 'other', country_code: 'FR', collected_by: 'manual', status: 'excluded' }],
 ];

@@ -6,6 +6,7 @@ import { fmtCount, pct, shortLabel } from './insights';
 import { MONEY, type MoneyKey } from './mapdata';
 import { POOL_KEYS } from './pool';
 import { inFocus, type TaxFocus } from './taxbars';
+import type { ReportOk } from './report';
 import { rateForYear, wealthUpToYear } from './years';
 
 export type SourceKind = 'official' | 'report' | 'data' | 'secondary' | 'unknown';
@@ -23,7 +24,7 @@ export interface SourceEntry {
   /** A report we hold as a file on Hentus's machine (not served by the site): shown as text, not a link. */
   file: string | null;
 }
-export interface SourceGroup { id: 'rates' | 'treaties' | 'lists' | 'money' | 'notes'; title: string; entries: SourceEntry[] }
+export interface SourceGroup { id: 'rates' | 'treaties' | 'lists' | 'money' | 'returns' | 'notes'; title: string; entries: SourceEntry[] }
 export interface SourceContext { code: string | null; years: number[]; taxFocus: TaxFocus; metrics: MoneyKey[]; treaty: boolean; money: boolean }
 
 const ARCHIVE = /^https?:\/\/web\.archive\.org\/web\/(\d{4})(\d{2})(\d{2})\d*[a-z_]*\/(https?:\/\/.+)$/i;
@@ -87,8 +88,8 @@ class Collector {
     if (raw.check) e.check = true;
   }
   result(moneyTitle: string): SourceGroup[] {
-    const titles: Record<SourceGroup['id'], string> = { rates: 'Tax rates', treaties: 'Treaties with Mauritius and Seychelles', lists: 'Blacklist and trust recognition', money: moneyTitle, notes: 'Notes in the brief' };
-    return (['rates', 'treaties', 'lists', 'money', 'notes'] as const).filter((id) => this.groups.get(id)?.size)
+    const titles: Record<SourceGroup['id'], string> = { rates: 'Tax rates', treaties: 'Treaties with Mauritius and Seychelles', lists: 'Blacklist and trust recognition', money: moneyTitle, returns: 'Index returns', notes: 'Notes in the brief' };
+    return (['rates', 'treaties', 'lists', 'money', 'returns', 'notes'] as const).filter((id) => this.groups.get(id)?.size)
       .map((id) => ({ id, title: titles[id], entries: [...this.groups.get(id)!.values()] }));
   }
 }
@@ -160,4 +161,14 @@ export function contextLabel(d: Dashboard, ctx: SourceContext) {
   const j = ctx.code ? d.jurisdictions.find((x) => x.code === ctx.code) : undefined;
   if (!j) return 'World map: ' + ([ctx.treaty ? 'treaty colours' : '', ctx.money ? 'money bars' : ''].filter(Boolean).join(' and ') || 'no layers on');
   return `${j.name} · tax year${ctx.years.length > 1 ? 's' : ''} ${[...ctx.years].sort().join(', ')}`;
+}
+
+/** The pages behind one report: every rate row it used (home and trust side), the index returns, and the pages the flags cite. */
+export function sourcesForReport(d: Dashboard, r: ReportOk): SourceGroup[] {
+  const c = new Collector();
+  const name = (code: string) => d.jurisdictions.find((x) => x.code === code)?.name ?? code;
+  for (const x of r.rates) c.add('rates', { url: x.sourceUrl, verifiedOn: x.verifiedOn, check: x.needsVerification, support: `${x.label} ${pct(x.rate)}, ${x.year}, ${name(x.jurisdiction)}` });
+  for (const x of r.returns) c.add('returns', { url: x.source_url, verifiedOn: x.verified_on, sourceName: x.source, support: `${x.year}: ${x.total_return_pct}% (${x.basis}, ${x.currency})` });
+  for (const f of r.flags) if (f.sourceUrl) c.add(f.text.startsWith('Tax treaty') ? 'treaties' : 'lists', { url: f.sourceUrl, support: f.text.slice(0, 80) });
+  return c.result('Index returns');
 }

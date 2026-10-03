@@ -1,0 +1,35 @@
+# The report renderer: Gotenberg (headless Chromium behind an HTTP API) turns the report's HTML into the PDF that is emailed.
+# Only n8n talks to it. It publishes NO port: it joins n8n's own Docker network and is reached by name from the
+# "Off_Shore_Insights - R1 Report mail" workflow (http://offshore-insights-render:3000).
+#
+# It renders HTML that a signed-in member's browser produced, so it is locked down: every http(s)/ftp/ws request is refused
+# (the report is fully self-contained: inline CSS, inline fonts, no images), JavaScript is off, files outside /tmp are
+# refused, a job times out after 45 s, and memory is capped (the Pi has ~8 GB shared with Supabase, n8n and the sites).
+# Start / update:  cd server/render && docker compose up -d      (deploy.sh does this on every deploy)
+name: offshore-insights-render
+services:
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: offshore-insights-render
+    restart: unless-stopped
+    command:
+      - gotenberg
+      - "--chromium-deny-list=^(https?|ftp|wss?)://.*|^file:(?!//\\/tmp/).*"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-max-concurrency=1"
+      - "--chromium-restart-after=50"
+      - "--api-timeout=45s"
+      - "--api-disable-health-check-logging=true"
+    mem_limit: 1g
+    memswap_limit: 1g
+    cpus: 2
+    read_only: false
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - n8n
+
+networks:
+  n8n:
+    external: true
+    name: n8n_n8n-network

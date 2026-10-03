@@ -290,3 +290,31 @@ beside the tax year lists the pages behind whatever is on screen.
 **Parked (Hentus, 2026-10-02):** the firms search and the "Who to talk to" tile. The tables, the `/find-advisors` skill and the run-file format stay in place; no firms are collected and no tile is added to the page until he restarts it.
 
 How it is built and run is in [CLAUDE.md](CLAUDE.md): `/research-country`, `/find-advisors`, `/update-offshore-insights`, and `node research/audit-country.mjs`.
+
+## 10. The report: what a million would have become (2026-10-02)
+
+**Ask (Hentus):** a selling report, "if you invested a million in 2024 you would have X, against Y keeping it local", for one investment vehicle at a time, first a
+**Trust in Mauritius or Seychelles**. It reuses the Country page's graphs, is shown on a **Reports** page, becomes a **PDF** made from the front end with the raw values in a
+separate **Excel**, and is **emailed through n8n** over the Pi's SMTP to the signed-in user.
+
+**Decisions (Hentus):** real, sourced index returns (MSCI World, US$, gross; a net series replaces it when one is fetchable) · a trust fee input on screen, 0.5 % a year until Justus
+supplies real fees · back-fill every country (2024 and 2025) before relying on it · a separate Reports page in the sidebar.
+
+**Added after the first PDF (Hentus: "it is in USD and we need to be able to change that"):** a currency switch **EUR / USD / ZAR** (PDF, Excel, chart and email subject follow it; the file name ends in the
+currency) and an **Amount invested** field, because a million rand is only about 52 thousand euros and sits under the Dutch Box 3 allowance. MSCI publishes US dollars only, so the euro and rand returns are
+**derived** from the dollar return and the ECB's year-end reference rates (`research/derive-index-currency.mjs`), labelled DERIVED row by row; they include the dollar's move.
+
+**Rules that carry over:** every rate has a source and a date; unknown is never 0 (an incomplete data set gives a list of what is missing and no comparison); red/green flags drawn from
+data we hold, no legal commentary; the assumptions are printed on the report. Not modelled: currency moves, inflation, dividend and interest taxes, source-country withholding, custody
+fees, set-up costs, inheritance. The trust column assumes the home country does not tax the trust's growth.
+
+**Parts:** `market_return` table + `returns[]` run section + recipe `msci-world-usd-annual` · `data/report.ts` (engine) · `pages/Reports.tsx` + `ui/report/*` (document, chart, HTML) ·
+`data/reportsheets.ts` + `reportxlsx.ts` (Excel) · gateway `POST /api/report/email` · n8n workflow R1 · Gotenberg renderer (`server/render/`) · nginx location with an 8 MB body limit.
+
+**Needs before it is live (each applied only with Hentus's go-ahead):** the schema change and the MSCI returns, USD exchange rate, the Mauritius/Seychelles back-year rows
+(`research/runs/2026-10-02-hubs-back.json`) · the shared secret file on the Pi · Gotenberg image pulled and started · R1 and its two credentials pushed to n8n · a deploy with `--restart` (nginx).
+
+**Back-fill status:** the Netherlands (2024-2026) and the two hubs (run prepared) are enough for the Netherlands report. BE CH DE ES FR GB IT PT ZA need 2024 and 2025 rows; the four
+rates the engine reads (capital gains on shares, net wealth, solidarity wealth, securities account) unlock a country's report, the other taxes fill the tax chart.
+
+**Open:** MSCI's terms on redistributing its figures in a PDF sent to prospects (Hentus to decide); the real trust fee schedule; whether a net-return MSCI series can be fetched.

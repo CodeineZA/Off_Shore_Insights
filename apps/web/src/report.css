@@ -1,0 +1,141 @@
+/* The report document: A4 pages in a light "paper" version of the theme (same gold palette). Used on screen as the preview
+   and, rendered to static HTML with this stylesheet inlined, as the emailed PDF. Everything is scoped to .report-doc. */
+
+@page { size: A4; margin: 0; }
+
+.report-doc {
+  /* Re-point the dark theme's tokens so the reused components (the tax chart, the legends) read correctly on white. */
+  --text: #1d1610; --muted: #5f5240; --muted-2: #6f604b; --axis: #8a7a64;
+  --line: rgba(90, 64, 28, .16); --line-2: rgba(90, 64, 28, .3);
+  --gold: #8a5f22; --gold-2: #b98d5a; --gold-3: #f3dcb2; --tile-top: #fff; --tile-bot: #fff;
+  --rep-home: #7b6f60; --rep-trust: #b97d1c; --rep-ink: #1d1610; --rep-line: rgba(90, 64, 28, .2);
+  display: flex; flex-direction: column; gap: 18px; align-items: center;
+  color: var(--text); font-family: Poppins, system-ui, sans-serif; font-variant-numeric: tabular-nums;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.report-doc *, .report-doc *::before, .report-doc *::after { animation: none !important; transition: none !important; }
+
+.report-page {
+  position: relative; width: 210mm; min-height: 297mm; padding: 13mm 14mm 14mm; background: #fff; color: var(--text);
+  display: flex; flex-direction: column; gap: 11px; box-shadow: 0 18px 50px -20px rgba(0, 0, 0, .65);
+  break-after: page; page-break-after: always;
+}
+.report-page:last-child { break-after: auto; page-break-after: auto; }
+.report-page > * { break-inside: avoid; }
+.report-page > .rep-table, .report-page > .rep-sources { break-inside: auto; }
+
+.rep-head { display: flex; justify-content: space-between; align-items: baseline; font: 500 8.5px Poppins; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); border-bottom: 1px solid var(--rep-line); padding-bottom: 6px; }
+.rep-brand { color: var(--gold); font-weight: 600; }
+.rep-title { display: flex; flex-direction: column; gap: 4px; }
+.rep-kicker { margin: 0; font: 600 9px/1.3 Poppins; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.rep-title h1 { margin: 0; font: 600 25px/1.15 Poppins; letter-spacing: -.01em; color: var(--rep-ink); }
+.rep-sub { margin: 0; max-width: 150mm; font: 400 10.5px/1.5 Poppins; color: var(--muted); }
+
+/* The result: the gold banner of the Country page, with three big numbers */
+.report-doc .banner.rep-headline { padding: 14px 18px; border-radius: 12px; gap: 0; box-shadow: none; border: 1px solid rgba(90, 64, 28, .22); }
+.rep-big { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.rep-big > div { display: flex; flex-direction: column; gap: 2px; padding-left: 12px; border-left: 2px solid rgba(90, 64, 28, .3); }
+.rep-big span { font: 600 8.5px/1.3 Poppins; letter-spacing: .08em; text-transform: uppercase; color: #6b4f2b; }
+.rep-big b { font: 600 20px/1.2 Poppins; color: #1d1610; letter-spacing: -.01em; }
+.rep-big small { font: 400 9px/1.4 Poppins; color: #4a3a26; }
+.rep-big .ahead { border-left-color: #3f8a4a; } .rep-big .ahead b { color: #1f5f2b; }
+.rep-big .behind { border-left-color: #c4482f; } .rep-big .behind b { color: #a93a24; }
+
+/* The value chart */
+.valuechart { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.valuechart .card-legend { padding: 6px 10px; border-radius: 8px; background: #fbf7f0; border: 1px solid var(--rep-line); }
+.valuechart .legend span { font: 400 9px Poppins; color: var(--text); }
+.vc-key { display: inline-block; width: 16px !important; height: 3px !important; border-radius: 2px !important; }
+.vc-key.home, .vc-line.home, .vc-dot.home { background: var(--rep-home); stroke: var(--rep-home); fill: var(--rep-home); }
+.vc-key.trust, .vc-line.trust, .vc-dot.trust { background: var(--rep-trust); stroke: var(--rep-trust); fill: var(--rep-trust); }
+.vc-svg { width: 100%; height: auto; display: block; }
+.vc-grid { stroke: var(--rep-line); stroke-width: 1; }
+.vc-axis { font: 400 9px Poppins; fill: var(--muted); }
+.vc-line { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; background: none; }
+.vc-dot { stroke: #fff; stroke-width: 1.5; background: none; }
+.vc-end { font: 600 11px Poppins; }
+.vc-end.home { fill: var(--rep-home); } .vc-end.trust { fill: var(--rep-trust); }
+
+/* The tax chart (reused) on paper */
+.report-doc .taxslicer { padding: 12px 14px 10px; gap: 8px; border: 1px solid var(--rep-line); border-radius: 12px; background: #fff; box-shadow: none; }
+.report-doc .taxslicer .card-title { font-size: 10px; color: var(--gold); }
+.report-doc .taxslicer .card-purpose { font-size: 9.5px; }
+.report-doc .taxslicer .card-legend { padding: 5px 9px; background: #fbf7f0; border: 1px solid var(--rep-line); }
+.report-doc .taxslicer .legend span { font-size: 8.5px; }
+.report-doc .taxrow { min-height: 0; padding: 3px 4px; gap: 10px; grid-template-columns: minmax(120px, 190px) minmax(0, 1fr) 84px; }
+.report-doc .taxrow.static, .report-doc .taxgroup-head.static { cursor: default; }
+.report-doc .taxrow-label { font-size: 10px; }
+.report-doc .tax-explain { font-size: 8px; margin-top: 1px; color: var(--muted-2); }
+.report-doc .taxrow-val { font-size: 10.5px; }
+.report-doc .taxrow-val small { font-size: 8px; }
+.report-doc .taxrow-track .bar { height: 6px; border-color: rgba(90, 64, 28, .45); }
+.report-doc .taxrow-track .bar.unknown { border-color: #8a7a64; }
+.report-doc .taxgroup-head { font-size: 8.5px; padding: 2px 8px; margin: 4px 0 1px; color: var(--gold); }
+.report-doc .taxgroup-head small { font-size: 8px; color: var(--muted-2); }
+.report-doc .hubtick { box-shadow: 0 0 0 1px rgba(29, 22, 16, .75); }
+.report-doc .bar.regional { background: rgba(90, 64, 28, .08); }
+.report-doc .axis-scale b, .report-doc .axis-scale em, .report-doc .axis-cap { font-size: 8px; }
+
+/* Page 2 */
+.rep-h { margin: 6px 0 0; font: 600 10px/1.2 Poppins; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); border-bottom: 1px solid var(--rep-line); padding-bottom: 4px; }
+.rep-table { width: 100%; border-collapse: collapse; font: 400 9px/1.3 Poppins; }
+.rep-table th { font: 600 8px/1.3 Poppins; letter-spacing: .04em; text-transform: uppercase; color: #6b4f2b; background: #f6efe2; padding: 5px 6px; border: 1px solid var(--rep-line); text-align: center; }
+.rep-table td { padding: 5px 6px; border: 1px solid var(--rep-line); text-align: right; }
+.rep-table td:first-child { text-align: center; font-weight: 600; }
+.rep-table .pos { color: #1f5f2b; font-weight: 600; } .rep-table .neg { color: #a93a24; font-weight: 600; }
+.rep-note { margin: -4px 0 0; font: 400 8.5px/1.5 Poppins; color: var(--muted); }
+.rep-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.rep-cards > div { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border: 1px solid var(--rep-line); border-radius: 8px; background: #fbf7f0; }
+.rep-cards span { font: 500 8px/1.3 Poppins; color: var(--muted); }
+.rep-cards b { font: 600 13px/1.2 Poppins; color: var(--rep-ink); }
+.rep-flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.rep-flags li { display: flex; gap: 8px; align-items: flex-start; font: 400 9px/1.45 Poppins; color: var(--text); }
+.rep-flags i { flex: none; width: 8px; height: 8px; border-radius: 50%; margin-top: 3px; background: #8a8175; }
+.rep-flags .green i { background: #3f8a4a; } .rep-flags .amber i { background: #d09a1c; } .rep-flags .red i { background: #c4482f; }
+.rep-assume { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; font: 400 9px/1.5 Poppins; color: var(--text); }
+.rep-sources { columns: 2; column-gap: 14px; font: 400 8px/1.4 Poppins; }
+.rep-src-group { break-inside: avoid-column; margin-bottom: 6px; }
+.rep-src-group h3 { margin: 0 0 2px; font: 600 8px Poppins; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.rep-src-group ul { list-style: none; margin: 0; padding: 0; }
+.rep-src-group li { padding: 2px 0; border-bottom: 1px solid rgba(90, 64, 28, .1); }
+.rep-src-group b { font-weight: 600; } .rep-src-group em { font-style: normal; color: var(--muted-2); }
+.rep-url { display: block; color: var(--muted-2); overflow-wrap: anywhere; }
+.rep-foot span:last-child { white-space: nowrap; }
+.rep-foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--rep-line); display: flex; justify-content: space-between; gap: 14px; font: 400 7.5px/1.5 Poppins; color: var(--muted-2); }
+
+/* On the Reports page the document sits on a dark desk, scaled down on narrow screens; in print it is exactly A4. */
+.report-desk { overflow: auto; padding: 18px; border-radius: 16px; background: #2a2724; border: 1px solid var(--line); }
+@media (max-width: 980px) { .report-desk .report-doc { zoom: .72; } }
+@media (max-width: 640px) { .report-desk .report-doc { zoom: .46; } .report-desk { padding: 10px; } }
+@media print {
+  .report-doc { gap: 0; zoom: 1 !important; display: block; }
+  .report-page { box-shadow: none; margin: 0; }
+}
+
+/* ── The Reports page (screen only): settings, actions, messages ── */
+.rep-controls { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--tile-top), var(--tile-bot)); }
+.rep-controls .filter-k { width: 150px; }
+@media (max-width: 800px) { .rep-controls .filter-k { width: 100%; } }
+.chip.nodata { border-style: dashed; color: var(--axis); }
+.rep-fee { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font: 400 12px Poppins; color: var(--muted); }
+.rep-fee input { width: 84px; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line-2); background: rgba(255, 255, 255, .04); color: var(--text); font: 500 13px Poppins; }
+.rep-fee input:focus-visible { outline: 2px solid rgba(216, 176, 122, .6); outline-offset: 1px; }
+.rep-fee small { flex-basis: 100%; font: 400 11px Poppins; color: var(--muted-2); }
+.rep-fixed { margin: 0; font: 400 12px/1.5 Poppins; color: var(--muted); }
+.rep-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rep-actions .pill:disabled { opacity: .55; cursor: default; }
+.rep-actions-note { font: 400 11.5px Poppins; color: var(--muted-2); }
+.rep-msg { margin: 0; padding: 10px 14px; border-radius: 10px; font: 400 12.5px/1.5 Poppins; border: 1px solid var(--line-2); }
+.rep-msg.ok { color: #cfe6c6; border-color: rgba(156, 197, 143, .45); background: rgba(156, 197, 143, .08); }
+.rep-msg.bad { color: #f0b98a; border-color: rgba(217, 120, 95, .5); background: rgba(217, 120, 95, .08); }
+.rep-missing { padding: 22px 24px; border-radius: 16px; border: 1px dashed var(--line-2); display: flex; flex-direction: column; gap: 8px; }
+.rep-missing h2 { margin: 0; font: 600 14px Poppins; color: var(--text); }
+.rep-missing p, .rep-missing li { margin: 0; font: 400 12.5px/1.55 Poppins; color: var(--muted); }
+.rep-missing ul { margin: 0; padding-left: 18px; }
+.rep-preview { margin: 0; padding: 8px 14px; border-radius: 10px; font: 500 11.5px Poppins; color: #e0b25a; border: 1px dashed rgba(224, 178, 90, .55); }
+
+/* The shaded gap between the two lines of the value chart */
+.vc-gap { stroke: none; background: none; }
+.vc-gap.ahead { fill: rgba(63, 138, 74, .2); }
+.vc-gap.behind { fill: rgba(196, 72, 47, .18); }
+.valuechart .vc-note { color: var(--muted); font: 400 8.5px Poppins; }

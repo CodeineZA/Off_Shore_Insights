@@ -13,6 +13,10 @@
 //   gates[]          blacklist / trust recognition
 //   wealth[]         money figures. Either { j, year, source, <column>: n } or the report shape
 //                    { source, year, column, values: { CC: n } }; ref_date = the date the figure is "as at".
+//   returns[]        calendar-year index returns for the "what a million would have become" report:
+//                    { recipe, index_code, index_name, basis: "gross"|"net", currency, source, values: { "2024": 19.19, ... } }
+//                    Only years that have CLOSED belong here; never a year-to-date figure.
+//                    A derived series (another currency) gives `source_by_year: { "2024": "DERIVED: ..." }` so each row carries its own working.
 //   gaps[]           research_item rows: what is missing/blocked and where to get it
 // Rules (research/README.md): unknown stays unknown, every value traces to a recipe.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -136,6 +140,25 @@ for (const w of wealthRows) {
     + ` verified_on = excluded.verified_on, ref_date = excluded.ref_date;`);
 }
 
+// ── index returns ────────────────────────────────────────────────────────────
+const returnRows = [];
+for (const r of run.returns ?? []) {
+  for (const k of ['index_code', 'index_name', 'basis', 'currency', 'source']) if (!r[k]) errors.push(`returns: missing ${k}`);
+  if (!['gross', 'net'].includes(r.basis)) errors.push(`returns ${r.index_code}: basis must be gross or net`);
+  for (const [year, pct] of Object.entries(r.values ?? {})) {
+    if (!/^\d{4}$/.test(year) || !Number.isFinite(pct)) { errors.push(`returns ${r.index_code}: bad entry ${year}=${pct}`); continue; }
+    if (+year >= +day.slice(0, 4)) errors.push(`returns ${r.index_code} ${year}: that year has not closed yet`);
+    returnRows.push({ ...r, source: r.source_by_year?.[year] ?? r.source, year: +year, pct });
+  }
+}
+for (const r of returnRows) {
+  out.push(`-- index return ${r.index_code} ${r.year} ${r.basis} ${r.currency} ← ${r.recipe}`);
+  out.push(`insert into market_return (index_code, index_name, year, total_return_pct, basis, currency, source, source_url, verified_on)`
+    + ` values (${q(r.index_code)}, ${q(r.index_name)}, ${r.year}, ${r.pct}, ${q(r.basis)}, ${q(r.currency)}, ${q(r.source)}, ${q(r.source_url ?? src(r))}, ${q(r.verified_on ?? day)})`
+    + ` on conflict (index_code, year, basis, currency) do update set total_return_pct = excluded.total_return_pct, index_name = excluded.index_name,`
+    + ` source = excluded.source, source_url = excluded.source_url, verified_on = excluded.verified_on;`);
+}
+
 // ── gaps (what is missing or blocked, and where to get it) ───────────────────
 for (const g of run.gaps ?? []) {
   out.push(`-- gap ${g.j} ${g.item}`);
@@ -150,4 +173,4 @@ if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 mkdirSync(join(here, '..', 'db', 'research'), { recursive: true });
 const target = join(here, '..', 'db', 'research', basename(file).replace(/\.json$/, '.sql'));
 writeFileSync(target, out.join('\n'));
-console.log(`wrote ${target}: ${js.length} jurisdictions, ${(run.rates ?? []).length} rates, ${(run.treaties ?? []).length} treaties, ${(run.gates ?? []).length} gates, ${wealthRows.length} wealth values, ${(run.gaps ?? []).length} gaps (mode ${mode})`);
+console.log(`wrote ${target}: ${js.length} jurisdictions, ${(run.rates ?? []).length} rates, ${(run.treaties ?? []).length} treaties, ${(run.gates ?? []).length} gates, ${wealthRows.length} wealth values, ${returnRows.length} index returns, ${(run.gaps ?? []).length} gaps (mode ${mode})`);

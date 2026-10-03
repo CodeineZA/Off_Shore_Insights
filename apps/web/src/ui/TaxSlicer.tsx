@@ -1,6 +1,8 @@
 // "Where the tax hurts": a bar chart of this entity's taxes by market, one bar per selected tax year, with the
 // Mauritius and Seychelles rate beside each. Click a market or a tax to focus the whole page on it; click again to clear.
 // Hover a bar for its range, threshold, note and source; the line under each tax spells out what it is.
+// mode="report": the same chart, read-only (no clicks), limited to `only` taxes: this is the graph the report prints.
+import type { ReactNode } from 'react';
 import type { Dashboard } from '../data/types';
 import { CATEGORY_LABEL, cellText, focusLabel, inFocus, scaleMax, taxBars, toggleFocus, type TaxFocus } from '../data/taxbars';
 import { HUB_PAINT } from '../data/mapdata';
@@ -14,8 +16,17 @@ const regionRange = (rs: { rate: number | null }[]) => {
   return !v.length ? 'by region' : v.length === 1 || Math.min(...v) === Math.max(...v) ? `${pct(v[0])} by region` : `${pct(Math.min(...v))}–${pct(Math.max(...v))}`;
 };
 
-export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashboard; code: string; years: number[]; focus: TaxFocus; onFocus: (f: TaxFocus) => void }) {
-  const groups = taxBars(d, code, years);
+/** A clickable row on the page; a plain row in the printed report. */
+function Press({ report, className, onClick, pressed, title, children }: { report: boolean; className: string; onClick: () => void; pressed: boolean; title?: string; children: ReactNode }) {
+  return report ? <div className={className + ' static'} title={title}>{children}</div>
+    : <button className={className} onClick={onClick} aria-pressed={pressed} title={title}>{children}</button>;
+}
+
+export default function TaxSlicer({ d, code, years, focus, onFocus, mode = 'live', only }: {
+  d: Dashboard; code: string; years: number[]; focus: TaxFocus; onFocus: (f: TaxFocus) => void; mode?: 'live' | 'report'; only?: string[];
+}) {
+  const report = mode === 'report';
+  const groups = taxBars(d, code, years).map((g) => ({ ...g, rows: only ? g.rows.filter((r) => only.includes(r.type.code)) : g.rows })).filter((g) => g.rows.length);
   const ys = [...years].sort((a, b) => a - b);
   const max = scaleMax(groups);
   const j = d.jurisdictions.find((x) => x.code === code);
@@ -26,9 +37,9 @@ export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashb
       <header className="taxslicer-head">
         <div>
           <h2 className="card-title">Where the tax hurts</h2>
-          <p className="card-purpose">Click a market or a tax to focus the whole page on it. Click it again to clear.</p>
+          <p className="card-purpose">{report ? 'The taxes that act on a share portfolio, with the Mauritius and Seychelles rate beside each.' : 'Click a market or a tax to focus the whole page on it. Click it again to clear.'}</p>
         </div>
-        {fl && <button className="chip on focus-chip" onClick={() => onFocus(null)} aria-label={`Clear focus on ${fl}`}>Focused on {fl} ✕</button>}
+        {fl && !report && <button className="chip on focus-chip" onClick={() => onFocus(null)} aria-label={`Clear focus on ${fl}`}>Focused on {fl} ✕</button>}
       </header>
       <div className="legend card-legend" aria-label="Legend">
         {ys.map((y, i) => <span key={y}><i style={{ background: shade(i, ys.length), borderRadius: 2 }} />{j?.name ?? code}, tax year {taxYearFor(d, code, y).label}</span>)}
@@ -37,7 +48,7 @@ export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashb
         {isRegion && <span><i style={{ background: 'transparent', border: '1px solid #d8b07a', borderRadius: 2 }} />Hollow: taken from the country</span>}
         <span><i style={{ background: 'transparent', border: '1px dashed #9a9185', borderRadius: 2 }} />Dashed: no figure for that year</span>
         {groups.some((g) => g.rows.some((r) => r.regions)) && <span><i style={{ background: '#f3dcb2', borderRadius: '50%', width: 7, height: 7 }} />Dots: one per region (the country sets this tax by region)</span>}
-        <span><i style={{ background: WARN, borderRadius: 2 }} />Red: a tax that argues against going offshore</span>
+        {groups.some((g) => g.category === 'anti_offshore') && <span><i style={{ background: WARN, borderRadius: 2 }} />Red: a tax that argues against going offshore</span>}
       </div>
       <div className="taxrow axis-row" aria-hidden="true">
         <span className="axis-cap">Tax</span>
@@ -50,16 +61,16 @@ export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashb
         const dim = !!focus && !g.rows.some((r) => inFocus(r.type, focus));
         return (
           <div key={g.category} className={'taxgroup' + (dim ? ' dim' : '')}>
-            <button className={'taxgroup-head' + (gFocus ? ' on' : '')} onClick={() => onFocus(toggleFocus(focus, { category: g.category }))} aria-pressed={gFocus}>
+            <Press report={report} className={'taxgroup-head' + (gFocus ? ' on' : '')} onClick={() => onFocus(toggleFocus(focus, { category: g.category }))} pressed={gFocus}>
               {CATEGORY_LABEL[g.category]}<small>{g.rows.length} {g.rows.length === 1 ? 'tax' : 'taxes'}</small>
-            </button>
+            </Press>
             {g.rows.map((r) => {
               const rFocus = !!focus?.taxType && focus.taxType === r.type.code;
               const on = inFocus(r.type, focus);
               const warn = g.category === 'anti_offshore';
               const latest = r.years[r.years.length - 1];
               return (
-                <button key={r.type.code} className={'taxrow' + (rFocus ? ' on' : '') + (on ? '' : ' dim')} onClick={() => onFocus(toggleFocus(focus, { taxType: r.type.code }))} aria-pressed={rFocus}
+                <Press key={r.type.code} report={report} className={'taxrow' + (rFocus ? ' on' : '') + (on ? '' : ' dim')} onClick={() => onFocus(toggleFocus(focus, { taxType: r.type.code }))} pressed={rFocus}
                   title={r.type.description ?? r.type.label}>
                   <span className="taxrow-label">{r.type.label}<small className="tax-explain">{explainOf(r.type)}</small></span>
                   <span className="taxrow-track">
@@ -79,7 +90,7 @@ export default function TaxSlicer({ d, code, years, focus, onFocus }: { d: Dashb
                     {r.regions && latest.rate == null ? regionRange(r.regions) : latest.rate == null ? '?' : pct(latest.rate)}
                     <small><span style={{ color: HUB_PAINT.MU }}>MU {r.hub.MU == null ? '?' : pct(r.hub.MU)}</span> <span style={{ color: HUB_PAINT.SC }}>SC {r.hub.SC == null ? '?' : pct(r.hub.SC)}</span></small>
                   </span>
-                </button>
+                </Press>
               );
             })}
           </div>

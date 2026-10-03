@@ -30,6 +30,8 @@ services:
       SUPABASE_INTERNAL_URL: http://host.docker.internal:8000
       SUPABASE_SCHEMA: offshore_insights
       AUTH_USERNAME_DOMAIN: users.insights.codeine.cloud
+      # n8n workflow R1 renders an emailed report to PDF and sends it. Its shared secret (REPORT_WEBHOOK_SECRET) comes from ./.env.
+      REPORT_WEBHOOK_URL: http://host.docker.internal:5678/webhook/offshore-report-mail
       PORT: "8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"

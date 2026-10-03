@@ -1,0 +1,248 @@
+{
+  "name": "Off_Shore_Insights - R1 Report mail",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid",
+    "errorWorkflow": "__ERROR_WORKFLOW_ID__"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "parameters": {
+        "content": "## R1 Report mail\nWebhook (header secret, called only by the login gateway) → check the payload → Gotenberg renders the HTML to a PDF (container offshore-insights-render on the n8n network; no network access, no JavaScript) → name the files → send from info@codeine.cloud through the Pi SMTP (host.docker.internal:1025) with the PDF and the Excel attached → answer {ok:true}. Any failure raises the Error alert. The recipient comes from the gateway, which takes it from the signed-in user, never from the request.",
+        "width": 760,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "offshore-report-mail",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "__CRED_REPORT_HEADER__",
+          "name": "Off_Shore_Insights report webhook"
+        }
+      },
+      "webhookId": "c91f5a64-3d0e-4b52-8c1a-7e2f40b9d6a3"
+    },
+    {
+      "id": "n3",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// R1 · Prepare: check what the gateway sent and turn it into two files (the HTML for the renderer, the Excel as it will be attached).\n// The gateway has already checked the token, chosen the recipient and screened the HTML; this re-checks the shape, because the\n// webhook is the last door before a real email is sent.\nconst b = $json.body || {};\nconst str = (v, max) => (typeof v === 'string' && v.length > 0 && v.length <= max ? v : null);\nconst to = str(b.to, 254), subject = str(b.subject, 200), summary = str(b.summary, 800), base = str(b.filenameBase, 120);\nconst html = str(b.html, 4500000), x = str(b.xlsxBase64, 1500000);\nif (!to || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(to)) throw new Error('R1: no valid recipient');\nif (!subject || /[\\r\\n]/.test(subject) || !summary || !base || !/^[A-Za-z0-9._-]+$/.test(base)) throw new Error('R1: the request is incomplete or malformed');\nif (!html || !/^<!doctype html>/i.test(html)) throw new Error('R1: the report is not an HTML document');\nif (!x || !/^[A-Za-z0-9+/]+={0,2}$/.test(x)) throw new Error('R1: the Excel is missing or malformed');\nconst xlsxMime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';\nreturn {\n  json: { to, subject, summary, filenameBase: base, requestedBy: String(b.requestedBy || '').slice(0, 64) },\n  binary: {\n    index_html: await this.helpers.prepareBinaryData(Buffer.from(html, 'utf8'), 'index.html', 'text/html'),   // Gotenberg wants the file named index.html\n    xlsx: await this.helpers.prepareBinaryData(Buffer.from(x, 'base64'), base + '.xlsx', xlsxMime),\n  },\n};\n"
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Render PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://offshore-insights-render:3000/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "index_html"
+            },
+            {
+              "name": "paperWidth",
+              "value": "8.27"
+            },
+            {
+              "name": "paperHeight",
+              "value": "11.7"
+            },
+            {
+              "name": "marginTop",
+              "value": "0"
+            },
+            {
+              "name": "marginBottom",
+              "value": "0"
+            },
+            {
+              "name": "marginLeft",
+              "value": "0"
+            },
+            {
+              "name": "marginRight",
+              "value": "0"
+            },
+            {
+              "name": "printBackground",
+              "value": "true"
+            },
+            {
+              "name": "preferCssPageSize",
+              "value": "true"
+            },
+            {
+              "name": "emulatedMediaType",
+              "value": "print"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "pdf"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Name the files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// R1 · Name the files and write the short covering note. The rendered PDF comes from the HTTP node; the Excel and the\n// recipient come from \"Prepare\" (looked up by name, so they do not depend on what the HTTP node carries forward).\nconst p = $('Prepare').item.json;\nconst pdf = $input.item.binary && $input.item.binary.pdf;\nconst xlsx = $('Prepare').item.binary && $('Prepare').item.binary.xlsx;\nif (!pdf || !xlsx) throw new Error('R1: the PDF or the Excel is missing');\npdf.fileName = p.filenameBase + '.pdf';\npdf.mimeType = 'application/pdf';\nconst esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst html = '<div style=\"font-family:Arial,Helvetica,sans-serif;color:#1d1610;max-width:560px;line-height:1.5\">'\n  + '<p style=\"margin:0 0 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8a5f22;font-weight:bold\">Off_Shore_Insights</p>'\n  + '<p style=\"margin:0 0 14px;font-size:16px;font-weight:bold\">Your report is attached</p>'\n  + '<p style=\"margin:0 0 14px;font-size:14px\">' + esc(p.summary) + '</p>'\n  + '<p style=\"margin:0 0 6px;font-size:13px\">Attached:</p>'\n  + '<ul style=\"margin:0 0 14px;padding-left:18px;font-size:13px\"><li>' + esc(pdf.fileName) + ': the report, 3 pages</li><li>' + esc(xlsx.fileName) + ': the raw values and sources, one sheet each</li></ul>'\n  + '<p style=\"margin:0;font-size:11px;color:#6f604b\">Indicative only, not tax advice. An illustration built from stored tax rates and published index returns; past performance does not predict future returns.</p>'\n  + '</div>';\nreturn { json: { to: p.to, subject: p.subject, html }, binary: { pdf, xlsx } };\n"
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "fromEmail": "Off_Shore_Insights <info@codeine.cloud>",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {
+          "attachments": "pdf,xlsx",
+          "appendAttribution": false,
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "credentials": {
+        "smtp": {
+          "id": "__CRED_SMTP__",
+          "name": "Pi SMTP (Mailpit, info@codeine.cloud)"
+        }
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Answer",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "Render PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render PDF": {
+      "main": [
+        [
+          {
+            "node": "Name the files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Name the files": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "run": "2026-10-02",
+  "by": "claude: node research/derive-index-currency.mjs",
+  "mode": "history",
+  "note": "The EUR and ZAR returns of the MSCI World Index, derived from the stored US-dollar gross returns and the ECB year-end reference rates. The report shows them as \"includes the currency move\".",
+  "returns": [
+    {
+      "recipe": "ecb-fx-year-end",
+      "index_code": "MSCI_WORLD",
+      "index_name": "MSCI World Index",
+      "basis": "gross",
+      "currency": "EUR",
+      "source": "MSCI World Index gross return in EUR: derived from the US-dollar return and ECB reference rates",
+      "source_url": "https://data-api.ecb.europa.eu/service/data/EXR/D.USD+ZAR.EUR.SP00.A",
+      "verified_on": "2026-10-02",
+      "values": {
+        "2024": 26.77,
+        "2025": 7.52
+      },
+      "source_by_year": {
+        "2024": "DERIVED: MSCI World Index (USD) gross return 19.19% for 2024 (MSCI World Index (USD) factsheet, 31 Aug 2026, gross returns), converted to EUR at the ECB euro foreign exchange reference rates of 2023-12-29 (1 EUR = 1.105 USD) and 2024-12-31 (1 EUR = 1.0389 USD). MSCI does not publish this figure.",
+        "2025": "DERIVED: MSCI World Index (USD) gross return 21.6% for 2025 (MSCI World Index (USD) factsheet, 31 Aug 2026, gross returns), converted to EUR at the ECB euro foreign exchange reference rates of 2024-12-31 (1 EUR = 1.0389 USD) and 2025-12-31 (1 EUR = 1.175 USD). MSCI does not publish this figure."
+      }
+    },
+    {
+      "recipe": "ecb-fx-year-end",
+      "index_code": "MSCI_WORLD",
+      "index_name": "MSCI World Index",
+      "basis": "gross",
+      "currency": "ZAR",
+      "source": "MSCI World Index gross return in ZAR: derived from the US-dollar return and ECB reference rates",
+      "source_url": "https://data-api.ecb.europa.eu/service/data/EXR/D.USD+ZAR.EUR.SP00.A",
+      "verified_on": "2026-10-02",
+      "values": {
+        "2024": 22.23,
+        "2025": 6.56
+      },
+      "source_by_year": {
+        "2024": "DERIVED: MSCI World Index (USD) gross return 19.19% for 2024 (MSCI World Index (USD) factsheet, 31 Aug 2026, gross returns), converted to ZAR at the ECB euro foreign exchange reference rates of 2023-12-29 (1 EUR = 1.105 USD, 20.3477 ZAR) and 2024-12-31 (1 EUR = 1.0389 USD, 19.6188 ZAR). MSCI does not publish this figure.",
+        "2025": "DERIVED: MSCI World Index (USD) gross return 21.6% for 2025 (MSCI World Index (USD) factsheet, 31 Aug 2026, gross returns), converted to ZAR at the ECB euro foreign exchange reference rates of 2024-12-31 (1 EUR = 1.0389 USD, 19.6188 ZAR) and 2025-12-31 (1 EUR = 1.175 USD, 19.4439 ZAR). MSCI does not publish this figure."
+      }
+    }
+  ]
+}

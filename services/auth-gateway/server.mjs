@@ -13,6 +13,11 @@
 // User management (admin only, i.e. Hentus). The caller's access token is verified HERE
 // (HS256, shared JWT secret) and its user must be an admin in the in-memory directory, so a
 // forged or non-admin request is rejected from memory; only then is the database touched.
+// Emailed reports (any active member). The report PDF + Excel are built in the browser; this endpoint checks the token,
+// picks the recipient ITSELF (the signed-in user's own address, never one from the request), caps size and rate, refuses
+// anything that is not plain static HTML, and hands the job to the n8n workflow, which renders the PDF and sends the mail.
+// POST   /api/report/email       {subject, summary, filenameBase, html, xlsxBase64} → {ok:true, sentTo:"a***@x.com"}
+//
 // GET    /api/admin/users        → [{user_id, username, display_name, email, cell, password, …}]
 // POST   /api/admin/users        {username, password, email?, cell?, display_name?}
 // PATCH  /api/admin/users/:id    any of {username, password, email, cell, display_name, disabled}
@@ -27,6 +32,8 @@ const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SCHEMA = process.env.SUPABASE_SCHEMA || 'offshore_insights';
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;          // admin endpoints are off without it
 const DOMAIN = process.env.AUTH_USERNAME_DOMAIN || 'users.insights.codeine.cloud';
+const REPORT_HOOK = process.env.REPORT_WEBHOOK_URL;          // the n8n webhook that renders and sends a report
+const REPORT_SECRET = process.env.REPORT_WEBHOOK_SECRET;     // shared with that webhook's header-auth credential
 if (!SUPABASE || !ANON || !SERVICE) { console.error('missing SUPABASE_INTERNAL_URL / keys'); process.exit(1); }
 
 const MIN = 60_000;
@@ -39,6 +46,8 @@ const LIMITS = {
   maxConcurrentGotrue: 2,
   maxTracked: 50_000,                         // cap on limiter map size (memory DoS guard)
   maxBody: 8192,                              // a 1000-character password in 4-byte characters fits
+  maxReportBody: 6 * 1024 * 1024,             // the report HTML (about 0.3 MB) + the Excel (about 25 kB) as base64, with room
+  reportsPerHour: 5,                          // emailed reports per user
   maxPassword: 1000,                          // characters; anything else goes (Hentus: any size, any combination)
 };
 
@@ -46,6 +55,7 @@ const LIMITS = {
 // login name (username, login email or contact email, lowercased) → { username, email }
 let directory = new Map();
 let admins = new Set();                                       // user_ids of active admins
+let people = new Map();                                       // user_id → { username, contact, auth } of every active member
 let directoryAt = 0;
 async function refreshDirectory() {
   try {
@@ -57,13 +67,14 @@ async function refreshDirectory() {
     });
     if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
     const rows = await res.json();
-    const next = new Map(), nextAdmins = new Set();
+    const next = new Map(), nextAdmins = new Set(), nextPeople = new Map();
     for (const r of rows) {
       const entry = { username: r.username, email: r.auth_email };
       for (const k of [r.username, r.auth_email, r.contact_email]) if (k) next.set(String(k).trim().toLowerCase(), entry);
       if (r.is_admin) nextAdmins.add(r.user_id);
+      nextPeople.set(r.user_id, { username: r.username, contact: r.contact_email || null, auth: r.auth_email || null });
     }
-    directory = next; admins = nextAdmins;
+    directory = next; admins = nextAdmins; people = nextPeople;
     directoryAt = Date.now();
   } catch (e) {
     console.error('directory refresh failed (keeping last good copy):', e.message);
@@ -395,9 +406,63 @@ async function admin(req, res, url) {
   }
 }
 
+// ── Emailed reports ───────────────────────────────────────────────────────────
+const reportLimit = new Window(LIMITS.reportsPerHour, 60 * MIN);
+setInterval(() => reportLimit.sweep(), MIN).unref();
+/** a***@gmail.com: enough to recognise the address, not enough to learn it. */
+const maskEmail = (e) => e.replace(/^(.).*(@.*)$/, (_, a, b) => `${a}***${b}`);
+// The report is plain static HTML with inline CSS and inline (data:) fonts. Anything that could load or run something is refused:
+// the page is rendered by a real browser engine on the Pi, which must never be pointed at another address.
+const HTML_BAD = /<\s*(script|iframe|frame|object|embed|link|base|form|img|video|audio|source|meta\s+http-equiv)\b|@import|url\(\s*['"]?\s*(?:https?:|\/\/|file:|ftp:)|<[^>]*\son[a-z]+\s*=|javascript:/i;
+
+async function reportEmail(req, res) {
+  const ip = clientIp(req);
+  if (ipReqs.blocked(ip)) return tooMany(res, ipReqs.retryAfterS(ip));
+  ipReqs.add(ip);
+  const m = /^Bearer ([A-Za-z0-9._-]{20,4096})$/.exec(String(req.headers.authorization || ''));
+  const self = m && verifyToken(m[1]);
+  if (!self) return send(res, 401, { error: 'unauthorized' });
+  const me = people.get(self);
+  if (!me) return send(res, 403, { error: 'forbidden' });                      // not an active member: from memory, no DB
+  if (!REPORT_HOOK || !REPORT_SECRET) return send(res, 503, { error: 'not_configured', message: 'Emailing reports is not set up on the server yet.' });
+  // The recipient is the signed-in user's own address: the contact email if one is set, else the sign-in email unless it is the made-up one.
+  const to = me.contact || (me.auth && !me.auth.toLowerCase().endsWith('@' + DOMAIN.toLowerCase()) ? me.auth : null);
+  if (!to) return send(res, 409, { error: 'no_email', message: 'There is no email address on your account. Ask the administrator to add one under User management, then try again.' });
+  if (reportLimit.blocked(self)) {
+    const s = reportLimit.retryAfterS(self);
+    return send(res, 429, { error: 'too_many_reports', retryAfterS: s, message: `You have sent ${LIMITS.reportsPerHour} reports in the last hour. Try again in ${Math.ceil(s / 60)} minutes.` }, { 'Retry-After': String(s) });
+  }
+  let b;
+  try { b = await readJson(req, LIMITS.maxReportBody); }
+  catch (e) {
+    // Reading stopped part-way, so this connection cannot be reused: tell the client to close it.
+    if (e.message === 'too_large') return send(res, 413, { error: 'too_large', message: 'The report is too large to send.' }, { Connection: 'close' });
+    return send(res, 400, { error: 'bad_request' });
+  }
+  const str = (v, max) => (typeof v === 'string' && v.length <= max ? v : null);
+  const html = str(b?.html, 4_500_000), x = str(b?.xlsxBase64, 1_500_000);
+  const subject = str(b?.subject, 200), summary = str(b?.summary, 800), base = str(b?.filenameBase, 120);
+  if (!html || !x || !subject || !summary || !base) return send(res, 400, { error: 'bad_request', message: 'The report is incomplete.' });
+  if (!/^<!doctype html>/i.test(html) || HTML_BAD.test(html)) return send(res, 400, { error: 'bad_html', message: 'The report contains something that is not allowed.' });
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(x) || /[\r\n]/.test(subject) || !/^[A-Za-z0-9._-]+$/.test(base)) return send(res, 400, { error: 'bad_request', message: 'The report is malformed.' });
+  reportLimit.add(self);                                                        // an attempt that reaches the mailer counts
+  try {
+    const r = await fetch(REPORT_HOOK, { method: 'POST', signal: AbortSignal.timeout(110_000),
+      headers: { 'Content-Type': 'application/json', 'X-Report-Secret': REPORT_SECRET },
+      body: JSON.stringify({ to, subject, summary, filenameBase: base, html, xlsxBase64: x, requestedBy: me.username }) });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok || out.ok !== true) { console.error('report mail failed:', r.status, JSON.stringify(out).slice(0, 200)); return send(res, 502, { error: 'mail_failed', message: 'The report could not be sent. Try again in a minute.' }); }
+    return send(res, 200, { ok: true, sentTo: maskEmail(to) });
+  } catch (e) {
+    console.error('report mail error:', e.message);
+    return send(res, 502, { error: 'mail_failed', message: 'The report could not be sent. Try again in a minute.' });
+  }
+}
+
 http.createServer((req, res) => {
   const url = (req.url || '').split('?')[0];
   if (url === '/api/admin/users' || url.startsWith('/api/admin/users/')) return void admin(req, res, url);
+  if (req.method === 'POST' && url === '/api/report/email') return void reportEmail(req, res);
   if (req.method === 'POST' && url === '/api/login') return void login(req, res);
   if (req.method === 'POST' && url === '/api/refresh') return void refresh(req, res);
   if (req.method === 'POST' && url === '/api/logout') return void logout(req, res);
