@@ -498,6 +498,51 @@
       "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
     },
     {
+      "id": "pwc-AT-pit",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/austria/individual/taxes-on-personal-income",
+      "cells": [
+        "AT:INCOME_TOP"
+      ],
+      "extract": "Top marginal personal income tax rate for residents, its threshold, and surcharges on top (solidarity, high-income, regional/municipal ranges). Tax year."
+    },
+    {
+      "id": "pwc-AT-cg",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/austria/individual/income-determination",
+      "cells": [
+        "AT:CGT_FINANCIAL",
+        "AT:CGT_PROPERTY"
+      ],
+      "extract": "Capital gains of resident individuals: shares/funds (rate, annual exemption) and real estate (rate, holding-period relief, main-home exemption)."
+    },
+    {
+      "id": "pwc-AT-other",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/austria/individual/other-taxes",
+      "cells": [
+        "AT:INHERITANCE_DIRECT",
+        "AT:INHERITANCE_OTHER",
+        "AT:WEALTH_NET",
+        "AT:WEALTH_SOLIDARITY",
+        "AT:WEALTH_PROPERTY",
+        "AT:SECURITIES_ACCOUNT",
+        "AT:FOREIGN_ASSET_TAX",
+        "AT:FOREIGN_PROPERTY"
+      ],
+      "extract": "Inheritance/gift tax (top rate + allowance for children; top rate for unrelated heirs). Net wealth, large-fortune/solidarity, real-estate wealth, securities-account, foreign-asset and foreign-real-estate taxes (rate, threshold). Stated as non-existent = 0. Not mentioned at all = 0 with note \"none listed in PwC Other taxes\"."
+    },
+    {
+      "id": "pwc-AT-wht",
+      "method": "page-extract",
+      "url": "https://taxsummaries.pwc.com/austria/corporate/withholding-taxes",
+      "cells": [
+        "AT:WHT_DIVIDEND",
+        "AT:WHT_INTEREST"
+      ],
+      "extract": "Domestic withholding tax on dividends and on interest paid to NON-RESIDENT INDIVIDUALS: standard rate, higher rate for blacklisted/non-cooperative jurisdictions, main exceptions."
+    },
+    {
       "id": "pwc-MU-pit",
       "method": "page-extract",
       "url": "https://taxsummaries.pwc.com/mauritius/individual/taxes-on-personal-income",
@@ -853,6 +898,28 @@
         "gate:LU:blacklist:SC"
       ],
       "extract": "The copy kept by the Luxembourg tax administration of the EU list of non-cooperative jurisdictions applied under art. 168 L.I.R. (law of 10 Feb 2021), with every version and its dates. Are Mauritius / Seychelles named in the version in force, and in which earlier versions?"
+    },
+    {
+      "id": "at-oegv-immoest",
+      "method": "page-extract",
+      "url": "https://www.oesterreich.gv.at/de/themen/steuern_und_finanzen/immobilienertragsteuer/Seite.2420002",
+      "cells": [
+        "AT:CGT_PROPERTY"
+      ],
+      "extract": "The special income tax rate on gains from selling real estate (Immobilienertragsteuer) and the years it applies to, as stated on the federal portal (content by the Federal Ministry of Finance). Note the \"Letzte Aktualisierung\" date."
+    },
+    {
+      "id": "at-sto-kvo",
+      "method": "page-extract",
+      "url": "https://www.ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2026_II_231/BGBLA_2026_II_231.html",
+      "cells": [
+        "gate:AT:blacklist:MU",
+        "gate:AT:blacklist:SC"
+      ],
+      "alt_urls": [
+        "https://www.ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2025_II_246/BGBLA_2025_II_246.html"
+      ],
+      "extract": "The Austrian Steueroasen-Kundmachungs-Verordnung (StO-KVO) of the year: the EU list of non-cooperative jurisdictions as published in the Federal Law Gazette, Annex I and Annex II, and the date it applies to. Are Mauritius / Seychelles named, and in which annex? A newer ordinance replaces the URL."
     },
     {
       "id": "eu-annex-i",

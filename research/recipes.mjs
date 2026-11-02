@@ -19,7 +19,7 @@ const pwc = (code, slug) => [
 
 const recipes = [
   ...pwc('FR', 'france'), ...pwc('DE', 'germany'), ...pwc('BE', 'belgium'), ...pwc('GB', 'united-kingdom'), ...pwc('IT', 'italy'),
-  ...pwc('ES', 'spain'), ...pwc('ZA', 'south-africa'), ...pwc('PT', 'portugal'), ...pwc('CH', 'switzerland'), ...pwc('NL', 'netherlands'), ...pwc('LU', 'luxembourg'),
+  ...pwc('ES', 'spain'), ...pwc('ZA', 'south-africa'), ...pwc('PT', 'portugal'), ...pwc('CH', 'switzerland'), ...pwc('NL', 'netherlands'), ...pwc('LU', 'luxembourg'), ...pwc('AT', 'austria'),
   { id: 'pwc-MU-pit', method: 'page-extract', url: P('mauritius', 'individual/taxes-on-personal-income'), cells: ['MU:INCOME_TOP'],
     extract: 'Resident income tax bands and top rate; Fair Share Contribution rate, threshold and the income years it applies to.' },
   { id: 'pwc-MU-other', method: 'page-extract', url: P('mauritius', 'individual/other-taxes'), cells: OTHER.map((t) => `MU:${t}`),
@@ -101,6 +101,11 @@ const recipes = [
     extract: 'Employers (self-employed with employees) per NUTS region, the same measure as the national figure, for the regions whose borders match a NUTS region (BE NUTS 1, ES/IT/PT NUTS 2). Eurostat flags small samples as low reliability (u): kept in the source text.' },
   { id: 'lu-nc-list', method: 'page-extract', url: 'https://impotsdirects.public.lu/fr/az/l/ListeUEterritoiresNC.html', cells: ['gate:LU:blacklist:MU', 'gate:LU:blacklist:SC'],
     extract: 'The copy kept by the Luxembourg tax administration of the EU list of non-cooperative jurisdictions applied under art. 168 L.I.R. (law of 10 Feb 2021), with every version and its dates. Are Mauritius / Seychelles named in the version in force, and in which earlier versions?' },
+  { id: 'at-oegv-immoest', method: 'page-extract', url: 'https://www.oesterreich.gv.at/de/themen/steuern_und_finanzen/immobilienertragsteuer/Seite.2420002', cells: ['AT:CGT_PROPERTY'],
+    extract: 'The special income tax rate on gains from selling real estate (Immobilienertragsteuer) and the years it applies to, as stated on the federal portal (content by the Federal Ministry of Finance). Note the "Letzte Aktualisierung" date.' },
+  { id: 'at-sto-kvo', method: 'page-extract', url: 'https://www.ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2026_II_231/BGBLA_2026_II_231.html', cells: ['gate:AT:blacklist:MU', 'gate:AT:blacklist:SC'],
+    alt_urls: ['https://www.ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2025_II_246/BGBLA_2025_II_246.html'],
+    extract: 'The Austrian Steueroasen-Kundmachungs-Verordnung (StO-KVO) of the year: the EU list of non-cooperative jurisdictions as published in the Federal Law Gazette, Annex I and Annex II, and the date it applies to. Are Mauritius / Seychelles named, and in which annex? A newer ordinance replaces the URL.' },
   // ── Gates (jurisdiction_gate) ──
   { id: 'eu-annex-i', method: 'page-extract', url: 'https://taxation-customs.ec.europa.eu/taxation/common-eu-list-third-country-jurisdictions-tax-purposes_en',
     alt_urls: ['https://taxation-customs.ec.europa.eu/news/eu-updates-list-non-cooperative-tax-jurisdictions-highlighting-commitment-global-tax-good-governance-2026-02-17_en'],
